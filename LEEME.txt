@@ -408,3 +408,13 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
   facilitar localizar la instruccion exacta en siguientes investigaciones.
 - Siguiente trabajo: acceso a registros GPU y procesamiento de comandos.
 - Referencia: https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_module.cc
+
+2026-10-12: captura de la primera cola de comandos
+- Identificado 7FC80714 como CP_RB_WPTR (indice 1C5).
+- El fallo captura hasta 256 palabras de la cola sin avanzar la lectura.
+- Cabeceras iniciales: C0114800 (tipo 3, 18 palabras de datos) y C0013F00
+  (tipo 3, 2 palabras). El limite real del productor aun no esta capturado.
+- inspect-gpu-ring.py interpreta cabeceras del registro de diagnostico;
+  seis casos de prueba, incluidos paquetes truncados y vacios.
+- La captura no ejecuta comandos: persiste el bloqueo original de GPU.
+- Referencias: xenia/gpu/graphics_system.cc y command_processor.cc.

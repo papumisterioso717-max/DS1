@@ -111,5 +111,13 @@
   "gamma_invalid_pointer_test": "passed; exit 22",
   "resolved_fault_59000100": "Unresolved KeDebugMonitorData import marker at slot 0x8200092C, not a physical alias",
   "monitor_imports": "KeDebugMonitorData -> 0x60050000, KeCertMonitorData -> 0x60050004, both contain BE null pointers",
-  "fault_diagnostics": "Host executable RVA and selected guest registers recorded"
+  "fault_diagnostics": "Host executable RVA and selected guest registers recorded",
+  "gpu_mmio_register": "CP_RB_WPTR (index 0x1C5)",
+  "gpu_ring_snapshot_words": 256,
+  "gpu_ring_initial_packet_headers": [
+    "0xC0114800",
+    "0xC0013F00"
+  ],
+  "gpu_ring_inspector": "Read-only PM4 header inspection; producer boundary unknown; execution absent",
+  "gpu_ring_inspector_test_cases": 6
 }

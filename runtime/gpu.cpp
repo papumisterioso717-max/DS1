@@ -102,3 +102,19 @@ PPC_FUNC(__imp__VdCallGraphicsNotificationRoutines){
  fprintf(stderr,"GPU_GRAPHICS_NOTIFICATION event=1 front=%ux%u back=%ux%u dispatch=pending\n",fw,fh,bw,bh);
  ctx.r3.u64=0;
 }
+
+void dumpDiagnosticGpuRing(uint8_t* base){
+ const auto s=queryDiagnosticGpu(base);
+ if(!s.ringConfigured||!s.ringBytes||!physicalRange(base,s.ringPhysical,s.ringBytes)){
+  fprintf(stderr,"GPU_RING_SNAPSHOT unavailable\n");return;
+ }
+ // No read-pointer advancement or completion is published by this inspection.
+ const uint32_t words=s.ringBytes/4,limit=words<256?words:256;
+ fprintf(stderr,"GPU_RING_SNAPSHOT physical=%08X bytes=%08X read_index=%u words=%u truncated=%u execution=absent\n",s.ringPhysical,s.ringBytes,s.ringReadIndex,limit,words>limit);
+ for(uint32_t i=0;i<limit;++i){
+  const uint32_t index=(s.ringReadIndex+i)%words;
+  const auto* p=base+0xA0000000ull+s.ringPhysical+uint64_t(index)*4;
+  const uint32_t value=(uint32_t(p[0])<<24)|(uint32_t(p[1])<<16)|(uint32_t(p[2])<<8)|p[3];
+  fprintf(stderr,"GPU_RING_WORD index=%u value=%08X\n",index,value);
+ }
+}

@@ -4,6 +4,7 @@
 #include <image.h>
 #include "tls.h"
 #include "physical.h"
+#include "gpu.h"
 #include "objects.h"
 #include "threads.h"
 #include "timestamp.h"
@@ -24,6 +25,13 @@ static LONG CALLBACK fault(EXCEPTION_POINTERS* e) {
     const auto pc=reinterpret_cast<uintptr_t>(e->ExceptionRecord->ExceptionAddress);
     fprintf(stderr,"FAULT_HOST_RVA=0x%llX\n",(unsigned long long)(pc-reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr))));
     if(diagnosticContext)fprintf(stderr,"FAULT_REGS r3=%08X r9=%08X r10=%08X r11=%08X r31=%08X ctr=%08X\n",diagnosticContext->r3.u32,diagnosticContext->r9.u32,diagnosticContext->r10.u32,diagnosticContext->r11.u32,diagnosticContext->r31.u32,diagnosticContext->ctr.u32);
+    if(e->ExceptionRecord->ExceptionCode==EXCEPTION_ACCESS_VIOLATION&&e->ExceptionRecord->NumberParameters>=2&&activeBase){
+      const auto address=e->ExceptionRecord->ExceptionInformation[1]-reinterpret_cast<uintptr_t>(activeBase);
+      if(address==0x7FC80714&&e->ExceptionRecord->ExceptionInformation[0]==1){
+        fprintf(stderr,"PENDING_GPU_COMMAND_PROCESSOR register=CP_RB_WPTR\n");
+        dumpDiagnosticGpuRing(activeBase);
+      }
+    }
     std::_Exit(21);
 }
 int main(int argc,char**argv){
