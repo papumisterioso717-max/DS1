@@ -10,7 +10,7 @@ namespace {
 struct Region {uint32_t guest,size,protect;};
 std::map<uint32_t,Region> regions; // keyed by guest physical address
 std::mutex physicalMutex;
-[[noreturn]] void pending(const char* why,PPCContext&ctx){fprintf(stderr,"PENDING_PHYSICAL_MODE %s guest_lr=0x%08X\n",why,uint32_t(ctx.lr));std::exit(20);}
+[[noreturn]] void pending(const char* why,PPCContext&ctx){fprintf(stderr,"PENDING_PHYSICAL_MODE %s guest_lr=0x%08X\n",why,uint32_t(ctx.lr));std::_Exit(20);}
 uint32_t physical(uint32_t a){if(a>=0xE0000000&&a<0xFFD00000)return a-0xE0000000+0x1000;if(a>=0xA0000000&&a<0xE0000000)return a&0x1FFFFFFF;return 0xFFFFFFFF;}
 auto containing(uint32_t a){for(auto it=regions.begin();it!=regions.end();++it)if(a>=it->second.guest&&uint64_t(a)<uint64_t(it->second.guest)+it->second.size)return it;return regions.end();}
 uint32_t allocate(PPCContext&ctx,uint8_t*b,uint32_t kind,uint32_t size,uint32_t protect,uint32_t low,uint32_t high,uint32_t alignment){
@@ -50,8 +50,8 @@ PPC_FUNC(__imp__MmAllocatePhysicalMemoryEx){ctx.r3.u64=allocate(ctx,base,ctx.r3.
 PPC_FUNC(__imp__MmAllocatePhysicalMemory){ctx.r3.u64=allocate(ctx,base,ctx.r3.u32,ctx.r4.u32,ctx.r5.u32,0,0xffffffff,0);}
 PPC_FUNC(__imp__MmFreePhysicalMemory){
  std::lock_guard<std::mutex> guard(physicalMutex);const uint32_t address=ctx.r4.u32;
- auto it=containing(address);if(it==regions.end()||it->second.guest!=address){fprintf(stderr,"INVALID_PHYSICAL_FREE address=0x%08X\n",address);std::exit(22);}
- if(!VirtualFree(base+address,it->second.size,MEM_DECOMMIT)){fprintf(stderr,"PHYSICAL_FREE_FAILED\n");std::exit(22);}regions.erase(it);
+ auto it=containing(address);if(it==regions.end()||it->second.guest!=address){fprintf(stderr,"INVALID_PHYSICAL_FREE address=0x%08X\n",address);std::_Exit(22);}
+ if(!VirtualFree(base+address,it->second.size,MEM_DECOMMIT)){fprintf(stderr,"PHYSICAL_FREE_FAILED\n");std::_Exit(22);}regions.erase(it);
 }
 PPC_FUNC(__imp__MmGetPhysicalAddress){ctx.r3.u64=physical(ctx.r3.u32);}
 PPC_FUNC(__imp__MmQueryAllocationSize){

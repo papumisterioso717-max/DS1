@@ -97,7 +97,7 @@ PPC_FUNC(__imp__NtAllocateVirtualMemory){
  uint32_t a=read32(base,ap),s=read32(base,sp);
  const auto result=manager(base).allocate(a,s,ctx.r5.u32,ctx.r6.u32,ctx.r7.u32);
  fprintf(stderr,"NtAllocateVirtualMemory flags=0x%08X protect=0x%X address=0x%08X size=0x%X status=0x%08X\n",ctx.r5.u32,ctx.r6.u32,a,s,result);
- if(result==unsupported){fprintf(stderr,"PENDING_MEMORY_MODE guest_lr=0x%08X\n",uint32_t(ctx.lr));std::exit(20);}
+ if(result==unsupported){fprintf(stderr,"PENDING_MEMORY_MODE guest_lr=0x%08X\n",uint32_t(ctx.lr));std::_Exit(20);}
  if(!result){write32(base,ap,a);write32(base,sp,s);}ctx.r3.u64=result;
 }
 PPC_FUNC(__imp__NtFreeVirtualMemory){
@@ -105,6 +105,6 @@ PPC_FUNC(__imp__NtFreeVirtualMemory){
  if(!pointerOK(base,ap)||!pointerOK(base,sp)){ctx.r3.u64=invalid;return;}
  uint32_t a=read32(base,ap),s=read32(base,sp);
  const auto result=manager(base).release(a,s,ctx.r5.u32,ctx.r6.u32);
- if(result==unsupported){fprintf(stderr,"PENDING_MEMORY_FREE_MODE\n");std::exit(20);}
+ if(result==unsupported){fprintf(stderr,"PENDING_MEMORY_FREE_MODE\n");std::_Exit(20);}
  if(!result){write32(base,ap,a);write32(base,sp,s);}ctx.r3.u64=result;
 }

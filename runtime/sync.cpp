@@ -14,7 +14,7 @@ namespace {
 struct Lock {std::condition_variable changed;uint32_t waiters=0;};
 std::mutex monitor;
 std::map<uint8_t*,std::unique_ptr<Lock>> locks;
-[[noreturn]] void invalid(const char* reason,uint32_t a){fprintf(stderr,"INVALID_SYNC %s address=0x%08X\n",reason,a);std::exit(22);}
+[[noreturn]] void invalid(const char* reason,uint32_t a){fprintf(stderr,"INVALID_SYNC %s address=0x%08X\n",reason,a);std::_Exit(22);}
 void check(uint8_t*base,uint32_t a,uint32_t n,bool write){
  if(!a||uint64_t(a)+n>0x100000000ull)invalid("range",a);
  for(uint64_t pos=a;pos<uint64_t(a)+n;){

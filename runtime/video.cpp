@@ -9,12 +9,12 @@ namespace {
 // This profile describes no physical PC connector and does not create a renderer.
 constexpr uint32_t mode[12]={1280,720,0,1,1,0x42700000,1,0x4A,1,0,0,0};
 void writeMode(uint8_t*base,uint32_t a){
- if(!a||uint64_t(a)+sizeof(mode)>0x100000000ull){fprintf(stderr,"INVALID_VIDEO_MODE_BUFFER\n");std::exit(22);}
+ if(!a||uint64_t(a)+sizeof(mode)>0x100000000ull){fprintf(stderr,"INVALID_VIDEO_MODE_BUFFER\n");std::_Exit(22);}
  for(uint32_t i=0;i<sizeof(mode);++i){
   MEMORY_BASIC_INFORMATION info{};
   if(!VirtualQuery(base+a+i,&info,sizeof(info))||info.State!=MEM_COMMIT||
      (info.Protect&PAGE_GUARD)||!(info.Protect&(PAGE_READWRITE|PAGE_EXECUTE_READWRITE))){
-   fprintf(stderr,"INVALID_VIDEO_MODE_BUFFER address=0x%08X\n",a);std::exit(22);
+   fprintf(stderr,"INVALID_VIDEO_MODE_BUFFER address=0x%08X\n",a);std::_Exit(22);
   }
  }
  for(uint32_t i=0;i<12;++i){const uint32_t v=mode[i],p=a+i*4;base[p]=v>>24;base[p+1]=v>>16;base[p+2]=v>>8;base[p+3]=v;}
@@ -36,7 +36,7 @@ PPC_FUNC(__imp__ExGetXConfigSetting){
  // Virtual diagnostic console configuration, consistent with Xenia's defaults.
  if(category==2&&setting==2)value=0x1000; // AV region: NTSC North America
  else if(category==3&&setting==10)value=0x40000; // widescreen video preference
- else {fprintf(stderr,"PENDING_XCONFIG category=%u setting=%u guest_lr=0x%08X\n",category,setting,uint32_t(ctx.lr));std::exit(20);}
+ else {fprintf(stderr,"PENDING_XCONFIG category=%u setting=%u guest_lr=0x%08X\n",category,setting,uint32_t(ctx.lr));std::_Exit(20);}
  auto writable=[&](uint32_t a,uint32_t n){
   if(!a||uint64_t(a)+n>0x100000000ull)return false;
   for(uint32_t i=0;i<n;++i){MEMORY_BASIC_INFORMATION m{};

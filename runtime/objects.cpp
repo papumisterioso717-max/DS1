@@ -29,7 +29,7 @@ bool valid(uint8_t*b,uint32_t a,uint32_t n,bool write){
 uint32_t get(uint8_t*b,uint32_t a){return(uint32_t(b[a])<<24)|(uint32_t(b[a+1])<<16)|(uint32_t(b[a+2])<<8)|b[a+3];}
 void put(uint8_t*b,uint32_t a,uint32_t v){b[a]=v>>24;b[a+1]=v>>16;b[a+2]=v>>8;b[a+3]=v;}
 std::shared_ptr<KernelObject> lookup(uint32_t handle){std::lock_guard<std::mutex> guard(objectsMutex);auto it=objects.find(handle);return it==objects.end()?nullptr:it->second;}
-[[noreturn]] void pending(const char* mode,PPCContext&ctx){fprintf(stderr,"PENDING_OBJECT_MODE %s guest_lr=0x%08X\n",mode,uint32_t(ctx.lr));std::exit(20);}
+[[noreturn]] void pending(const char* mode,PPCContext&ctx){fprintf(stderr,"PENDING_OBJECT_MODE %s guest_lr=0x%08X\n",mode,uint32_t(ctx.lr));std::_Exit(20);}
 }
 PPC_FUNC(__imp__NtCreateSemaphore){
  const uint32_t out=ctx.r3.u32,attributes=ctx.r4.u32;const int32_t count=ctx.r5.s32,limit=ctx.r6.s32;
@@ -92,12 +92,12 @@ PPC_FUNC(__imp__NtClose){
 void registerCurrentGuestThread(uint8_t*base,uint32_t pcr){
  HANDLE native=nullptr;
  if(!DuplicateHandle(GetCurrentProcess(),GetCurrentThread(),GetCurrentProcess(),&native,0,FALSE,DUPLICATE_SAME_ACCESS)){
-  fprintf(stderr,"Unable to register native thread handle\n");std::exit(22);
+  fprintf(stderr,"Unable to register native thread handle\n");std::_Exit(22);
  }
  auto object=std::make_shared<KernelObject>(native,ObjectKind::Thread);
  if(valid(base,pcr+0x100,4,false))object->guestAddress=get(base,pcr+0x100);
  std::lock_guard<std::mutex> guard(objectsMutex);
- if(!threads.emplace(std::make_pair(base,pcr),object).second){fprintf(stderr,"Thread already registered\n");std::exit(22);}
+ if(!threads.emplace(std::make_pair(base,pcr),object).second){fprintf(stderr,"Thread already registered\n");std::_Exit(22);}
 }
 PPC_FUNC(__imp__NtDuplicateObject){
  const uint32_t source=ctx.r3.u32,out=ctx.r4.u32,options=ctx.r5.u32;
@@ -138,7 +138,7 @@ PPC_FUNC(__imp__ObReferenceObjectByHandle){
 PPC_FUNC(__imp__ObDereferenceObject){
  std::lock_guard<std::mutex> guard(objectsMutex);
  auto it=references.find({base,ctx.r3.u32});
- if(it==references.end()){fprintf(stderr,"INVALID_OBJECT_DEREFERENCE address=0x%08X\n",ctx.r3.u32);std::exit(22);}
+ if(it==references.end()){fprintf(stderr,"INVALID_OBJECT_DEREFERENCE address=0x%08X\n",ctx.r3.u32);std::_Exit(22);}
  if(--it->second.count==0)references.erase(it);ctx.r3.u64=0;
 }
 
@@ -189,4 +189,25 @@ PPC_FUNC(__imp__NtClearEvent){
  if(!object){ctx.r3.u64=badHandle;return;}
  if(object->kind!=ObjectKind::Event){ctx.r3.u64=0xC0000024;return;}
  std::lock_guard<std::mutex> lock(object->eventMutex);object->signaled=false;ctx.r3.u64=0;
+}
+
+uint32_t registerNativeGuestThread(uint8_t*base,uint32_t pcr,void*native){
+ auto object=std::make_shared<KernelObject>(native,ObjectKind::Thread);object->guestAddress=get(base,pcr+0x100);
+ std::lock_guard<std::mutex> guard(objectsMutex);
+ if(nextHandle>0xDFFFFFFC||threads.count({base,pcr})){fprintf(stderr,"THREAD_REGISTRATION_FAILED\n");std::_Exit(22);}
+ uint32_t handle=nextHandle;nextHandle+=4;objects.emplace(handle,object);threads.emplace(std::make_pair(base,pcr),object);return handle;
+}
+PPC_FUNC(__imp__NtResumeThread){
+ auto object=lookup(ctx.r3.u32);uint32_t out=ctx.r4.u32;
+ if(!object){ctx.r3.u64=badHandle;return;}
+ if(object->kind!=ObjectKind::Thread){ctx.r3.u64=0xC0000024;return;}
+ if(out&&!valid(base,out,4,true)){ctx.r3.u64=invalid;return;}
+ // Only this diagnostic runtime changes native suspension counts.
+ std::lock_guard<std::mutex> guard(objectsMutex);
+ const uint32_t address=object->guestAddress;
+ const uint8_t old=address?base[address+0xBC]:0;
+ if(address)base[address+0xBC]=0;
+ DWORD previous=ResumeThread(object->handle);
+ if(previous==DWORD(-1)){if(address)base[address+0xBC]=old;ctx.r3.u64=invalid;return;}
+ if(out)put(base,out,previous);ctx.r3.u64=0;
 }

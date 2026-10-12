@@ -12,7 +12,7 @@ namespace {
 struct State {std::vector<bool> used;std::map<uint32_t,uint32_t> dynamic;};
 std::map<uint8_t*,State> states;
 std::mutex mutex;
-[[noreturn]] void fail(){fprintf(stderr,"INVALID_TLS_STATE\n");std::exit(22);}
+[[noreturn]] void fail(){fprintf(stderr,"INVALID_TLS_STATE\n");std::_Exit(22);}
 void range(uint8_t*b,uint32_t a,uint64_t n,bool write){
  if(!a||uint64_t(a)+n>0x100000000ull)fail();
  for(uint64_t i=0;i<n;){MEMORY_BASIC_INFORMATION m{};
@@ -51,4 +51,8 @@ PPC_FUNC(__imp__KeTlsFree){
  if(slot>=s.used.size()||!s.used[slot]){ctx.r3.u64=0;return;}
  for(const auto&t:s.dynamic)put(base,t.second+4*slot,0);
  s.used[slot]=false;ctx.r3.u64=1;
+}
+
+void unregisterGuestTls(uint8_t*b,uint32_t pcr){
+ std::lock_guard<std::mutex> guard(mutex);auto it=states.find(b);if(it!=states.end())it->second.dynamic.erase(pcr);
 }

@@ -10,8 +10,8 @@
   "instruction_checks_passed": 98408,
   "runtime": "diagnostic; memory reserve and commit succeeded",
   "diagnostic_exit_code": 20,
-  "next_unimplemented_import": "ExCreateThread",
-  "guest_lr": "0x82894CF8",
+  "next_unimplemented_import": "KeSetAffinityThread",
+  "guest_lr": "0x828930A4",
   "playable": false,
   "setjmp_longjmp": "not identified; unset",
   "memory_checks_passed": 43,
@@ -23,7 +23,7 @@
   "sync_assertions_passed": 9,
   "sync_protected_increments": 40000,
   "sync_test_host_threads": 4,
-  "main_thread": "partial KPCR/KTHREAD and static/dynamic TLS initialized; creation and scheduler pending",
+  "main_thread": "main and worker KPCR/KTHREAD initialized; only verified fields implemented",
   "executable_privileges": "read from original XEX system flags",
   "video_checks_passed": 16309,
   "video_invalid_buffer_test": "passed; exit 22",
@@ -56,5 +56,11 @@
   "priority_invalid_thread_test": "passed; exit 20",
   "events_created_at_startup": 32,
   "event_support": "unnamed manual/auto reset; create, set, clear, single non-alertable wait, duplicate and close; named objects, pulse, guest event structures and multiwait pending",
-  "event_checks_passed": 35
+  "event_checks_passed": 35,
+  "thread_checks_passed": 26,
+  "thread_name_checks_passed": 3,
+  "guest_threads_created_at_startup": 1,
+  "guest_worker_started_at_startup": false,
+  "thread_stack_size_from_xex": 262144,
+  "thread_support": "create flags 0/1, isolated KPCR/KTHREAD/TLS/stack, native resume, worker exit, single wait; affinity, APC, scheduling, other flags and lifecycle reclamation pending"
 }

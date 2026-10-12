@@ -11,8 +11,8 @@ RESULTADO VERIFICADO
   saturación, alias de registros, endian, saltos calculados y destinos compartidos.
 - El ejecutable entra en el código recompilado y supera la consulta del módulo XEX.
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
-- Se detiene al solicitar ExCreateThread
-  (LR 0x82894CF8, salida 20). Ver diagnostic.log.
+- Se detiene al solicitar KeSetAffinityThread
+  (LR 0x828930A4, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
 - Pasaron 16 401 comprobaciones de estado inicial, límites y memoria vecina.
@@ -221,3 +221,27 @@ LR 82894CF8, salida controlada 20. El juego todavia no es jugable.
 Referencia de las firmas y tipos:
 https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc
 Pasaron 35 comprobaciones de eventos y todas las pruebas anteriores.
+
+CREACION DE HILOS
+ExCreateThread admite flags 0 y 1 (suspendido), pila independiente con pagina
+inferior sin acceso, KPCR/KTHREAD y TLS propio. La pila predeterminada se lee
+del XEX: 256 KB para esta copia. NtResumeThread devuelve el contador anterior.
+Los workers ejecutan el punto de arranque y sus argumentos; ExTerminateThread
+sale del worker mediante una excepcion interna, sin terminar todo el proceso.
+El contexto de diagnostico es local a cada hilo. Las detenciones fatales usan
+_Exit para evitar destruir recursos mientras otros hilos siguen activos.
+Pasaron 26 comprobaciones con workers sinteticos: creacion suspendida, TLS,
+pila, reanudacion, terminacion, trampolin y vida del identificador duplicado.
+Tambien se ejecutaron las pruebas anteriores. La comprobacion adicional del
+aviso de nombre acepta el formato documentado y rechaza codigo o puntero
+invalido (3 casos). No se implementa un despachador general de excepciones.
+El XEX crea el hilo 2 suspendido, llamado Job Manager - Job Thread, y luego
+se detiene en KeSetAffinityThread, LR 828930A4. El worker real todavia no se
+ha reanudado: las pruebas de ejecucion de workers son sinteticas.
+LIMITACIONES: maximo 126 workers por proceso, reservas no reutilizadas y
+objetos de hilo retenidos hasta terminar el proceso; faltan afinidad, APC,
+notificaciones, otras banderas, planificador Xbox y campos del KTHREAD.
+Referencias:
+https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xthread.cc
+https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xthread.h
+https://learn.microsoft.com/en-us/visualstudio/debugger/tips-for-debugging-threads
