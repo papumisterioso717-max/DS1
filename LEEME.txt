@@ -13,7 +13,7 @@ RESULTADO VERIFICADO
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
-- Se detiene en paquete GPU tipo 0, registro 0x0A31, fisica 0x1F8F0040
+- Se detiene en WAIT_REG_MEM (opcode 0x3C), fisica 0x1F8F0054
   (LR 0x823EBC90, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
@@ -435,3 +435,14 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
   truncamiento, indice fuera de rango y recursion circular).
 - Compilacion y pruebas del runtime correctas. Renderizador aun ausente.
 - Referencias: xenia/gpu/graphics_system.cc, command_processor.cc, xenos.h.
+
+2026-10-12: registros de coherencia GPU
+- Paquetes tipo 0 registran COHER_SIZE_HOST (A2F), COHER_BASE_HOST (A30)
+  y COHER_STATUS_HOST (A31), con direccionamiento secuencial o repetido.
+- Una escritura al estado activa el bit pendiente 31; no se simula el fin
+  de una sincronizacion ni se completa la lista que contiene comandos pendientes.
+- El titulo solicita 4 MB desde 1F8E0000 y despues emite WAIT_REG_MEM
+  (3C) en 1F8F0054. Resolver esa espera es el siguiente trabajo.
+- 16 comprobaciones del procesador y 5 rechazos correctos, incluyendo
+  registro sin soporte y conservacion del estado pendiente.
+- Referencias: xenia/gpu/register_table.inc y command_processor.cc.

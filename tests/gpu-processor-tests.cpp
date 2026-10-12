@@ -18,6 +18,7 @@ int main(int argc,char**argv){
  if(argc>1){
   if(!strcmp(argv[1],"unknown")){put(0,0xC0002200);put(1,0);diagnosticMmioStore32(base,0x7FC80714,2,0);}
   if(!strcmp(argv[1],"truncated")){put(0,0xC0034800);diagnosticMmioStore32(base,0x7FC80714,1,0);}
+  if(!strcmp(argv[1],"register")){put(0,0x00000A32);put(1,0);diagnosticMmioStore32(base,0x7FC80714,2,0);}
   if(!strcmp(argv[1],"index"))diagnosticMmioStore32(base,0x7FC80714,8,0);
   if(!strcmp(argv[1],"cycle")){put(0,0xC0013F00);put(1,0x10000);put(2,3);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   return 1;
@@ -30,6 +31,15 @@ int main(int argc,char**argv){
  diagnosticMmioStore32(base,0x7FC80714,1,0);s=queryDiagnosticGpu(base);check(s.ringReadIndex==1&&s.processedPackets==8);check(PPC_LOAD_U32(0xA0011000)==1);
  diagnosticMmioStore32(base,0x10000,0xAABBCCDD,0);check(PPC_LOAD_U32(0x10000)==0xAABBCCDD);
  diagnosticMmioStore32(base,0x7FC80714,1,0);check(queryDiagnosticGpu(base).processedPackets==8);
+ // Sequential type-0 writes stage base/size/status without clearing pending.
+ put(1,0x00020A2F);put(2,4096);put(3,0x12000);put(4,0x123);
+ diagnosticMmioStore32(base,0x7FC80714,5,0);s=queryDiagnosticGpu(base);
+ check(s.coherSize==4096&&s.coherBase==0x12000&&s.coherStatus==0x80000123);
+ check(s.ringReadIndex==5&&PPC_LOAD_U32(0xA0011000)==5);
+ // The single-register flag writes twice to the same register across wrap.
+ put(5,0x00018A30);put(6,0x10000);put(7,0x11000);
+ diagnosticMmioStore32(base,0x7FC80714,0,0);check(queryDiagnosticGpu(base).coherBase==0x11000);
+ check(queryDiagnosticGpu(base).coherStatus==0x80000123);
  __imp__VdShutdownEngines(c,base);check(queryDiagnosticGpu(base).processedPackets==0);check(VirtualFree(base,0,MEM_RELEASE));
  printf("PASS %d processor checks: initialization, indirect list, wraparound, writeback and fallback\n",n);
 }

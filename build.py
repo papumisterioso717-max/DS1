@@ -54,7 +54,7 @@ run([tool/'clang++.exe',*flags,root/'tests/gpu-ring-tests.cpp',gpu,'-o',bin/'Gpu
 run([bin/'GpuRingTests.exe'])
 run([tool/'clang++.exe',*flags,root/'tests/gpu-processor-tests.cpp',gpu,'-o',bin/'GpuProcessorTests.exe'])
 run([bin/'GpuProcessorTests.exe'])
-for case,expected in [('unknown',20),('truncated',22),('index',22),('cycle',22)]:
+for case,expected in [('unknown',20),('truncated',22),('index',22),('cycle',22),('register',20)]:
  r=subprocess.run([str(bin/'GpuProcessorTests.exe'),case],capture_output=True,text=True)
  if r.returncode!=expected:raise RuntimeError('GPU processor rejection failed: '+case)
 

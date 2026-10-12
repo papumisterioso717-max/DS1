@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "Unsupported type-0 GPU register write at physical 0x1F8F0040, header 0x00000A31 (register index 0x0A31)",
+  "next_blocker": "WAIT_REG_MEM opcode 0x3C at physical 0x1F8F0054; GPU coherence completion pending",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -121,11 +121,18 @@
   "gpu_ring_inspector": "Read-only PM4 header inspection; producer boundary unknown; execution absent",
   "gpu_ring_inspector_test_cases": 6,
   "gpu_processor_support": "Bounded synchronous CP_RB_WPTR dispatch; zero/type2/NOP packets, ME_INIT data storage, INDIRECT_BUFFER/PFD traversal; unknown/predicated commands stop; no renderer",
-  "gpu_processor_checks_passed": 12,
-  "gpu_processor_negative_cases": 4,
+  "gpu_processor_checks_passed": 16,
+  "gpu_processor_negative_cases": 5,
   "gpu_first_submission_words": 22,
   "gpu_first_submission_write_index": 22,
   "gpu_first_indirect_physical": "0x1F8F0040",
   "gpu_first_indirect_words": 11,
-  "gpu_mmio_hook": "PPC_MM_STORE_U32 override for five generated translation units; other widths and reads pending"
+  "gpu_mmio_hook": "PPC_MM_STORE_U32 override for five generated translation units; other widths and reads pending",
+  "gpu_coherence_support": "Type-0 COHER_SIZE_HOST/BASE_HOST/STATUS_HOST writes; sequential and single-register addressing; status bit31 remains pending",
+  "gpu_coherence_request": {
+    "base": "0x1F8E0000",
+    "bytes": 4194304,
+    "written_status": "0x01000000",
+    "pending_status": "0x81000000"
+  }
 }

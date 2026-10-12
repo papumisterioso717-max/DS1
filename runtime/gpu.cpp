@@ -138,6 +138,22 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
   const uint32_t opcode=(head>>8)&0x7F;
   fprintf(stderr,"GPU_PACKET depth=%u physical=%08X header=%08X payload=%u\n",depth,address(i),head,count);
   if(head==0||type==2){ /* Explicit no-op packet. */ }
+  else if(type==0){
+   const uint32_t first=head&0x7FFF;const bool single=(head&0x8000)!=0;
+   // COHER_* writes stage a cache-coherence request; status remains pending.
+   // Match Xenia's WriteRegister behavior without pretending to flush a GPU.
+   for(uint32_t n=0;n<count;++n){
+    const uint32_t index=first+(single?0:n);
+    if(index<0xA2F||index>0xA31){fprintf(stderr,"PENDING_GPU_REGISTER_PACKET index=%04X physical=%08X\n",index,address(i));std::_Exit(20);}
+   }
+   for(uint32_t n=0;n<count;++n){
+    const uint32_t index=first+(single?0:n),value=physicalWord(base,address(i+1+n));
+    if(index==0xA2F)state.coherSize=value;
+    else if(index==0xA30)state.coherBase=value;
+    else state.coherStatus=value|0x80000000u;
+    fprintf(stderr,"GPU_COHER_REGISTER index=%04X value=%08X\n",index,value);
+   }
+  }
   else if(type==3&&(head&1)==0&&opcode==0x10){ /* NOP payload. */ }
   else if(type==3&&(head&1)==0&&opcode==0x48){
    auto& data=microEngine[base];data.clear();
