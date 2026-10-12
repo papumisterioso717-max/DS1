@@ -3,6 +3,7 @@
 #include "ppc_recomp_shared.h"
 #include <image.h>
 #include "tls.h"
+#include "physical.h"
 #include "objects.h"
 #include "threads.h"
 #include "timestamp.h"
@@ -27,7 +28,7 @@ int main(int argc,char**argv){
  auto file=LoadFile(argv[1]);if(file.size()<24||memcmp(file.data(),"XEX2",4)){fprintf(stderr,"Invalid or unreadable XEX2\n");return 3;}
  auto image=Image::ParseImage(file.data(),file.size());
  if(image.base!=PPC_IMAGE_BASE||image.size!=PPC_IMAGE_SIZE||image.entry_point!=0x82894210){fprintf(stderr,"This host requires the configured Dead Space executable.\n");return 4;}
- auto*base=static_cast<uint8_t*>(VirtualAlloc(nullptr,PPC_MEMORY_SIZE,MEM_RESERVE,PAGE_NOACCESS));
+ auto*base=reserveGuestMemory();
  if(!base){fprintf(stderr,"Unable to reserve guest address space: %lu\n",GetLastError());return 5;}
  auto commit=[&](size_t address,size_t size){if(!VirtualAlloc(base+address,size,MEM_COMMIT,PAGE_READWRITE)){fprintf(stderr,"Unable to commit guest range: %lu\n",GetLastError());std::_Exit(6);}};
  commit(PPC_IMAGE_BASE,PPC_IMAGE_SIZE);memcpy(base+PPC_IMAGE_BASE,image.data.get(),PPC_IMAGE_SIZE);

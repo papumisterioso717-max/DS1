@@ -11,8 +11,9 @@ RESULTADO VERIFICADO
   saturación, alias de registros, endian, saltos calculados y destinos compartidos.
 - El ejecutable entra en el código recompilado y supera la consulta del módulo XEX.
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
-- Se detiene por escritura al alias fisico 0xBE010100 sin respaldo compartido
-  (LR 0x823F8138, salida 21). Ver diagnostic.log.
+- Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
+- Se detiene en VdSetSystemCommandBufferGpuIdentifierAddress
+  (LR 0x823ECF58, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
 - Pasaron 16 401 comprobaciones de estado inicial, límites y memoria vecina.
@@ -317,3 +318,18 @@ crear paginas independientes no preservaria los datos del juego.
 Referencia de registro:
 https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_modules.cc
 https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state.cc
+
+2026-10-12: memoria fisica compartida
+- Los alias A/C/E comparten una seccion de Windows por asignacion. Se conserva
+  el desplazamiento fisico de 0x1000 del rango E y sus limites.
+- Reservas placeholder evitan liberar huecos al mapear; liberacion elimina
+  todas las vistas y la reutilizacion entrega memoria inicializada en cero.
+- 50 comprobaciones: coherencia bidireccional, proteccion de solo lectura,
+  consultas por alias, limites, reutilizacion y recombinacion de reservas.
+- Regresion exacta: BE010100, DE010100 y FE00F100 ven el mismo byte.
+- Compilacion 320/320 y todas las pruebas del runtime correctas.
+- Arranque real supera el fallo anterior y llega a
+  VdSetSystemCommandBufferGpuIdentifierAddress (LR 823ECF58, salida 20).
+- Requiere Windows 10 1803 o posterior. Cache de GPU y renderizador pendientes;
+  este avance no produce una ventana jugable.
+- API de respaldo: https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-mapviewoffile3
