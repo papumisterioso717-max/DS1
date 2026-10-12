@@ -11,8 +11,8 @@ RESULTADO VERIFICADO
   saturación, alias de registros, endian, saltos calculados y destinos compartidos.
 - El ejecutable entra en el código recompilado y supera la consulta del módulo XEX.
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
-- Se detiene al solicitar ExRegisterTitleTerminateNotification
-  (LR 0x823F8050, salida 20). Ver diagnostic.log.
+- Se detiene por escritura al alias fisico 0xBE010100 sin respaldo compartido
+  (LR 0x823F8138, salida 21). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
 - Pasaron 16 401 comprobaciones de estado inicial, límites y memoria vecina.
@@ -295,3 +295,25 @@ LR 823F8050. El codigo posterior registra otra notificacion de cierre y
 llama a VdSetGraphicsInterruptCallback. No hay procesamiento de comandos,
 interrupciones de GPU, shaders ni presentacion de imagen.
 Referencia: https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_video.cc
+
+REGISTRO DE NOTIFICACIONES E INTERRUPCIONES
+ExRegisterTitleTerminateNotification conserva callback y prioridad big-endian,
+admite registros duplicados y elimina la primera coincidencia por rutina,
+como Xenia. No modifica los campos de lista del registro invitado.
+Las paradas fatales del diagnostico no ejecutan funciones de cierre. El
+cierre ordenado del titulo y su despacho por prioridades siguen pendientes.
+VdSetGraphicsInterruptCallback conserva funcion y argumento en el estado
+grafico de diagnostico, y permite retirarlos con callback cero. No entrega
+interrupciones: requiere un backend grafico real para producirlas.
+Pasaron 14 comprobaciones de notificaciones y el rechazo de un registro
+invalido (salida 22); las pruebas graficas aumentan a 16. Paso la bateria
+anterior incluida en build.py.
+El juego registra 823F7F80 y 823F7FE0 para cierre, y 823ECA70 con argumento
+D9D24E00 para interrupciones. Luego intenta escribir en BE010100.
+Esa direccion corresponde a fisica 1E010100, incluida en la reserva inicial
+de 96 MB expuesta en D9000000..DEFFFFFF. Su direccion equivalente en ese
+mapeo es DE010100. Falta compartir el respaldo entre los alias fisicos;
+crear paginas independientes no preservaria los datos del juego.
+Referencia de registro:
+https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_modules.cc
+https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state.cc

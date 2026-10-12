@@ -4,7 +4,7 @@ Proyecto experimental de recompilación de Dead Space para Xbox 360 con XenonRec
 
 ## Estado
 
-El diagnóstico entra en el código recompilado y actualmente inicia seis hilos de trabajo y captura la configuración gráfica en modo de diagnóstico y se detiene en `ExRegisterTitleTerminateNotification`. Todavía no es jugable y no dispone de un renderizador.
+El diagnóstico entra en el código recompilado y actualmente inicia seis hilos de trabajo y captura la configuración gráfica en modo de diagnóstico y registra las notificaciones de cierre e interrupción; el siguiente bloqueo es el respaldo compartido entre alias de memoria física. Todavía no es jugable y no dispone de un renderizador.
 
 ## Contenido
 

@@ -5,6 +5,7 @@
 #include <map>
 #include <mutex>
 #include <cstdio>
+#include <cstdlib>
 namespace {
 std::mutex mutex;
 std::map<uint8_t*,DiagnosticGpuState> engines;
@@ -26,3 +27,12 @@ PPC_FUNC(__imp__VdInitializeEngines){
  ctx.r3.u64=1;
 }
 PPC_FUNC(__imp__VdShutdownEngines){std::lock_guard<std::mutex> guard(mutex);engines.erase(base);fprintf(stderr,"GPU_DIAGNOSTIC_SHUTDOWN\n");}
+
+PPC_FUNC(__imp__VdSetGraphicsInterruptCallback){
+ uint32_t callback=ctx.r3.u32,argument=ctx.r4.u32;
+ if(callback&&((callback&3)||callback<PPC_CODE_BASE||uint64_t(callback)>=uint64_t(PPC_CODE_BASE)+PPC_CODE_SIZE)){fprintf(stderr,"INVALID_GPU_INTERRUPT_CALLBACK\n");std::_Exit(22);}
+ std::lock_guard<std::mutex> guard(mutex);auto it=engines.find(base);
+ if(it==engines.end()){fprintf(stderr,"PENDING_GPU_MODE interrupt registration before engine initialization\n");std::_Exit(20);}
+ it->second.interruptCallback=callback;it->second.interruptArgument=argument;
+ fprintf(stderr,"GPU_INTERRUPT_REGISTRATION callback=%08X argument=%08X delivery=pending\n",callback,argument);
+}
