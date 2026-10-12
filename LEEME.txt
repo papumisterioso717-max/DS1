@@ -12,8 +12,8 @@ RESULTADO VERIFICADO
 - El ejecutable entra en el código recompilado y supera la consulta del módulo XEX.
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
-- Se detiene en KiApcNormalRoutineNop
-  (LR 0x823ED200, salida 20). Ver diagnostic.log.
+- Se detiene en KeWaitForSingleObject
+  (LR 0x8240E5BC, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
 - Pasaron 16 401 comprobaciones de estado inicial, límites y memoria vecina.
@@ -358,3 +358,10 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
   lectura en 1FCEE03C con frecuencia 32, e identificador en FFCED008.
 - Siguiente exportacion pendiente: KiApcNormalRoutineNop, LR 823ED200.
 - Referencia: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/command_processor.cc
+
+2026-10-12: compatibilidad de la exportacion 0x1DF
+- KiApcNormalRoutineNop devuelve cero sin modificar memoria, siguiendo
+  el stub de Xenia. No implica soporte general de APC ni validacion GPU.
+- El arranque crea dos hilos adicionales: ocho trabajadores observados.
+- Siguiente bloqueo: KeWaitForSingleObject, LR 8240E5BC, salida 20.
+- Referencia: https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc

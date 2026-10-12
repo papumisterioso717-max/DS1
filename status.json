@@ -8,10 +8,10 @@
   "unsupported_instruction_occurrences": 0,
   "full_compilation": "320/320 passed; full build and runtime test suites rerun",
   "instruction_checks_passed": 98408,
-  "runtime": "diagnostic: six worker threads start; reaches graphics initialization",
+  "runtime": "diagnostic: eight worker threads created; GPU configuration captured, rendering absent",
   "diagnostic_exit_code": 20,
-  "next_unimplemented_import": "__imp__KiApcNormalRoutineNop",
-  "guest_lr": "0x823ED200",
+  "next_unimplemented_import": "__imp__KeWaitForSingleObject",
+  "guest_lr": "0x8240E5BC",
   "playable": false,
   "setjmp_longjmp": "not identified; unset",
   "memory_checks_passed": 43,
@@ -59,7 +59,7 @@
   "event_checks_passed": 35,
   "thread_checks_passed": 49,
   "thread_name_checks_passed": 3,
-  "guest_threads_created_at_startup": 6,
+  "guest_threads_created_at_startup": 8,
   "guest_worker_started_at_startup": true,
   "thread_stack_size_from_xex": 262144,
   "thread_support": "create flags 0/1, isolated KPCR/KTHREAD/TLS/stack, native resume, worker exit, single wait; affinity, APC, scheduling, other flags and lifecycle reclamation pending",
@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "KiApcNormalRoutineNop export",
+  "next_blocker": "Kernel object-pointer single wait",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -93,5 +93,6 @@
   "gpu_ring_physical": "0x1FCEF000",
   "gpu_ring_bytes": 65536,
   "gpu_read_pointer_physical": "0x1FCEE03C",
-  "gpu_read_pointer_update_frequency": 32
+  "gpu_read_pointer_update_frequency": 32,
+  "apc_nop_support": "Ordinal 0x1DF compatibility stub returns zero, matching Xenia; no memory modification or APC scheduler"
 }

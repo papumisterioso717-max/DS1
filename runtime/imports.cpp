@@ -140,7 +140,10 @@ PPC_FUNC(__imp__KeGetCurrentProcessType) { ctx.r3.u64 = 1; }
 PPC_FUNC(__imp__RtlCompareMemoryUlong) { fprintf(stderr, "PENDING_IMPORT __imp__RtlCompareMemoryUlong guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__RtlCompareMemory) { fprintf(stderr, "PENDING_IMPORT __imp__RtlCompareMemory guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__NtQueryVirtualMemory) { fprintf(stderr, "PENDING_IMPORT __imp__NtQueryVirtualMemory guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
-PPC_FUNC(__imp__KiApcNormalRoutineNop) { fprintf(stderr, "PENDING_IMPORT __imp__KiApcNormalRoutineNop guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
+// Compatibility stub matching Xenia xboxkrnl_threading.cc, ordinal 0x1DF.
+// The title passes a command packet and 0x13; leave packet memory untouched.
+// This does not implement APC scheduling or verify GPU microcode.
+PPC_FUNC(__imp__KiApcNormalRoutineNop) { ctx.r3.u64=0; }
 PPC_FUNC(__imp__KeAcquireSpinLockAtRaisedIrql) { fprintf(stderr, "PENDING_IMPORT __imp__KeAcquireSpinLockAtRaisedIrql guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__KfAcquireSpinLock) { fprintf(stderr, "PENDING_IMPORT __imp__KfAcquireSpinLock guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__KfReleaseSpinLock) { fprintf(stderr, "PENDING_IMPORT __imp__KfReleaseSpinLock guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
