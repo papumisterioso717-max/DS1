@@ -1,0 +1,8 @@
+{
+  "site": "0x82606B68",
+  "function": "0x82606B38",
+  "reason": "inline absolute jump table was emitted as external call; enable local CTR-address dispatch",
+  "changed_files": [
+    "ppc_recomp.143.cpp"
+  ]
+}

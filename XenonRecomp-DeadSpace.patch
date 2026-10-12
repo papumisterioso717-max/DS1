@@ -1,0 +1,352 @@
+diff --git a/XenonRecomp/recompiler.cpp b/XenonRecomp/recompiler.cpp
+index fa91527..5b160ad 100644
+--- a/XenonRecomp/recompiler.cpp
++++ b/XenonRecomp/recompiler.cpp
+@@ -607,7 +607,16 @@ bool Recompiler::Recompile(
+         break;
+ 
+     case PPC_INST_BCTR:
+-        if (switchTable != config.switchTables.end())
++        if (config.computedJumpAddresses.count(base))
++        {
++            // Dispatch the computed guest PC directly when no reliable index range is known.
++            println("\tswitch ({}.u32 & ~3u) {{", ctr());
++            for (size_t target = fn.base; target < fn.base + fn.size; target += 4)
++                println("\tcase 0x{:X}: goto loc_{:X};", target, target);
++            println("\tdefault: PPC_CALL_INDIRECT_FUNC({}.u32 & ~3u); return;", ctr());
++            println("\t}}");
++        }
++        else if (switchTable != config.switchTables.end())
+         {
+             println("\tswitch ({}.u64) {{", r(switchTable->second.r));
+ 
+@@ -617,9 +626,20 @@ bool Recompiler::Recompile(
+                 auto label = switchTable->second.labels[i];
+                 if (label < fn.base || label >= fn.base + fn.size)
+                 {
+-                    println("\t\t// ERROR: 0x{:X}", label);
+-                    fmt::println("ERROR: Switch case at {:X} is trying to jump outside function: {:X}", base, label);
+-                    println("\t\treturn;");
++                    const auto target = image.symbols.find(label);
++                    if (target != image.symbols.end() && target->address == label && target->type == Symbol_Function)
++                    {
++                        // A switch may tail-call a shared exit block outside its own range.
++                        println("\t\t{}(ctx, base);", target->name);
++                        println("\t\treturn;");
++                    }
++                    else
++                    {
++                        println("\t\t// ERROR: unresolved external switch target 0x{:X}", label);
++                        fmt::println("ERROR: Switch case at {:X} has unresolved external target: {:X}", base, label);
++                        println("\t\t__builtin_debugtrap();");
++                        println("\t\treturn;");
++                    }
+                 }
+                 else
+                 {
+@@ -800,6 +820,7 @@ bool Recompiler::Recompile(
+         // no op
+         break;
+ 
++    case PPC_INST_DCBST:
+     case PPC_INST_DCBF:
+         // no op
+         break;
+@@ -1133,6 +1154,7 @@ bool Recompiler::Recompile(
+         println("\t{}.s64 = {};", r(insn.operands[0]), int32_t(insn.operands[1] << 16));
+         break;
+ 
++    case PPC_INST_LVEBX:
+     case PPC_INST_LVEWX:
+     case PPC_INST_LVEWX128:
+     case PPC_INST_LVX:
+@@ -1260,7 +1282,7 @@ bool Recompiler::Recompile(
+         break;
+ 
+     case PPC_INST_MFTB:
+-        println("\t{}.u64 = __rdtsc();", r(insn.operands[0]));
++        println("\t{}.u64 = ppc_read_timebase();", r(insn.operands[0]));
+         break;
+ 
+     case PPC_INST_MR:
+@@ -1556,6 +1578,14 @@ bool Recompiler::Recompile(
+         println("{}, {}.u32);", int32_t(insn.operands[1]), temp());
+         break;
+ 
++    case PPC_INST_STFSU:
++        printSetFlushMode(false);
++        println("\t{} = {}.u32 + {};", ea(), r(insn.operands[2]), int32_t(insn.operands[1]));
++        println("\t{}.f32 = float({}.f64);", temp(), f(insn.operands[0]));
++        println("\t{}({}, {}.u32);", mmioStore() ? "PPC_MM_STORE_U32" : "PPC_STORE_U32", ea(), temp());
++        println("\t{}.u32 = {};", r(insn.operands[2]), ea());
++        break;
++
+     case PPC_INST_STFSX:
+         printSetFlushMode(false);
+         println("\t{}.f32 = float({}.f64);", temp(), f(insn.operands[0]));
+@@ -1740,6 +1770,14 @@ bool Recompiler::Recompile(
+         println("\tsimde_mm_store_ps({}.f32, simde_mm_add_ps(simde_mm_load_ps({}.f32), simde_mm_load_ps({}.f32)));", v(insn.operands[0]), v(insn.operands[1]), v(insn.operands[2]));
+         break;
+ 
++    case PPC_INST_VADDSWS:
++        println("\t{} = ppc_vaddsws({}, {}, ctx.vscr);", v(insn.operands[0]), v(insn.operands[1]), v(insn.operands[2]));
++        break;
++
++    case PPC_INST_VADDUHS:
++        println("\t{} = ppc_vadduhs({}, {}, ctx.vscr);", v(insn.operands[0]), v(insn.operands[1]), v(insn.operands[2]));
++        break;
++
+     case PPC_INST_VADDSHS:
+         println("\tsimde_mm_store_si128((simde__m128i*){}.s16, simde_mm_adds_epi16(simde_mm_load_si128((simde__m128i*){}.s16), simde_mm_load_si128((simde__m128i*){}.s16)));", v(insn.operands[0]), v(insn.operands[1]), v(insn.operands[2]));
+         break;
+@@ -1785,6 +1823,12 @@ bool Recompiler::Recompile(
+         println("\tsimde_mm_store_si128((simde__m128i*){}.u8, simde_mm_avg_epu8(simde_mm_load_si128((simde__m128i*){}.u8), simde_mm_load_si128((simde__m128i*){}.u8)));", v(insn.operands[0]), v(insn.operands[1]), v(insn.operands[2]));
+         break;
+ 
++    case PPC_INST_VCTUXS:
++    case PPC_INST_VCFPUXWS128:
++        printSetFlushMode(true);
++        println("\t{} = ppc_vctuxs({}, {}, ctx.vscr);", v(insn.operands[0]), v(insn.operands[1]), insn.operands[2]);
++        break;
++
+     case PPC_INST_VCTSXS:
+     case PPC_INST_VCFPSXWS128:
+         printSetFlushMode(true);
+@@ -1871,6 +1915,13 @@ bool Recompiler::Recompile(
+             println("\t{}.setFromMask(simde_mm_load_ps({}.f32), 0xF);", cr(6), v(insn.operands[0]));
+         break;
+ 
++    case PPC_INST_VCMPGTUW:
++        for (size_t i = 0; i < 4; i++)
++            println("\t{}.u32[{}] = {}.u32[{}] > {}.u32[{}] ? UINT32_MAX : 0;", v(insn.operands[0]), i, v(insn.operands[1]), i, v(insn.operands[2]), i);
++        if (strchr(insn.opcode->name, '.'))
++            println("\t{}.setFromMask(simde_mm_load_ps({}.f32), 0xF);", cr(6), v(insn.operands[0]));
++        break;
++
+     case PPC_INST_VCMPGTUB:
+         println("\tsimde_mm_store_si128((simde__m128i*){}.u8, simde_mm_cmpgt_epu8(simde_mm_load_si128((simde__m128i*){}.u8), simde_mm_load_si128((simde__m128i*){}.u8)));", v(insn.operands[0]), v(insn.operands[1]), v(insn.operands[2]));
+         break;
+@@ -1912,6 +1963,10 @@ bool Recompiler::Recompile(
+         println("\tsimde_mm_store_si128((simde__m128i*){}.u32, simde_mm_max_epi32(simde_mm_load_si128((simde__m128i*){}.u32), simde_mm_load_si128((simde__m128i*){}.u32)));", v(insn.operands[0]), v(insn.operands[1]), v(insn.operands[2]));
+         break;
+ 
++    case PPC_INST_VMINSW:
++        println("\tsimde_mm_store_si128((simde__m128i*){}.u32, simde_mm_min_epi32(simde_mm_load_si128((simde__m128i*){}.u32), simde_mm_load_si128((simde__m128i*){}.u32)));", v(insn.operands[0]), v(insn.operands[1]), v(insn.operands[2]));
++        break;
++
+     case PPC_INST_VMINFP:
+     case PPC_INST_VMINFP128:
+         printSetFlushMode(true);
+@@ -1966,6 +2021,12 @@ bool Recompiler::Recompile(
+         println("\tsimde_mm_store_ps({}.f32, simde_mm_xor_ps(simde_mm_sub_ps(simde_mm_mul_ps(simde_mm_load_ps({}.f32), simde_mm_load_ps({}.f32)), simde_mm_load_ps({}.f32)), simde_mm_castsi128_ps(simde_mm_set1_epi32(int(0x80000000)))));", v(insn.operands[0]), v(insn.operands[1]), v(insn.operands[2]), v(insn.operands[3]));
+         break;
+ 
++    case PPC_INST_VNOR:
++    case PPC_INST_VNOR128:
++        for (size_t i = 0; i < 2; i++)
++            println("\t{}.u64[{}] = ~({}.u64[{}] | {}.u64[{}]);", v(insn.operands[0]), i, v(insn.operands[1]), i, v(insn.operands[2]), i);
++        break;
++
+     case PPC_INST_VOR:
+     case PPC_INST_VOR128:
+         print("\tsimde_mm_store_si128((simde__m128i*){}.u8, ", v(insn.operands[0]));
+@@ -2042,6 +2103,16 @@ bool Recompiler::Recompile(
+         }
+         break;
+ 
++    case PPC_INST_VPKSWSS:
++    case PPC_INST_VPKSWSS128:
++        println("\t{} = ppc_vpkswss({}, {}, ctx.vscr);", v(insn.operands[0]), v(insn.operands[1]), v(insn.operands[2]));
++        break;
++
++    case PPC_INST_VPKUWUS:
++    case PPC_INST_VPKUWUS128:
++        println("\t{} = ppc_vpkuwus({}, {}, ctx.vscr);", v(insn.operands[0]), v(insn.operands[1]), v(insn.operands[2]));
++        break;
++
+     case PPC_INST_VPKSHUS:
+     case PPC_INST_VPKSHUS128:
+         println("\tsimde_mm_store_si128((simde__m128i*){}.u8, simde_mm_packus_epi16(simde_mm_load_si128((simde__m128i*){}.s16), simde_mm_load_si128((simde__m128i*){}.s16)));", v(insn.operands[0]), v(insn.operands[2]), v(insn.operands[1]));
+@@ -2238,6 +2309,11 @@ bool Recompiler::Recompile(
+         println("\tsimde_mm_store_si128((simde__m128i*){}.s32, simde_mm_cvtepi16_epi32(simde_mm_load_si128((simde__m128i*){}.s16)));", v(insn.operands[0]), v(insn.operands[1]));
+         break;
+ 
++    case PPC_INST_VSRO:
++    case PPC_INST_VSRO128:
++        println("\t{} = ppc_vsro({}, {});", v(insn.operands[0]), v(insn.operands[1]), v(insn.operands[2]));
++        break;
++
+     case PPC_INST_VXOR:
+     case PPC_INST_VXOR128:
+         print("\tsimde_mm_store_si128((simde__m128i*){}.u8, ", v(insn.operands[0]));
+@@ -2249,6 +2325,12 @@ bool Recompiler::Recompile(
+ 
+         break;
+ 
++    case PPC_INST_EQV:
++        println("\t{}.u64 = ~({}.u64 ^ {}.u64);", r(insn.operands[0]), r(insn.operands[1]), r(insn.operands[2]));
++        if (strchr(insn.opcode->name, '.'))
++            println("\t{}.compare<int32_t>({}.s32, 0, {});", cr(0), r(insn.operands[0]), xer());
++        break;
++
+     case PPC_INST_XOR:
+         println("\t{}.u64 = {}.u64 ^ {}.u64;", r(insn.operands[0]), r(insn.operands[1]), r(insn.operands[2]));
+         if (strchr(insn.opcode->name, '.'))
+@@ -2290,6 +2372,15 @@ bool Recompiler::Recompile(const Function& fn)
+ 
+     static std::unordered_set<size_t> labels;
+     labels.clear();
++    for (const auto site : config.computedJumpAddresses)
++    {
++        if (site >= base && site < end)
++        {
++            for (size_t addr = base; addr < end; addr += 4)
++                labels.emplace(addr);
++            break;
++        }
++    }
+ 
+     for (size_t addr = base; addr < end; addr += 4)
+     {
+@@ -2424,7 +2515,7 @@ bool Recompiler::Recompile(const Function& fn)
+         }
+         else
+         {
+-            if (insn.opcode->id == PPC_INST_BCTR && (*(data - 1) == 0x07008038 || *(data - 1) == 0x00000060) && switchTable == config.switchTables.end())
++            if (insn.opcode->id == PPC_INST_BCTR && (*(data - 1) == 0x07008038 || *(data - 1) == 0x00000060) && switchTable == config.switchTables.end() && !config.computedJumpAddresses.count(base))
+                 fmt::println("Found a switch jump table at {:X} with no switch table entry present", base);
+ 
+             if (!Recompile(fn, base, insn, data, switchTable, localVariables, csrState))
+diff --git a/XenonRecomp/recompiler_config.cpp b/XenonRecomp/recompiler_config.cpp
+index 81330a4..3e72e88 100644
+--- a/XenonRecomp/recompiler_config.cpp
++++ b/XenonRecomp/recompiler_config.cpp
+@@ -18,6 +18,10 @@ void RecompilerConfig::Load(const std::string_view& configFilePath)
+         outDirectoryPath = main["out_directory_path"].value_or<std::string>("");
+         switchTableFilePath = main["switch_table_file_path"].value_or<std::string>("");
+ 
++        if (auto sites = main["computed_jump_addresses"].as_array())
++            for (const auto& site : *sites)
++                computedJumpAddresses.emplace(*site.value<uint32_t>());
++
+         skipLr = main["skip_lr"].value_or(false);
+         skipMsr = main["skip_msr"].value_or(false);
+         ctrAsLocalVariable = main["ctr_as_local"].value_or(false);
+diff --git a/XenonRecomp/recompiler_config.h b/XenonRecomp/recompiler_config.h
+index 534e503..d8ee71a 100644
+--- a/XenonRecomp/recompiler_config.h
++++ b/XenonRecomp/recompiler_config.h
+@@ -31,6 +31,7 @@ struct RecompilerConfig
+     std::string outDirectoryPath;
+     std::string switchTableFilePath;
+     std::unordered_map<uint32_t, RecompilerSwitchTable> switchTables;
++    std::unordered_set<uint32_t> computedJumpAddresses;
+     bool skipLr = false;
+     bool ctrAsLocalVariable = false;
+     bool xerAsLocalVariable = false;
+diff --git a/XenonUtils/ppc_context.h b/XenonUtils/ppc_context.h
+index 31a86cd..413a9da 100644
+--- a/XenonUtils/ppc_context.h
++++ b/XenonUtils/ppc_context.h
+@@ -6,6 +6,7 @@
+ #endif
+ 
+ #include <climits>
++#include <chrono>
+ #include <cmath>
+ #include <csetjmp>
+ #include <cstdint>
+@@ -205,6 +206,71 @@ union alignas(0x10) PPCVRegister
+     double f64[2];
+ };
+ 
++
++// Vector storage is reversed relative to guest byte order.
++// Return by value so the destination may alias either source.
++inline PPCVRegister ppc_vaddsws(const PPCVRegister& a, const PPCVRegister& b, uint32_t& vscr)
++{
++    PPCVRegister d{};
++    for (unsigned i = 0; i < 4; ++i) {
++        const int64_t sum = int64_t(a.s32[i]) + int64_t(b.s32[i]);
++        if (sum > INT32_MAX) { d.s32[i] = INT32_MAX; vscr |= 1; }
++        else if (sum < INT32_MIN) { d.s32[i] = INT32_MIN; vscr |= 1; }
++        else d.s32[i] = int32_t(sum);
++    }
++    return d;
++}
++inline PPCVRegister ppc_vadduhs(const PPCVRegister& a, const PPCVRegister& b, uint32_t& vscr)
++{
++    PPCVRegister d{};
++    for (unsigned i = 0; i < 8; ++i) {
++        const uint32_t sum = uint32_t(a.u16[i]) + b.u16[i];
++        if (sum > UINT16_MAX) { d.u16[i] = UINT16_MAX; vscr |= 1; }
++        else d.u16[i] = uint16_t(sum);
++    }
++    return d;
++}
++inline PPCVRegister ppc_vpkswss(const PPCVRegister& a, const PPCVRegister& b, uint32_t& vscr)
++{
++    PPCVRegister d{};
++    for (unsigned i = 0; i < 8; ++i) {
++        const int32_t n = i < 4 ? b.s32[i] : a.s32[i - 4];
++        if (n > INT16_MAX) { d.s16[i] = INT16_MAX; vscr |= 1; }
++        else if (n < INT16_MIN) { d.s16[i] = INT16_MIN; vscr |= 1; }
++        else d.s16[i] = int16_t(n);
++    }
++    return d;
++}
++inline PPCVRegister ppc_vpkuwus(const PPCVRegister& a, const PPCVRegister& b, uint32_t& vscr)
++{
++    PPCVRegister d{};
++    for (unsigned i = 0; i < 8; ++i) {
++        const uint32_t n = i < 4 ? b.u32[i] : a.u32[i - 4];
++        if (n > UINT16_MAX) { d.u16[i] = UINT16_MAX; vscr |= 1; }
++        else d.u16[i] = uint16_t(n);
++    }
++    return d;
++}
++inline PPCVRegister ppc_vctuxs(const PPCVRegister& b, unsigned shift, uint32_t& vscr)
++{
++    PPCVRegister d{};
++    for (unsigned i = 0; i < 4; ++i) {
++        const float n = b.f32[i] * float(uint32_t(1) << shift);
++        if (std::isnan(n)) d.u32[i] = 0; // NaN leaves SAT unchanged.
++        else if (n < 0.0f) { d.u32[i] = 0; vscr |= 1; }
++        else if (n >= 4294967296.0f) { d.u32[i] = UINT32_MAX; vscr |= 1; }
++        else d.u32[i] = uint32_t(n);
++    }
++    return d;
++}
++inline PPCVRegister ppc_vsro(const PPCVRegister& a, const PPCVRegister& b)
++{
++    PPCVRegister d{};
++    const unsigned shift = (b.u8[0] >> 3) & 15;
++    for (unsigned i = 0; i + shift < 16; ++i) d.u8[i] = a.u8[i + shift];
++    return d;
++}
++
+ #define PPC_ROUND_NEAREST 0x00
+ #define PPC_ROUND_TOWARD_ZERO 0x01
+ #define PPC_ROUND_UP 0x02
+@@ -303,6 +369,8 @@ struct PPCFPSCRRegister
+ 
+ struct alignas(0x40) PPCContext
+ {
++    uint32_t vscr = 0x10000; // NJ mode; bit 0 is sticky saturation.
++
+     PPCRegister r3;
+ #ifndef PPC_CONFIG_NON_ARGUMENT_AS_LOCAL
+     PPCRegister r0;
+@@ -700,4 +768,12 @@ inline uint64_t __rdtsc()
+ #   error "Missing implementation for __rdtsc()"
+ #endif
+ 
++// Guest timebase: 50 MHz, independent of the host CPU cycle counter.
++inline constexpr uint32_t PPC_TIMEBASE_FREQUENCY = 50000000;
++inline uint64_t ppc_read_timebase() {
++    const auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
++        std::chrono::steady_clock::now().time_since_epoch()).count();
++    return uint64_t(ns) / 20;
++}
++
+ #endif

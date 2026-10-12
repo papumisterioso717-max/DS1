@@ -1,0 +1,223 @@
+Dead Space: traducción compilada y arranque de diagnóstico
+
+Entrada: C:\Users\Yahir Aquino\Downloads\Dead Space 1\default.xex
+SHA-256: f366067bea1d4e5e994699bdd316d07d4fe4a196cd8d62f1ad75e6394130313e
+
+RESULTADO VERIFICADO
+- Generación sin errores de tablas ni instrucciones sin soporte en el registro.
+- 319 archivos traducidos y una tabla de funciones: 320/320 compilados.
+- 81 844 correspondencias de funciones nativas cargadas.
+- 98 408 comprobaciones pasaron sobre las 13 instrucciones añadidas,
+  saturación, alias de registros, endian, saltos calculados y destinos compartidos.
+- El ejecutable entra en el código recompilado y supera la consulta del módulo XEX.
+- Reserva 1 MB y activa 64 KB de memoria correctamente.
+- Se detiene al solicitar ExCreateThread
+  (LR 0x82894CF8, salida 20). Ver diagnostic.log.
+- Se implementaron KeGetCurrentProcessType (proceso de usuario),
+  RtlInitializeCriticalSection y su variante con contador de espera activa.
+- Pasaron 16 401 comprobaciones de estado inicial, límites y memoria vecina.
+- Pasaron 43 comprobaciones adicionales de memoria y del paso de argumentos.
+
+ARCHIVOS
+bin/DeadSpaceDiagnostic.exe: programa de diagnóstico, no juego terminado.
+bin/DeadSpacePPC.a: biblioteca con el código compilado.
+bin/InstructionTests.exe: pruebas de instrucciones.
+bin/MemoryTests.exe: pruebas de memoria.
+bin/StartupTests.exe: pruebas del estado inicial de proceso y bloqueos.
+bin/SyncTests.exe: recursión, intento, exclusión y espera entre hilos.
+bin/VideoTests.exe: consultas de vídeo y configuración, límites y formato.
+XenonRecomp-DeadSpace.patch: cambios locales al traductor oficial.
+runtime/: fuente del entorno de diagnóstico.
+tests/: pruebas y resultado.
+Compilar.ps1: recompilar biblioteca, diagnóstico y pruebas con herramientas locales.
+Diagnosticar.ps1: ejecutar el diagnóstico con el XEX original.
+Regenerar.ps1: volver a traducir usando el traductor modificado ya instalado.
+
+CONFIGURACIÓN Y LÍMITES
+Se verificaron ocho rutinas de guardado/restauración. Las 828 tablas de salto
+pasaron revisión estructural; esto no demuestra equivalencia con la consola.
+Se corrigieron límites de funciones, destinos compartidos y cuatro saltos
+calculados. boundary-analysis.json conserva el análisis inicial; el TOML
+es la configuración actual y contiene ajustes posteriores.
+El entorno carga la imagen, enlaza funciones nativas, consulta cabeceras
+del módulo principal y gestiona memoria virtual con páginas de 4 y 64 KB.
+Soporta reservar, activar, desactivar y liberar; conserva datos al volver
+a activar páginas existentes. Usa un área de diagnóstico de 256 MB entre
+0x10000000 y 0x20000000, sin reproducir todo el mapa de memoria de Xbox.
+No implementa MEM_RESET, páginas de 16 MB, memoria de desarrollo ni
+protecciones especiales. Detiene modos pendientes de forma explícita. Las demás
+llamadas se detienen indicando el servicio pendiente. Los otros imports
+de datos todavía requieren enlace y un modelo de estado del sistema.
+Faltan otros servicios de memoria y sistema, creación de hilos, archivos, gráficos,
+audio y mandos. La gestión añadida no valida equivalencia completa con Xbox.
+Setjmp/longjmp y excepciones aún requieren revisión. Las pruebas añadidas
+no certifican todas las instrucciones ya existentes del traductor, ni la
+corrección completa del juego. Algunas instrucciones saturadas anteriores
+no actualizan el nuevo estado VSCR. No es un ejecutable jugable.
+
+Referencias técnicas:
+https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_memory.cc
+https://github.com/hedge-dev/XenonRecomp
+https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xmodule.h
+https://github.com/xenia-project/xenia/blob/master/src/xenia/cpu/ppc/ppc_emit_altivec.cc
+
+Se añadió la identidad del hilo principal con campos verificados de KPCR y
+KTHREAD, incluidos punteros a la pila. No están completos: creación de hilos y planificación siguen pendientes.
+RtlEnterCriticalSection, RtlTryEnterCriticalSection y RtlLeaveCriticalSection
+usan un monitor del anfitrión, identifican al dueño, permiten recursión y
+esperan cuando otro hilo es dueño. Las pruebas aprobaron 9 aserciones y
+40 000 incrementos protegidos entre cuatro hilos del anfitrión. Eso no
+implica que el juego ya pueda crear hilos Xbox. Los accesos directos a
+campos de bloqueos desde código invitado necesitan revisión adicional.
+XexCheckExecutablePrivilege consulta los bits del XEX original.
+Siguiente paso: referencias a objetos del núcleo a partir de identificadores.
+Referencias de proceso y estructura de sincronización:
+https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state.h
+https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_rtl.cc
+
+Estructuras de hilo verificadas contra:
+https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xthread.h
+
+PERFIL DE VIDEO DE DIAGNOSTICO
+XGetAVPack usa el valor de compatibilidad 0 de UnleashedRecomp. Su significado
+como cable físico no se ha verificado. No identifica la conexión del monitor.
+XGetVideoMode y VdQueryVideoMode devuelven un perfil virtual 1280x720 a 60 Hz;
+VdQueryVideoFlags es coherente con ese perfil. ExGetXConfigSetting admite
+únicamente la región AV 2/2 y las banderas de vídeo 3/10. Otros ajustes se
+detienen explícitamente. Perfil NTSC de Norteamérica según valores base de
+Xenia; no se ha leído configuración de una Xbox ni del monitor del usuario.
+Pasaron 16 309 comprobaciones de consulta, formato, memoria vecina y errores
+de tamaño, más el rechazo de un búfer que cruza a una página inaccesible.
+El juego ejecutó XGetAVPack y la consulta de región durante el arranque;
+las otras consultas se verificaron mediante pruebas directas.
+Este módulo no crea una ventana, un dispositivo gráfico ni un renderizador.
+Referencias:
+https://github.com/hedge-dev/UnleashedRecomp/blob/main/UnleashedRecomp/kernel/imports.cpp
+https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_video.cc
+https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_xconfig.cc
+
+ALMACENAMIENTO LOCAL POR HILO
+El cargador lee la cabecera TLS del XEX: 64 espacios y 24 bytes estáticos.
+Copia los valores iniciales a la memoria del hilo principal, coloca su
+puntero en KPCR/KTHREAD y mantiene los valores dinámicos en memoria invitada.
+KeTlsAlloc, KeTlsGetValue, KeTlsSetValue y KeTlsFree están implementados.
+Liberar un índice borra el valor de todos los hilos registrados.
+El límite actual sigue los 64 espacios del XEX; no reproduce los accesos
+fuera de rango permisivos de una consola. Fuera de rango devuelve cero;
+al agotar los espacios, la reserva devuelve 0xFFFFFFFF.
+Las 143 comprobaciones cubren dos contextos de hilo, agotamiento, reutilización,
+datos estáticos, formato y coherencia con accesos directos a la memoria.
+Crear y destruir hilos durante el juego sigue pendiente, incluido retirar
+sus registros TLS. bin/TlsTests.exe repite estas comprobaciones.
+Referencias:
+https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xthread.cc
+https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state.cc
+
+SEMAFOROS Y ESPERAS
+Se implementaron NtCreateSemaphore, NtReleaseSemaphore, NtClose y
+NtWaitForSingleObjectEx para semáforos sin nombre. Una tabla conserva
+identificadores invitados separados de los identificadores nativos de Windows.
+Las referencias de las esperas mantienen vivo el objeto durante la espera.
+Se verifican los límites de contador, se devuelve el contador anterior al
+liberar y se rechazan identificadores cerrados. Las esperas aceptan sondeo,
+tiempo relativo, fecha absoluta según reloj del anfitrión o espera indefinida.
+Los semáforos con nombre/atributos, las esperas alertables (APC) y tiempos
+superiores al límite de espera finita del anfitrión se detienen explícitamente.
+NtClose conoce los semáforos y los hilos registrados en esta tabla. Faltan eventos,
+otros objetos, espera múltiple y la integración con hilos creados por el juego.
+El arranque creó cuatro semáforos y llegó a KeQueryPerformanceFrequency.
+Las 22 pruebas de bin/ObjectTests.exe cubren contadores, límites, espera
+entre dos hilos, vencimientos, cierre y rechazo de identificadores antiguos.
+Referencia de ABI:
+https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc
+
+RELOJ DEL JUEGO
+KeQueryPerformanceFrequency devuelve 50 000 000 Hz. Las 757 instrucciones
+traducidas que leen el contador usan ahora ppc_read_timebase, basado en el
+reloj monótono de C++ a 50 MHz. Antes usaban ciclos del procesador del PC.
+El cambio está en el traductor, su cabecera de contexto y el parche guardado,
+por lo que se conserva al regenerar. Se regeneraron y compilaron 320 archivos
+y se ejecutaron todas las pruebas actuales. Las 10 007 comprobaciones del
+reloj incluyen monotonía, cuatro hilos lectores y comparación con el contador
+de rendimiento de Windows. Ver tests/full-build-test-result.txt y ClockTests.exe.
+No se implementaron aún pausa/escalado temporal, KeQuerySystemTime ni los
+servicios de temporizadores pendientes. El arranque llega a NtDuplicateObject.
+Referencia de frecuencia:
+https://github.com/xenia-project/xenia/blob/master/src/xenia/emulator.cc
+
+DUPLICACION DE OBJETOS
+NtDuplicateObject crea identificadores distintos que comparten el mismo
+objeto. Cerrar uno no destruye los que siguen abiertos. La opción de cerrar
+el origen retira ese identificador, incluso si falla la validación del búfer.
+El valor especial 0xFFFFFFFE resuelve el hilo invitado actual, registrado
+explícitamente con su hilo nativo. No crea un hilo nuevo. Las operaciones de
+semáforo rechazan identificadores de hilo con error de tipo.
+Se admiten opciones 0, 1 (cerrar origen), 2 (mismo acceso) y su combinación;
+no hay todavía un modelo completo de permisos ni otros tipos de objeto.
+Las 24 pruebas en bin/DuplicateTests.exe verifican referencias compartidas,
+cierre, identificadores antiguos, hilo actual y validación de tipo.
+Las pruebas anteriores se ejecutaron de nuevo y pasaron. En el arranque,
+el juego duplicó su hilo actual y llegó a MmAllocatePhysicalMemoryEx.
+Referencia:
+https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_ob.cc
+
+MEMORIA FISICA Y CORRECCION DE ARRANQUE
+Se implementaron reservas físicas para páginas invitadas de 4 KB, 64 KB y
+16 MB, límites físicos inclusivos, alineación, liberación, tamaño y protección.
+Un registro común evita solapamientos físicos entre las tres regiones.
+Las páginas del anfitrión siguen siendo páginas normales de Windows.
+El juego reservó 96 MB con alineación de 16 MB: dirección invitada D9000000,
+dirección física 19000000. Las 24 pruebas de PhysicalTests.exe verifican
+límites, redondeo, alineación, no solapamiento, protección y reutilización.
+LIMITACION: sólo existe respaldo en la dirección invitada devuelta. Faltan
+mapeos compartidos entre alias, presupuesto conjunto con otras memorias,
+coherencia GPU y semántica de caché; las banderas de caché se guardan como
+metadatos. Las consultas de tamaño/protección fuera de reservas físicas se
+detienen explícitamente. No es una implementación completa de memoria Xbox.
+El arranque también reveló una tabla de saltos interna no detectada en
+82606B68 (función 82606B38). Se añadió al despacho local por CTR, se regeneró
+el código y el juego superó la llamada nula que causaba. Hay cinco sitios
+configurados de este tipo. Ver tests/physical-startup-switch-fix.json.
+El punto actual es ObReferenceObjectByHandle, LR 82892C34.
+Referencias:
+https://github.com/xenia-project/xenia/blob/master/src/xenia/memory.cc
+https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_memory.cc
+
+REFERENCIAS A OBJETOS DE HILO
+ObReferenceObjectByHandle resuelve el hilo registrado, valida el tipo y
+retiene referencias independientes del identificador abierto.
+ObDereferenceObject libera esas referencias; una liberacion sin referencia
+se detiene con salida 22. Pasaron 14 comprobaciones y esa prueba negativa.
+ExThreadObjectType usa una identidad opaca; su descriptor completo y las
+estructuras invitadas de otros objetos siguen pendientes.
+El XEX supera la referencia al hilo actual 60011000 y se detiene en
+KeSetBasePriorityThread, LR 82892C64, salida controlada 20. No es jugable.
+
+PRIORIDAD DEL HILO
+KeSetBasePriorityThread resuelve la estructura del hilo registrado, consulta
+la prioridad anterior y aplica el cambio al hilo nativo. El valor devuelto
+conserva el signo. Se usa la correspondencia de compatibilidad de Xenia:
+mayor que 34: alta; mayor que 17: superior a normal; menor que -34: baja;
+menor que -17: inferior a normal; el resto: normal.
+No reproduce el planificador Xbox, prioridades dinamicas ni sus boosts.
+Los hilos desconocidos y fallos del sistema se detienen explicitamente.
+El arranque solicita incremento 0, supera este paso y crea nueve semaforos
+adicionales (13 en total). Siguiente pendiente: NtCreateEvent, LR 828949CC.
+Referencia de compatibilidad:
+https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xthread.cc
+Pasaron las 10 transiciones de prioridad, el caso de hilo desconocido
+y todas las pruebas anteriores incluidas en build.py.
+
+EVENTOS DE SINCRONIZACION
+Se implementaron NtCreateEvent, NtSetEvent y NtClearEvent para eventos sin
+nombre. Admiten reinicio manual o automatico, estado inicial, estado anterior
+al activar y esperas individuales no alertables con tiempo limite.
+Los identificadores duplicados comparten estado; cerrar uno no destruye los
+restantes. Las esperas conservan una referencia durante el bloqueo.
+Pendientes: eventos con nombre, pulsos, esperas multiples, estructuras de
+evento en memoria invitada y la semantica completa del planificador Xbox.
+El arranque crea 32 eventos automaticos sin senal y avanza a ExCreateThread,
+LR 82894CF8, salida controlada 20. El juego todavia no es jugable.
+Referencia de las firmas y tipos:
+https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc
+Pasaron 35 comprobaciones de eventos y todas las pruebas anteriores.

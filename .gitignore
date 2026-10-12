@@ -1,0 +1,12 @@
+bin/
+build/
+ppc/
+local/
+*.xex
+*.iso
+*.exe
+*.dll
+*.obj
+*.a
+*.log
+__pycache__/
