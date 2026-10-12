@@ -1,0 +1,35 @@
+#define NOMINMAX
+#include <windows.h>
+#include "ppc_recomp_shared.h"
+#include "../runtime/gpu.h"
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <initializer_list>
+int main(int argc,char**argv){
+ int n=0;auto check=[&](bool ok){++n;if(!ok){fprintf(stderr,"FAIL processor %d\n",n);exit(1);}};
+ auto*base=(uint8_t*)VirtualAlloc(nullptr,0x100000000ull,MEM_RESERVE,PAGE_NOACCESS);check(base!=nullptr);
+ check(VirtualAlloc(base+0x10000,4096,MEM_COMMIT,PAGE_READWRITE)!=nullptr);
+ check(VirtualAlloc(base+0xA0010000,0x3000,MEM_COMMIT,PAGE_READWRITE)!=nullptr);
+ PPCContext c{};c.r6.u64=0x10000;c.r7.u64=0x10004;__imp__VdInitializeEngines(c,base);check(c.r3.u32==1);
+ c.r3.u64=0x10000;c.r4.u64=2;__imp__VdInitializeRingBuffer(c,base);
+ c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
+ auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
+ if(argc>1){
+  if(!strcmp(argv[1],"unknown")){put(0,0xC0002200);put(1,0);diagnosticMmioStore32(base,0x7FC80714,2,0);}
+  if(!strcmp(argv[1],"truncated")){put(0,0xC0034800);diagnosticMmioStore32(base,0x7FC80714,1,0);}
+  if(!strcmp(argv[1],"index"))diagnosticMmioStore32(base,0x7FC80714,8,0);
+  if(!strcmp(argv[1],"cycle")){put(0,0xC0013F00);put(1,0x10000);put(2,3);diagnosticMmioStore32(base,0x7FC80714,3,0);}
+  return 1;
+ }
+ put(0,0xC0004800);put(1,0x12345678);put(2,0xC0013F00);put(3,0x12000);put(4,2);
+ PPC_STORE_U32(0xA0012000,0x80000000);PPC_STORE_U32(0xA0012004,0);
+ diagnosticMmioStore32(base,0x7FC80714,5,0);auto s=queryDiagnosticGpu(base);
+ check(s.ringReadIndex==5&&s.processedPackets==4&&s.microEngineWords==1);check(PPC_LOAD_U32(0xA0011000)==5);
+ for(auto i:{5u,6u,7u,0u})put(i,0x80000000);
+ diagnosticMmioStore32(base,0x7FC80714,1,0);s=queryDiagnosticGpu(base);check(s.ringReadIndex==1&&s.processedPackets==8);check(PPC_LOAD_U32(0xA0011000)==1);
+ diagnosticMmioStore32(base,0x10000,0xAABBCCDD,0);check(PPC_LOAD_U32(0x10000)==0xAABBCCDD);
+ diagnosticMmioStore32(base,0x7FC80714,1,0);check(queryDiagnosticGpu(base).processedPackets==8);
+ __imp__VdShutdownEngines(c,base);check(queryDiagnosticGpu(base).processedPackets==0);check(VirtualFree(base,0,MEM_RELEASE));
+ printf("PASS %d processor checks: initialization, indirect list, wraparound, writeback and fallback\n",n);
+}

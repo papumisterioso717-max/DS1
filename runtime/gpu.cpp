@@ -3,12 +3,14 @@
 #include "ppc_recomp_shared.h"
 #include "gpu.h"
 #include <map>
+#include <vector>
 #include <mutex>
 #include <cstdio>
 #include <cstdlib>
 namespace {
 std::mutex mutex;
 std::map<uint8_t*,DiagnosticGpuState> engines;
+std::map<uint8_t*,std::vector<uint32_t>> microEngine;
 bool readable(uint8_t*b,uint32_t a,uint32_t n){
  if(!a||uint64_t(a)+n>0x100000000ull)return false;
  for(uint32_t i=0;i<n;++i){MEMORY_BASIC_INFORMATION m{};if(!VirtualQuery(b+a+i,&m,sizeof(m))||m.State!=MEM_COMMIT||(m.Protect&(PAGE_GUARD|PAGE_NOACCESS)))return false;}
@@ -21,12 +23,12 @@ PPC_FUNC(__imp__VdInitializeEngines){
  // Capture the request only. Microcode execution and callbacks need a GPU backend.
  if(!readable(base,next.pfp,4)||!readable(base,next.me,4)||
     (next.callback&&((next.callback&3)||next.callback<PPC_CODE_BASE||uint64_t(next.callback)>=uint64_t(PPC_CODE_BASE)+PPC_CODE_SIZE))){ctx.r3.u64=0;return;}
- std::lock_guard<std::mutex> guard(mutex);engines[base]=next;
+ std::lock_guard<std::mutex> guard(mutex);engines[base]=next;microEngine.erase(base);
  fprintf(stderr,"GPU_DIAGNOSTIC_INIT flags=%08X callback=%08X argument=%08X pfp=%08X me=%08X renderer=absent microcode=not-executed\n",next.flags,next.callback,next.argument,next.pfp,next.me);
  // Compatibility return used by Xenia's VdInitializeEngines stub, not GPU readiness.
  ctx.r3.u64=1;
 }
-PPC_FUNC(__imp__VdShutdownEngines){std::lock_guard<std::mutex> guard(mutex);engines.erase(base);fprintf(stderr,"GPU_DIAGNOSTIC_SHUTDOWN\n");}
+PPC_FUNC(__imp__VdShutdownEngines){std::lock_guard<std::mutex> guard(mutex);engines.erase(base);microEngine.erase(base);fprintf(stderr,"GPU_DIAGNOSTIC_SHUTDOWN\n");}
 
 PPC_FUNC(__imp__VdSetGraphicsInterruptCallback){
  uint32_t callback=ctx.r3.u32,argument=ctx.r4.u32;
@@ -116,5 +118,57 @@ void dumpDiagnosticGpuRing(uint8_t* base){
   const auto* p=base+0xA0000000ull+s.ringPhysical+uint64_t(index)*4;
   const uint32_t value=(uint32_t(p[0])<<24)|(uint32_t(p[1])<<16)|(uint32_t(p[2])<<8)|p[3];
   fprintf(stderr,"GPU_RING_WORD index=%u value=%08X\n",index,value);
+ }
+}
+
+namespace {
+uint32_t physicalWord(uint8_t* base,uint32_t address){
+ if((address&3)||!physicalRange(base,address,4))invalidRing();
+ const auto* p=base+0xA0000000ull+address;
+ return (uint32_t(p[0])<<24)|(uint32_t(p[1])<<16)|(uint32_t(p[2])<<8)|p[3];
+}
+void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint32_t words,uint32_t ringStart,uint32_t ringBytes,unsigned depth,uint32_t& budget){
+ if(depth>8||words>65536)invalidRing();
+ auto address=[&](uint32_t i){return ringBytes?ringStart+((start-ringStart+i*4)%ringBytes):start+i*4;};
+ for(uint32_t i=0;i<words;){
+  if(!budget--)invalidRing();
+  const uint32_t head=physicalWord(base,address(i)),type=head>>30;
+  const uint32_t count=head==0||type==2?0:type==1?2:((head>>16)&0x3FFF)+1;
+  if(count>words-i-1)invalidRing();
+  const uint32_t opcode=(head>>8)&0x7F;
+  fprintf(stderr,"GPU_PACKET depth=%u physical=%08X header=%08X payload=%u\n",depth,address(i),head,count);
+  if(head==0||type==2){ /* Explicit no-op packet. */ }
+  else if(type==3&&(head&1)==0&&opcode==0x10){ /* NOP payload. */ }
+  else if(type==3&&(head&1)==0&&opcode==0x48){
+   auto& data=microEngine[base];data.clear();
+   for(uint32_t n=0;n<count;++n)data.push_back(physicalWord(base,address(i+1+n)));
+   state.microEngineWords=count;
+  }else if(type==3&&(head&1)==0&&(opcode==0x3F||opcode==0x37)&&count==2){
+   const uint32_t child=physicalWord(base,address(i+1))&0x1FFFFFFF;
+   const uint32_t length=physicalWord(base,address(i+2));
+   if(length>65536||(child&3)||!physicalRange(base,child,uint64_t(length)*4))invalidRing();
+   processPackets(base,state,child,length,0,0,depth+1,budget);
+  }else{
+   fprintf(stderr,"PENDING_GPU_PACKET type=%u opcode=%02X physical=%08X depth=%u execution=incomplete\n",type,opcode,address(i),depth);std::_Exit(20);
+  }
+  ++state.processedPackets;i+=count+1;
+ }
+}
+}
+void diagnosticMmioStore32(uint8_t* base,uint32_t address,uint32_t value,uint32_t lr){
+ if((address&0xFFFF0000)!=0x7FC80000){PPC_STORE_U32(address,value);return;}
+ if(address!=0x7FC80714){fprintf(stderr,"PENDING_GPU_REGISTER address=%08X value=%08X lr=%08X\n",address,value,lr);std::_Exit(20);}
+ std::lock_guard<std::mutex> guard(mutex);auto it=engines.find(base);
+ if(it==engines.end()||!it->second.ringConfigured)invalidRing();
+ auto& state=it->second;const uint32_t capacity=state.ringBytes/4;
+ if(value>=capacity)invalidRing();
+ const uint32_t words=(value+capacity-state.ringReadIndex)%capacity;
+ fprintf(stderr,"GPU_SUBMIT write_index=%u read_index=%u words=%u lr=%08X\n",value,state.ringReadIndex,words,lr);
+ uint32_t budget=65536;
+ processPackets(base,state,state.ringPhysical+state.ringReadIndex*4,words,state.ringPhysical,state.ringBytes,0,budget);
+ state.ringReadIndex=value;
+ if(state.readPointerPhysical){
+  const auto a=0xA0000000u+state.readPointerPhysical;
+  PPC_STORE_U32(a,value);
  }
 }

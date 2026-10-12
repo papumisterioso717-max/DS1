@@ -11,10 +11,13 @@ def run(args):subprocess.run([str(x) for x in args],check=True)
 header_time=max(p.stat().st_mtime for p in (root/'ppc').glob('*.h'))
 runtime_header_time=max(p.stat().st_mtime for p in (root/'runtime').glob('*.h'))
 def compile(p):
+ hooked=p.parent.name=='ppc' and 'PPC_MM_STORE_U32' in p.read_text()
+ extra=['-include',str(root/'runtime/mmio.h')] if hooked else []
+ dependency=(root/'runtime/mmio.h').stat().st_mtime if hooked else 0
  obj=build/(p.stem+'.obj')
- if obj.exists() and obj.stat().st_mtime>=max(p.stat().st_mtime,header_time,runtime_header_time if p.parent.name=="runtime" else 0):return obj
+ if obj.exists() and obj.stat().st_mtime>=max(dependency,p.stat().st_mtime,header_time,runtime_header_time if p.parent.name=="runtime" else 0):return obj
  pending=obj.with_suffix('.pending.obj')
- run([tool/'clang++.exe',*flags,'-c',p,'-o',pending])
+ run([tool/'clang++.exe',*flags,*extra,'-c',p,'-o',pending])
  pending.replace(obj)
  return obj
 files=sorted((root/'ppc').glob('*.cpp'))
@@ -49,6 +52,12 @@ for case,expected in [('event',20),('pointer',22)]:
 
 run([tool/'clang++.exe',*flags,root/'tests/gpu-ring-tests.cpp',gpu,'-o',bin/'GpuRingTests.exe'])
 run([bin/'GpuRingTests.exe'])
+run([tool/'clang++.exe',*flags,root/'tests/gpu-processor-tests.cpp',gpu,'-o',bin/'GpuProcessorTests.exe'])
+run([bin/'GpuProcessorTests.exe'])
+for case,expected in [('unknown',20),('truncated',22),('index',22),('cycle',22)]:
+ r=subprocess.run([str(bin/'GpuProcessorTests.exe'),case],capture_output=True,text=True)
+ if r.returncode!=expected:raise RuntimeError('GPU processor rejection failed: '+case)
+
 for case in ['shift','alignment','unmapped','overflow','order','wbshift','wbunmapped']:
  r=subprocess.run([str(bin/'GpuRingTests.exe'),case],capture_output=True,text=True)
  if r.returncode!=(20 if case=='order' else 22):raise RuntimeError('GPU ring invalid case failed: '+case)

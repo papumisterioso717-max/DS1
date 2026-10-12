@@ -12,8 +12,9 @@ RESULTADO VERIFICADO
 - El ejecutable entra en el código recompilado y supera la consulta del módulo XEX.
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
-- Se detiene por escritura a registro GPU 0x7FC80714
-  (LR 0x823EBC90, salida 21). Ver diagnostic.log.
+- Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
+- Se detiene en paquete GPU tipo 0, registro 0x0A31, fisica 0x1F8F0040
+  (LR 0x823EBC90, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
 - Pasaron 16 401 comprobaciones de estado inicial, límites y memoria vecina.
@@ -418,3 +419,19 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
   seis casos de prueba, incluidos paquetes truncados y vacios.
 - La captura no ejecuta comandos: persiste el bloqueo original de GPU.
 - Referencias: xenia/gpu/graphics_system.cc y command_processor.cc.
+
+2026-10-12: procesador parcial de comandos GPU
+- build.py inyecta runtime/mmio.h en las cinco unidades generadas que usan
+  PPC_MM_STORE_U32; regenerar el codigo conserva la conexion al compilar.
+- CP_RB_WPTR entrega el indice real y calcula las palabras pendientes con
+  retorno circular. Otros registros GPU permanecen pendientes.
+- Soporta paquetes cero/tipo2/NOP, almacenamiento de datos ME_INIT y listas
+  INDIRECT_BUFFER/PFD. Limites de profundidad, presupuesto y memoria.
+- Solo publica el indice de lectura cuando todos los paquetes entregados
+  fueron atendidos; comandos desconocidos/predicados detienen el proceso.
+- El titulo entrega 22 palabras: ME_INIT con 18 datos y una lista indirecta
+  de 11 palabras en 1F8F0040. Primer pendiente: tipo 0, registro 0A31.
+- Pasaron 12 comprobaciones y cuatro rechazos (comando sin soporte,
+  truncamiento, indice fuera de rango y recursion circular).
+- Compilacion y pruebas del runtime correctas. Renderizador aun ausente.
+- Referencias: xenia/gpu/graphics_system.cc, command_processor.cc, xenos.h.

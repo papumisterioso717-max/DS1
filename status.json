@@ -9,7 +9,7 @@
   "full_compilation": "320/320 passed; full build and runtime test suites rerun",
   "instruction_checks_passed": 98408,
   "runtime": "diagnostic: eight worker threads created; GPU configuration captured, rendering absent",
-  "diagnostic_exit_code": 21,
+  "diagnostic_exit_code": 20,
   "next_unimplemented_import": null,
   "guest_lr": "0x823EBC90",
   "playable": false,
@@ -75,8 +75,8 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "GPU MMIO write to 0x7FC80714; register access and command execution absent",
-  "next_fault_guest_address": "0x7FC80714",
+  "next_blocker": "Unsupported type-0 GPU register write at physical 0x1F8F0040, header 0x00000A31 (register index 0x0A31)",
+  "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
   "title_termination_registration_count": 2,
@@ -89,7 +89,7 @@
   "gpu_system_command_identifier_observed": "0xFFCED008",
   "gpu_ring_checks_passed": 14,
   "gpu_ring_negative_cases": 7,
-  "gpu_ring_support": "Configuration capture with mapped physical range and shift checks; read index zero; no packet execution or read-pointer writes",
+  "gpu_ring_support": "Configuration plus bounded partial packet processing; completion written only after whole supported submission succeeds",
   "gpu_ring_physical": "0x1FCEF000",
   "gpu_ring_bytes": 65536,
   "gpu_read_pointer_physical": "0x1FCEE03C",
@@ -119,5 +119,13 @@
     "0xC0013F00"
   ],
   "gpu_ring_inspector": "Read-only PM4 header inspection; producer boundary unknown; execution absent",
-  "gpu_ring_inspector_test_cases": 6
+  "gpu_ring_inspector_test_cases": 6,
+  "gpu_processor_support": "Bounded synchronous CP_RB_WPTR dispatch; zero/type2/NOP packets, ME_INIT data storage, INDIRECT_BUFFER/PFD traversal; unknown/predicated commands stop; no renderer",
+  "gpu_processor_checks_passed": 12,
+  "gpu_processor_negative_cases": 4,
+  "gpu_first_submission_words": 22,
+  "gpu_first_submission_write_index": 22,
+  "gpu_first_indirect_physical": "0x1F8F0040",
+  "gpu_first_indirect_words": 11,
+  "gpu_mmio_hook": "PPC_MM_STORE_U32 override for five generated translation units; other widths and reads pending"
 }
