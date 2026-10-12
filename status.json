@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "Unsupported GPU register 0x0D02 at physical 0x1F8E0000 in second submission",
+  "next_blocker": "Unsupported GPU register 0x0A02 at physical 0x1F8E0008 in second submission",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -121,7 +121,7 @@
   "gpu_ring_inspector": "Read-only PM4 header inspection; producer boundary unknown; execution absent",
   "gpu_ring_inspector_test_cases": 6,
   "gpu_processor_support": "Bounded synchronous CP_RB_WPTR dispatch; zero/type2/NOP packets, ME_INIT data storage, INDIRECT_BUFFER/PFD traversal; unknown/predicated commands stop; no renderer",
-  "gpu_processor_checks_passed": 25,
+  "gpu_processor_checks_passed": 29,
   "gpu_processor_negative_cases": 7,
   "gpu_first_submission_words": 22,
   "gpu_first_submission_write_index": 22,
@@ -137,5 +137,7 @@
   },
   "gpu_wait_support": "Register comparisons on COHER registers; unsupported modes and unsatisfied waits stop; observed 0x81000000 coherence resolved only for shared CPU memory with no host GPU resources",
   "gpu_first_submission_completed": true,
-  "gpu_second_submission_write_index": 25
+  "gpu_second_submission_write_index": 25,
+  "gpu_sq_configuration_support": "Raw storage for SQ_GPR_MANAGEMENT, SQ_FLOW_CONTROL and SQ_INST_STORE_MANAGMENT (0xD00..0xD02); no shader execution",
+  "gpu_sq_inst_store_observed": "0x00010800"
 }

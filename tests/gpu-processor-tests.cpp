@@ -53,6 +53,16 @@ int main(int argc,char**argv){
   put(0,0xC0043C00);put(1,compare);put(2,0xA2F);put(3,compare==1?4097:compare==4||compare==6?4095:4096);put(4,0xffffffff);put(5,0);
   diagnosticMmioStore32(base,0x7FC80714,6,0);check(queryDiagnosticGpu(base).ringReadIndex==6);
  }
- __imp__VdShutdownEngines(c,base);check(queryDiagnosticGpu(base).processedPackets==0);check(VirtualFree(base,0,MEM_RELEASE));
+ // SQ configuration retains exact words, including repeated writes across wrap.
+ put(6,0x00020D00);put(7,0x12345678);put(0,0x87654321);put(1,0xFFFFFFFF);
+ diagnosticMmioStore32(base,0x7FC80714,2,0);s=queryDiagnosticGpu(base);
+ check(s.sqGprManagement==0x12345678&&s.sqFlowControl==0x87654321&&s.sqInstStoreManagement==0xFFFFFFFF);
+ check(s.coherSize==4096&&s.coherStatus==0&&PPC_LOAD_U32(0xA0011000)==2);
+ put(2,0x00018D02);put(3,1);put(4,0);
+ diagnosticMmioStore32(base,0x7FC80714,5,0);s=queryDiagnosticGpu(base);
+ check(s.sqInstStoreManagement==0&&s.sqGprManagement==0x12345678&&s.sqFlowControl==0x87654321);
+ __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
+ check(s.sqGprManagement==0&&s.sqFlowControl==0&&s.sqInstStoreManagement==0);
+ check(queryDiagnosticGpu(base).processedPackets==0);check(VirtualFree(base,0,MEM_RELEASE));
  printf("PASS %d processor checks: initialization, indirect list, wraparound, writeback and fallback\n",n);
 }

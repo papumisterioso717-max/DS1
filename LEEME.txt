@@ -13,7 +13,7 @@ RESULTADO VERIFICADO
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
-- Completa la primera lista y se detiene en registro GPU 0x0D02, fisica 0x1F8E0000
+- Completa la primera lista y se detiene en registro GPU 0x0A02, fisica 0x1F8E0008
   (LR 0x823EBC90, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
@@ -457,3 +457,12 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
   con indice productor 25. Nuevo bloqueo: registro 0D02 en 1F8E0000.
 - 25 comprobaciones del procesador y 7 rechazos correctos.
 - Referencia: xenia/gpu/command_processor.cc, WAIT_REG_MEM y MakeCoherent.
+
+2026-10-12: configuracion SQ
+- Conserva los registros SQ 0D00, 0D01 y 0D02 sin ejecutar shaders.
+- Pruebas: palabras exactas, escritura repetida, vuelta del anillo,
+  conservacion de coherencia y limpieza al apagar. 29 comprobaciones pasan.
+- Compilacion completa y pruebas generales correctas.
+- Arranque real: 0D02 recibe 00010800; siguiente bloqueo 0A02 en 1F8E0008.
+- Sigue sin renderizador ni imagen del juego.
+- Referencias: xenia/gpu/register_table.inc y command_processor.cc, WriteRegister.
