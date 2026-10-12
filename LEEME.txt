@@ -12,8 +12,8 @@ RESULTADO VERIFICADO
 - El ejecutable entra en el código recompilado y supera la consulta del módulo XEX.
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
-- Se detiene en VdInitializeRingBuffer
-  (LR 0x823ED08C, salida 20). Ver diagnostic.log.
+- Se detiene en KiApcNormalRoutineNop
+  (LR 0x823ED200, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
 - Pasaron 16 401 comprobaciones de estado inicial, límites y memoria vecina.
@@ -346,3 +346,15 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
   siguiente servicio: VdInitializeRingBuffer, LR 823ED08C, salida 20.
 - Cola de comandos, ejecucion GPU y renderizador siguen pendientes.
 - Referencia: https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_video.cc
+
+2026-10-12: configuracion de cola GPU para diagnostico
+- VdInitializeRingBuffer registra direccion fisica, tamano 2^(exponente+3)
+  y posicion de lectura inicial; verifica alineacion y memoria accesible.
+- VdEnableRingBufferRPtrWriteBack conserva direccion y frecuencia de lectura.
+  No escribe finalizaciones ni procesa paquetes de comandos.
+- Pruebas: 14 comprobaciones positivas y 7 casos negativos (rangos, orden,
+  alineacion y exponentes); conserva memoria y limpia estado al cerrar.
+- El titulo configura una cola de 65536 bytes en fisica 1FCEF000,
+  lectura en 1FCEE03C con frecuencia 32, e identificador en FFCED008.
+- Siguiente exportacion pendiente: KiApcNormalRoutineNop, LR 823ED200.
+- Referencia: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/command_processor.cc

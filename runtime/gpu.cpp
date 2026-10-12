@@ -52,3 +52,38 @@ PPC_FUNC(__imp__VdSetSystemCommandBufferGpuIdentifierAddress){
  it->second.systemCommandIdentifierAddress=address;
  fprintf(stderr,"GPU_SYSTEM_COMMAND_IDENTIFIER address=%08X processing=pending\n",address);
 }
+
+namespace {
+bool physicalRange(uint8_t* base,uint32_t address,uint64_t bytes){
+ if(uint64_t(address)+bytes>0x20000000ull)return false;
+ for(uint64_t pos=0;pos<bytes;){
+  MEMORY_BASIC_INFORMATION m{};auto* p=base+0xA0000000ull+address+pos;
+  if(!VirtualQuery(p,&m,sizeof(m))||m.State!=MEM_COMMIT||(m.Protect&(PAGE_GUARD|PAGE_NOACCESS)))return false;
+  pos+=static_cast<uint8_t*>(m.BaseAddress)+m.RegionSize-p;
+ }
+ return true;
+}
+[[noreturn]] void invalidRing(){fprintf(stderr,"INVALID_GPU_RING_CONFIGURATION\n");std::_Exit(22);}
+}
+PPC_FUNC(__imp__VdInitializeRingBuffer){
+ const uint32_t address=ctx.r3.u32,log2=ctx.r4.u32;
+ // Xenia command_processor.cc: byte size is 2^(RB_BUFSZ + 3).
+ // Check before shifting; the guest physical address space is 512 MiB.
+ if(log2>26||(address&3))invalidRing();
+ const uint32_t bytes=uint32_t(1)<<(log2+3);
+ if(!physicalRange(base,address,bytes))invalidRing();
+ std::lock_guard<std::mutex> guard(mutex);auto it=engines.find(base);
+ if(it==engines.end()){fprintf(stderr,"PENDING_GPU_MODE ring before engine initialization\n");std::_Exit(20);}
+ auto& s=it->second;s.ringConfigured=true;s.ringPhysical=address;s.ringBytes=bytes;s.ringReadIndex=0;
+ fprintf(stderr,"GPU_RING_CONFIGURATION physical=%08X bytes=%08X processing=pending\n",address,bytes);
+}
+PPC_FUNC(__imp__VdEnableRingBufferRPtrWriteBack){
+ const uint32_t address=ctx.r3.u32,log2=ctx.r4.u32;
+ if(log2>31||(address&3)||!physicalRange(base,address,4))invalidRing();
+ std::lock_guard<std::mutex> guard(mutex);auto it=engines.find(base);
+ if(it==engines.end()||!it->second.ringConfigured){fprintf(stderr,"PENDING_GPU_MODE writeback before ring initialization\n");std::_Exit(20);}
+ it->second.readPointerPhysical=address;
+ it->second.readPointerUpdateFrequency=(uint32_t(1)<<log2)>>2;
+ // No commands have been processed: do not publish a completion/read pointer.
+ fprintf(stderr,"GPU_RING_WRITEBACK physical=%08X frequency=%u delivery=pending\n",address,it->second.readPointerUpdateFrequency);
+}

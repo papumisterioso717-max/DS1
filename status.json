@@ -10,8 +10,8 @@
   "instruction_checks_passed": 98408,
   "runtime": "diagnostic: six worker threads start; reaches graphics initialization",
   "diagnostic_exit_code": 20,
-  "next_unimplemented_import": "__imp__VdInitializeRingBuffer",
-  "guest_lr": "0x823ED08C",
+  "next_unimplemented_import": "__imp__KiApcNormalRoutineNop",
+  "guest_lr": "0x823ED200",
   "playable": false,
   "setjmp_longjmp": "not identified; unset",
   "memory_checks_passed": 43,
@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "GPU ring buffer initialization; command processor and renderer absent",
+  "next_blocker": "KiApcNormalRoutineNop export",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -86,5 +86,12 @@
   "physical_alias_regression": "Passed write at 0xBE010100 shared with 0xDE010100 and 0xFE00F100; title startup passes former fault",
   "host_memory_requirement": "Windows 10 version 1803 or later, VirtualAlloc2/MapViewOfFile3 placeholders",
   "gpu_system_command_identifier_support": "Opaque address registration/replacement/clear only; void call preserves context; no GPU writes or completion simulated",
-  "gpu_system_command_identifier_observed": "0x00000000 (clear)"
+  "gpu_system_command_identifier_observed": "0xFFCED008",
+  "gpu_ring_checks_passed": 14,
+  "gpu_ring_negative_cases": 7,
+  "gpu_ring_support": "Configuration capture with mapped physical range and shift checks; read index zero; no packet execution or read-pointer writes",
+  "gpu_ring_physical": "0x1FCEF000",
+  "gpu_ring_bytes": 65536,
+  "gpu_read_pointer_physical": "0x1FCEE03C",
+  "gpu_read_pointer_update_frequency": 32
 }
