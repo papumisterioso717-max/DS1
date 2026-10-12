@@ -11,8 +11,8 @@ RESULTADO VERIFICADO
   saturación, alias de registros, endian, saltos calculados y destinos compartidos.
 - El ejecutable entra en el código recompilado y supera la consulta del módulo XEX.
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
-- Se detiene al solicitar VdInitializeEngines
-  (LR 0x823F8040, salida 20). Ver diagnostic.log.
+- Se detiene al solicitar ExRegisterTitleTerminateNotification
+  (LR 0x823F8050, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
 - Pasaron 16 401 comprobaciones de estado inicial, límites y memoria vecina.
@@ -279,3 +279,19 @@ Supera el fallo AD000110 y llega a VdInitializeEngines, LR 823F8040, salida 20.
 Este es el inicio del sistema grafico, aun sin renderizador ni ventana de juego.
 Referencia del formato:
 https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_module.cc
+
+CAPTURA DE CONFIGURACION GRAFICA (SIN RENDERIZADOR)
+VdInitializeEngines captura flags, callback, argumento y direcciones PFP/ME.
+Valida que se puedan leer los primeros cuatro bytes de los microcodigos y
+que el callback tenga alineacion y rango de codigo; no verifica ni ejecuta
+el microcodigo completo. Devuelve 1 como el stub de compatibilidad de Xenia.
+Ese valor NO prueba que un motor grafico funcione. El estado registrado es
+exclusivamente de diagnostico. VdShutdownEngines elimina ese registro.
+Solicitud observada: flags 1B530000, callback 823F7F60, argumento 0,
+PFP 820D0F08, ME 820D1388. Pasaron 14 comprobaciones de captura, limites,
+preservacion del microcodigo, reinicializacion y cierre.
+La siguiente llamada pendiente es ExRegisterTitleTerminateNotification,
+LR 823F8050. El codigo posterior registra otra notificacion de cierre y
+llama a VdSetGraphicsInterruptCallback. No hay procesamiento de comandos,
+interrupciones de GPU, shaders ni presentacion de imagen.
+Referencia: https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_video.cc

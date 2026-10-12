@@ -10,8 +10,8 @@
   "instruction_checks_passed": 98408,
   "runtime": "diagnostic: six worker threads start; reaches graphics initialization",
   "diagnostic_exit_code": 20,
-  "next_unimplemented_import": "VdInitializeEngines",
-  "guest_lr": "0x823F8040",
+  "next_unimplemented_import": "ExRegisterTitleTerminateNotification",
+  "guest_lr": "0x823F8050",
   "playable": false,
   "setjmp_longjmp": "not identified; unset",
   "memory_checks_passed": 43,
@@ -65,5 +65,14 @@
   "thread_support": "create flags 0/1, isolated KPCR/KTHREAD/TLS/stack, native resume, worker exit, single wait; affinity, APC, scheduling, other flags and lifecycle reclamation pending",
   "affinity_support": "single-bit guest masks 1..32 mapped cyclically onto process CPUs; KPCR/KTHREAD current CPU and prior mask; multi-bit masks rejected",
   "timestamp_checks_passed": 16,
-  "timestamp_support": "24-byte Xenia-compatible diagnostic bundle; 32-bit elapsed milliseconds at +16; target 1 ms host timer cadence, other fields zero"
+  "timestamp_support": "24-byte Xenia-compatible diagnostic bundle; 32-bit elapsed milliseconds at +16; target 1 ms host timer cadence, other fields zero",
+  "gpu_diagnostic_checks_passed": 14,
+  "gpu_engine_support": "diagnostic request capture only; compatibility return 1; microcode execution, graphics callbacks and renderer absent",
+  "gpu_request": {
+    "flags": "0x1B530000",
+    "callback": "0x823F7F60",
+    "argument": "0x00000000",
+    "pfp": "0x820D0F08",
+    "me": "0x820D1388"
+  }
 }

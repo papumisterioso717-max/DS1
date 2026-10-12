@@ -1,0 +1,4 @@
+#pragma once
+#include <cstdint>
+struct DiagnosticGpuState {bool initialized=false;uint32_t flags=0,callback=0,argument=0,pfp=0,me=0;};
+DiagnosticGpuState queryDiagnosticGpu(uint8_t* base);
