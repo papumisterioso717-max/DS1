@@ -67,6 +67,11 @@ run([tool/'clang++.exe',*flags,root/'tests/object-tests.cpp',objects,'-o',bin/'O
 run([bin/'ObjectTests.exe'])
 run([tool/'clang++.exe',*flags,root/'tests/event-tests.cpp',objects,'-o',bin/'EventTests.exe'])
 run([bin/'EventTests.exe'])
+run([tool/'clang++.exe',*flags,root/'tests/kernel-event-tests.cpp',objects,'-o',bin/'KernelEventTests.exe'])
+run([bin/'KernelEventTests.exe'])
+r=subprocess.run([str(bin/'KernelEventTests.exe'),'unsupported'],capture_output=True,text=True)
+if r.returncode!=20:raise RuntimeError('Unsupported dispatcher type was accepted')
+
 run([tool/'clang++.exe',*flags,root/'tests/duplicate-tests.cpp',objects,'-o',bin/'DuplicateTests.exe'])
 run([bin/'DuplicateTests.exe'])
 run([tool/'clang++.exe',*flags,root/'tests/reference-tests.cpp',objects,'-o',bin/'ReferenceTests.exe'])

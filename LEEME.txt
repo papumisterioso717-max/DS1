@@ -12,8 +12,8 @@ RESULTADO VERIFICADO
 - El ejecutable entra en el código recompilado y supera la consulta del módulo XEX.
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
-- Se detiene en KeWaitForSingleObject
-  (LR 0x8240E5BC, salida 20). Ver diagnostic.log.
+- Se detiene en VdCallGraphicsNotificationRoutines
+  (LR 0x824126E0, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
 - Pasaron 16 401 comprobaciones de estado inicial, límites y memoria vecina.
@@ -365,3 +365,16 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
 - El arranque crea dos hilos adicionales: ocho trabajadores observados.
 - Siguiente bloqueo: KeWaitForSingleObject, LR 8240E5BC, salida 20.
 - Referencia: https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc
+
+2026-10-12: espera de eventos por direccion de objeto
+- KeWaitForSingleObject reconoce hilos registrados y eventos inicializados
+  en memoria del titulo, con reinicio manual o automatico y plazos de espera.
+- KeSetEvent y KeResetEvent actualizan el estado big endian y devuelven
+  el estado anterior; la espera automatica consume la senal.
+- La espera por handle reutiliza el mismo mecanismo de plazos y bloqueo.
+- El arranque registra D9D27AFC (manual, sin senal) y continua hasta
+  VdCallGraphicsNotificationRoutines, LR 824126E0, salida 20.
+- Siguen pendientes APC, otros tipos de dispatcher, prioridades del scheduler,
+  secuencias atomicas set-and-wait y reinicializacion/reutilizacion de eventos.
+- Referencias: xenia/kernel/xobject.h, xevent.cc y xboxkrnl_threading.cc.
+- Pasaron 21 comprobaciones de eventos por direccion y el rechazo de un tipo no soportado.

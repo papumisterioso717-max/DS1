@@ -18,6 +18,7 @@ std::map<uint32_t,std::shared_ptr<KernelObject>> objects;
 std::map<std::pair<uint8_t*,uint32_t>,std::shared_ptr<KernelObject>> threads;
 struct Reference {std::shared_ptr<KernelObject> object;uint32_t count;};
 std::map<std::pair<uint8_t*,uint32_t>,Reference> references;
+std::map<std::pair<uint8_t*,uint32_t>,std::shared_ptr<KernelObject>> kernelEvents;
 uint32_t nextHandle=0xD0000000;
 bool valid(uint8_t*b,uint32_t a,uint32_t n,bool write){
  if(!a||uint64_t(a)+n>0x100000000ull)return false;
@@ -58,11 +59,11 @@ PPC_FUNC(__imp__NtReleaseSemaphore){
  if(!ReleaseSemaphore(object->handle,count,&previous)){ctx.r3.u64=GetLastError()==ERROR_TOO_MANY_POSTS?0xC0000047:invalid;return;}
  if(out)put(base,out,uint32_t(previous));ctx.r3.u64=0;
 }
-PPC_FUNC(__imp__NtWaitForSingleObjectEx){
- auto object=lookup(ctx.r3.u32);if(!object){ctx.r3.u64=badHandle;return;}
- if(ctx.r4.u32>1){ctx.r3.u64=invalid;return;}
- if(ctx.r5.u32)pending("alertable wait requires guest APC support",ctx);
- const uint32_t ptr=ctx.r6.u32;DWORD ms=INFINITE;
+namespace {
+void waitObject(PPCContext& ctx,uint8_t* base,const std::shared_ptr<KernelObject>& object,uint32_t mode,uint32_t alertable,uint32_t ptr){
+ if(mode>1){ctx.r3.u64=invalid;return;}
+ if(alertable)pending("alertable wait requires guest APC support",ctx);
+ DWORD ms=INFINITE;
  if(ptr){
   if(!valid(base,ptr,8,false)){ctx.r3.u64=invalid;return;}
   const uint64_t bits=(uint64_t(get(base,ptr))<<32)|get(base,ptr+4);
@@ -78,11 +79,49 @@ PPC_FUNC(__imp__NtWaitForSingleObjectEx){
   bool ready;
   if(ms==INFINITE){object->eventChanged.wait(lock,[&]{return object->signaled;});ready=true;}
   else ready=object->eventChanged.wait_for(lock,std::chrono::milliseconds(ms),[&]{return object->signaled;});
-  if(ready&&!object->manual)object->signaled=false;
+  if(ready&&!object->manual){object->signaled=false;if(object->guestAddress)put(base,object->guestAddress+4,0);}
   ctx.r3.u64=ready?0:0x102;return;
  }
  DWORD result=WaitForSingleObject(object->handle,ms);
  ctx.r3.u64=result==WAIT_OBJECT_0?0:result==WAIT_TIMEOUT?0x102:badHandle;
+}
+std::shared_ptr<KernelObject> kernelObject(uint8_t* base,uint32_t address,PPCContext& ctx){
+ std::lock_guard<std::mutex> guard(objectsMutex);
+ for(const auto& entry:threads)if(entry.first.first==base&&entry.second->guestAddress==address&&address)return entry.second;
+ if(!valid(base,address,16,true)||(address&3))pending("invalid kernel object address",ctx);
+ // Guest-initialized dispatcher events: type at +0, BE signal state at +4.
+ if(base[address]>1)pending("unsupported kernel dispatcher object type",ctx);
+ const auto key=std::make_pair(base,address);auto it=kernelEvents.find(key);
+ if(it!=kernelEvents.end())return it->second;
+ auto object=std::make_shared<KernelObject>(nullptr,ObjectKind::Event);
+ object->guestAddress=address;object->manual=base[address]==0;object->signaled=get(base,address+4)!=0;
+ kernelEvents.emplace(key,object);
+ fprintf(stderr,"KERNEL_EVENT_REGISTER address=%08X manual=%d signaled=%d\n",address,object->manual,object->signaled);
+ return object;
+}
+}
+PPC_FUNC(__imp__NtWaitForSingleObjectEx){
+ auto object=lookup(ctx.r3.u32);if(!object){ctx.r3.u64=badHandle;return;}
+ waitObject(ctx,base,object,ctx.r4.u32,ctx.r5.u32,ctx.r6.u32);
+}
+PPC_FUNC(__imp__KeWaitForSingleObject){
+ auto object=kernelObject(base,ctx.r3.u32,ctx);
+ waitObject(ctx,base,object,ctx.r5.u32,ctx.r6.u32,ctx.r7.u32);
+}
+PPC_FUNC(__imp__KeSetEvent){
+ if(ctx.r5.u32)pending("atomic set-and-wait sequence",ctx);
+ auto object=kernelObject(base,ctx.r3.u32,ctx);
+ if(object->kind!=ObjectKind::Event)pending("KeSetEvent on non-event",ctx);
+ std::lock_guard<std::mutex> lock(object->eventMutex);const bool previous=object->signaled;
+ object->signaled=true;put(base,object->guestAddress+4,1);
+ if(object->manual)object->eventChanged.notify_all();else object->eventChanged.notify_one();
+ ctx.r3.u64=previous?1:0;
+}
+PPC_FUNC(__imp__KeResetEvent){
+ auto object=kernelObject(base,ctx.r3.u32,ctx);
+ if(object->kind!=ObjectKind::Event)pending("KeResetEvent on non-event",ctx);
+ std::lock_guard<std::mutex> lock(object->eventMutex);const bool previous=object->signaled;
+ object->signaled=false;put(base,object->guestAddress+4,0);ctx.r3.u64=previous?1:0;
 }
 PPC_FUNC(__imp__NtClose){
  std::lock_guard<std::mutex> guard(objectsMutex);auto it=objects.find(ctx.r3.u32);
