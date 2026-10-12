@@ -12,8 +12,8 @@ RESULTADO VERIFICADO
 - El ejecutable entra en el código recompilado y supera la consulta del módulo XEX.
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
-- Se detiene por lectura sin respaldo en 0x59000100
-  (LR 0x823F81F0, salida 21). Causa por investigar; ver diagnostic.log.
+- Se detiene por escritura a registro GPU 0x7FC80714
+  (LR 0x823EBC90, salida 21). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
 - Pasaron 16 401 comprobaciones de estado inicial, límites y memoria vecina.
@@ -396,3 +396,15 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
 - El arranque supera gamma y falla al leer 59000100 (LR 823F81F0).
   La causa de esta direccion no esta confirmada todavia.
 - Referencia: https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_video.cc
+
+2026-10-12: resolucion de variables de monitores
+- La lectura 59000100 era el marcador sin resolver de KeDebugMonitorData
+  en 8200092C. Se comprobo el slot, la instruccion y la tabla de imports.
+- El cargador enlaza KeDebugMonitorData y KeCertMonitorData con variables
+  independientes que contienen cero: ambos monitores estan deshabilitados.
+- El arranque supera la lectura anterior y llega a escribir en 7FC80714,
+  dentro del espacio de registros GPU (LR 823EBC90, salida 21).
+- El manejador de fallos registra RVA nativo y registros invitados para
+  facilitar localizar la instruccion exacta en siguientes investigaciones.
+- Siguiente trabajo: acceso a registros GPU y procesamiento de comandos.
+- Referencia: https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_module.cc

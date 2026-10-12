@@ -21,6 +21,9 @@ static LONG CALLBACK fault(EXCEPTION_POINTERS* e) {
       const auto address=e->ExceptionRecord->ExceptionInformation[1];
       fprintf(stderr,"FAULT_ACCESS kind=%llu host=%p guest=0x%llX\n",(unsigned long long)e->ExceptionRecord->ExceptionInformation[0],(void*)address,(unsigned long long)(address-reinterpret_cast<uintptr_t>(activeBase)));
     }
+    const auto pc=reinterpret_cast<uintptr_t>(e->ExceptionRecord->ExceptionAddress);
+    fprintf(stderr,"FAULT_HOST_RVA=0x%llX\n",(unsigned long long)(pc-reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr))));
+    if(diagnosticContext)fprintf(stderr,"FAULT_REGS r3=%08X r9=%08X r10=%08X r11=%08X r31=%08X ctr=%08X\n",diagnosticContext->r3.u32,diagnosticContext->r9.u32,diagnosticContext->r10.u32,diagnosticContext->r11.u32,diagnosticContext->r31.u32,diagnosticContext->ctr.u32);
     std::_Exit(21);
 }
 int main(int argc,char**argv){
@@ -78,6 +81,13 @@ int main(int argc,char**argv){
  configureGuestThreads(base,slots,dataSize,raw,rawSize,defaultStack);
  commit(0x60040000,0x1000);
  if(!startGuestTimestamp(base,0x820008E0,0x60040000)){fprintf(stderr,"Timestamp initialization failed\n");return 9;}
+ // Imported monitor variables contain pointers, not dispatcher objects.
+ // Xenia xboxkrnl_module.cc uses a null pointer when each monitor is disabled.
+ commit(0x60050000,0x1000);
+ put(0x60050000,0);put(0x60050004,0);
+ put(0x8200092C,0x60050000); // KeDebugMonitorData
+ put(0x82000850,0x60050004); // KeCertMonitorData
+ fprintf(stderr,"MONITOR_IMPORTS debug=disabled cert=disabled\n");
  registerCurrentGuestThread(base,ctx.r13.u32);
  _xstart(ctx,base);
  printf("Guest entry returned. This does not imply a playable game.\n");

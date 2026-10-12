@@ -11,7 +11,7 @@
   "runtime": "diagnostic: eight worker threads created; GPU configuration captured, rendering absent",
   "diagnostic_exit_code": 21,
   "next_unimplemented_import": null,
-  "guest_lr": "0x823F81F0",
+  "guest_lr": "0x823EBC90",
   "playable": false,
   "setjmp_longjmp": "not identified; unset",
   "memory_checks_passed": 43,
@@ -75,8 +75,8 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "Unmapped read at guest 0x59000100; cause not yet established",
-  "next_fault_guest_address": "0x59000100",
+  "next_blocker": "GPU MMIO write to 0x7FC80714; register access and command execution absent",
+  "next_fault_guest_address": "0x7FC80714",
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
   "title_termination_registration_count": 2,
@@ -108,5 +108,8 @@
   ],
   "gpu_graphics_notification_negative_tests": "unknown event exits 20; invalid pointer exits 22",
   "display_gamma": "Diagnostic type 2 (BT.709), float32 power 2.22222233; both BE outputs validated before writes",
-  "gamma_invalid_pointer_test": "passed; exit 22"
+  "gamma_invalid_pointer_test": "passed; exit 22",
+  "resolved_fault_59000100": "Unresolved KeDebugMonitorData import marker at slot 0x8200092C, not a physical alias",
+  "monitor_imports": "KeDebugMonitorData -> 0x60050000, KeCertMonitorData -> 0x60050004, both contain BE null pointers",
+  "fault_diagnostics": "Host executable RVA and selected guest registers recorded"
 }
