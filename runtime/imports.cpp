@@ -153,7 +153,6 @@ PPC_FUNC(__imp__VdSetDisplayMode) { fprintf(stderr, "PENDING_IMPORT __imp__VdSet
 PPC_FUNC(__imp__VdGetCurrentDisplayInformation) { fprintf(stderr, "PENDING_IMPORT __imp__VdGetCurrentDisplayInformation guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__sprintf) { fprintf(stderr, "PENDING_IMPORT __imp__sprintf guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp___vsnprintf) { fprintf(stderr, "PENDING_IMPORT __imp___vsnprintf guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
-PPC_FUNC(__imp__VdGetCurrentDisplayGamma) { fprintf(stderr, "PENDING_IMPORT __imp__VdGetCurrentDisplayGamma guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__VdEnableDisableClockGating) { fprintf(stderr, "PENDING_IMPORT __imp__VdEnableDisableClockGating guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__VdQuerySystemCommandBuffer) { fprintf(stderr, "PENDING_IMPORT __imp__VdQuerySystemCommandBuffer guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__VdSetSystemCommandBuffer) { fprintf(stderr, "PENDING_IMPORT __imp__VdSetSystemCommandBuffer guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }

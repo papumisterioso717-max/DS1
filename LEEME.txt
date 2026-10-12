@@ -12,8 +12,8 @@ RESULTADO VERIFICADO
 - El ejecutable entra en el código recompilado y supera la consulta del módulo XEX.
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
-- Se detiene en VdGetCurrentDisplayGamma
-  (LR 0x823FAC20, salida 20). Ver diagnostic.log.
+- Se detiene por lectura sin respaldo en 0x59000100
+  (LR 0x823F81F0, salida 21). Causa por investigar; ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
 - Pasaron 16 401 comprobaciones de estado inicial, límites y memoria vecina.
@@ -386,4 +386,13 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
   detienen el diagnostico. No despacha callbacks ni presenta imagen.
 - El titulo informa front/back de 1280x720; siguiente exportacion pendiente:
   VdGetCurrentDisplayGamma, LR 823FAC20, salida 20.
+- Referencia: https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_video.cc
+
+2026-10-12: consulta de gamma
+- VdGetCurrentDisplayGamma devuelve tipo 2 (BT.709) y float32 2.22222233
+  en big endian, con ambos destinos validados antes de escribir.
+- Perfil virtual de diagnostico; no cambia la calibracion del monitor.
+- 16313 comprobaciones de video y rechazo del puntero gamma invalido.
+- El arranque supera gamma y falla al leer 59000100 (LR 823F81F0).
+  La causa de esta direccion no esta confirmada todavia.
 - Referencia: https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_video.cc

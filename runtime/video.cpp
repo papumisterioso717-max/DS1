@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <initializer_list>
 namespace {
 // Diagnostic-only virtual display, matching Xenia's baseline video-mode query.
 // This profile describes no physical PC connector and does not create a renderer.
@@ -52,4 +53,20 @@ PPC_FUNC(__imp__ExGetXConfigSetting){
  if(!status&&buffer){base[buffer]=value>>24;base[buffer+1]=value>>16;base[buffer+2]=value>>8;base[buffer+3]=value;}
  if(required){base[required]=0;base[required+1]=status?0:4;}
  ctx.r3.u64=status;
+}
+
+PPC_FUNC(__imp__VdGetCurrentDisplayGamma){
+ const uint32_t type=ctx.r3.u32,power=ctx.r4.u32;
+ // Validate both destinations before modifying either one.
+ for(uint32_t a:{type,power}){
+  if(!a||uint64_t(a)+4>0x100000000ull){fprintf(stderr,"INVALID_GAMMA_BUFFER\n");std::_Exit(22);}
+  for(uint32_t i=0;i<4;++i){MEMORY_BASIC_INFORMATION m{};
+   if(!VirtualQuery(base+a+i,&m,sizeof(m))||m.State!=MEM_COMMIT||(m.Protect&PAGE_GUARD)||!(m.Protect&(PAGE_READWRITE|PAGE_EXECUTE_READWRITE))){fprintf(stderr,"INVALID_GAMMA_BUFFER\n");std::_Exit(22);}
+  }
+ }
+ auto put=[&](uint32_t a,uint32_t v){base[a]=v>>24;base[a+1]=v>>16;base[a+2]=v>>8;base[a+3]=v;};
+ // Diagnostic display defaults from Xenia, not the host monitor calibration.
+ const float gamma=2.22222233f;uint32_t bits;memcpy(&bits,&gamma,4);
+ put(type,2);put(power,bits);
+ fprintf(stderr,"VIDEO_GAMMA type=2 power=%.8f profile=diagnostic\n",double(gamma));
 }

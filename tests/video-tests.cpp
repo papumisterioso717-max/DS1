@@ -10,6 +10,7 @@ void check(bool b){++checks;if(!b){fprintf(stderr,"FAIL video %d\n",checks);exit
 uint32_t get(uint8_t*b,uint32_t a){return(uint32_t(b[a])<<24)|(uint32_t(b[a+1])<<16)|(uint32_t(b[a+2])<<8)|b[a+3];}
 int main(int argc,char**argv){
  auto*b=static_cast<uint8_t*>(VirtualAlloc(nullptr,8192,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE));check(b!=nullptr);PPCContext c{};
+ if(argc>1&&argv[1][0]=='g'){c.r3.u64=64;c.r4.u64=0xFFFFFFFF;__imp__VdGetCurrentDisplayGamma(c,b);return 1;}
  if(argc>1){DWORD old=0;VirtualProtect(b+4096,4096,PAGE_NOACCESS,&old);c.r3.u64=4080;__imp__XGetVideoMode(c,b);return 1;}
  for(uint32_t a:{64u,4080u}){
   memset(b,0xA5,8192);c.r3.u64=a;__imp__XGetVideoMode(c,b);
@@ -30,5 +31,8 @@ int main(int argc,char**argv){
  query(2,2,0,0);check(c.r3.u64==0&&b[101]==4);
  query(2,2,64,3);check(c.r3.u64==0xC0000023&&get(b,64)==0x40000&&b[101]==0);
  query(2,2,0,4);check(c.r3.u64==0xC00000F1);
+ memset(b,0xA5,8192);c.r3.u64=64;c.r4.u64=4094;__imp__VdGetCurrentDisplayGamma(c,b);
+ check(get(b,64)==2);uint32_t gammaBits=get(b,4094);float gamma;memcpy(&gamma,&gammaBits,4);check(gamma>2.22222f&&gamma<2.22223f);
+ check(c.r3.u32==64&&c.r4.u32==4094);check(b[63]==0xA5&&b[68]==0xA5&&b[4093]==0xA5&&b[4098]==0xA5);
  VirtualFree(b,0,MEM_RELEASE);printf("PASS %d video checks: profile, endian, cross-page write, padding and query parity\n",checks);
 }

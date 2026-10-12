@@ -9,9 +9,9 @@
   "full_compilation": "320/320 passed; full build and runtime test suites rerun",
   "instruction_checks_passed": 98408,
   "runtime": "diagnostic: eight worker threads created; GPU configuration captured, rendering absent",
-  "diagnostic_exit_code": 20,
-  "next_unimplemented_import": "__imp__VdGetCurrentDisplayGamma",
-  "guest_lr": "0x823FAC20",
+  "diagnostic_exit_code": 21,
+  "next_unimplemented_import": null,
+  "guest_lr": "0x823F81F0",
   "playable": false,
   "setjmp_longjmp": "not identified; unset",
   "memory_checks_passed": 43,
@@ -25,7 +25,7 @@
   "sync_test_host_threads": 4,
   "main_thread": "main and worker KPCR/KTHREAD initialized; only verified fields implemented",
   "executable_privileges": "read from original XEX system flags",
-  "video_checks_passed": 16309,
+  "video_checks_passed": 16313,
   "video_invalid_buffer_test": "passed; exit 22",
   "video_profile": "diagnostic only: 1280x720 60Hz, AVPack compatibility value 0, NTSC North America; renderer absent",
   "xconfig_supported_settings": [
@@ -75,8 +75,8 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "Current display gamma query",
-  "next_fault_guest_address": null,
+  "next_blocker": "Unmapped read at guest 0x59000100; cause not yet established",
+  "next_fault_guest_address": "0x59000100",
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
   "title_termination_registration_count": 2,
@@ -106,5 +106,7 @@
     1280,
     720
   ],
-  "gpu_graphics_notification_negative_tests": "unknown event exits 20; invalid pointer exits 22"
+  "gpu_graphics_notification_negative_tests": "unknown event exits 20; invalid pointer exits 22",
+  "display_gamma": "Diagnostic type 2 (BT.709), float32 power 2.22222233; both BE outputs validated before writes",
+  "gamma_invalid_pointer_test": "passed; exit 22"
 }

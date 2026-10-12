@@ -38,6 +38,9 @@ run([tool/'clang++.exe',*flags,root/'tests/sync-tests.cpp',imports,sync,'-o',bin
 run([bin/'SyncTests.exe'])
 run([tool/'clang++.exe',*flags,root/'tests/video-tests.cpp',video,'-o',bin/'VideoTests.exe'])
 run([bin/'VideoTests.exe'])
+r=subprocess.run([str(bin/'VideoTests.exe'),'gamma'],capture_output=True,text=True)
+if r.returncode!=22:raise RuntimeError('Invalid gamma output pointer accepted')
+
 run([tool/'clang++.exe',*flags,root/'tests/gpu-tests.cpp',gpu,'-o',bin/'GpuTests.exe'])
 run([bin/'GpuTests.exe'])
 for case,expected in [('event',20),('pointer',22)]:
