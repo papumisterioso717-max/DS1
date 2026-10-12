@@ -11,8 +11,8 @@ RESULTADO VERIFICADO
   saturación, alias de registros, endian, saltos calculados y destinos compartidos.
 - El ejecutable entra en el código recompilado y supera la consulta del módulo XEX.
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
-- Se detiene por acceso a KeTimeStampBundle sin conectar
-  (LR 0x82542B20, direccion 0xAD000110, salida 21). Ver diagnostic.log.
+- Se detiene al solicitar VdInitializeEngines
+  (LR 0x823F8040, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
 - Pasaron 16 401 comprobaciones de estado inicial, límites y memoria vecina.
@@ -262,3 +262,20 @@ Pendiente: asignar respaldo valido y actualizar el contador compartido.
 Referencia: https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_module.cc
 Pasaron 49 comprobaciones de hilos, incluidas afinidad y sus limites,
 y todas las pruebas anteriores del script de compilacion.
+
+RELOJ COMPARTIDO Y LLEGADA AL SISTEMA GRAFICO
+Se conecta KeTimeStampBundle (slot 820008E0) a 24 bytes en 60040000.
+El campo +16 contiene milisegundos desde su inicializacion, con formato
+big-endian y escritura alineada de 32 bits. Un temporizador anfitrion pide
+actualizacion cada 1 ms; Windows no garantiza una cadencia exacta de 1 ms.
+Los demas campos quedan en cero, siguiendo la compatibilidad de Xenia.
+No implementa todas las semanticas de tiempo del kernel Xbox; las lecturas
+del codigo traducido conservan las limitaciones de concurrencia del runtime.
+Se puede detener el temporizador esperando a que termine su callback antes
+de liberar el respaldo. Pasaron 16 comprobaciones de importacion, formato,
+avance, limites, reinicio y parada; tambien pasaron las pruebas anteriores.
+El juego ya inicia seis workers: Job Manager, cuatro EARSJob y Presentation.
+Supera el fallo AD000110 y llega a VdInitializeEngines, LR 823F8040, salida 20.
+Este es el inicio del sistema grafico, aun sin renderizador ni ventana de juego.
+Referencia del formato:
+https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_module.cc

@@ -5,6 +5,7 @@
 #include "tls.h"
 #include "objects.h"
 #include "threads.h"
+#include "timestamp.h"
 #include <file.h>
 #include <cstdio>
 #include <cstdlib>
@@ -74,6 +75,8 @@ int main(int argc,char**argv){
  uint32_t defaultStack=0;
  for(uint32_t i=0;i<readHeader(20);++i)if(readHeader(24+8*i)==0x20200)defaultStack=readHeader(28+8*i);
  configureGuestThreads(base,slots,dataSize,raw,rawSize,defaultStack);
+ commit(0x60040000,0x1000);
+ if(!startGuestTimestamp(base,0x820008E0,0x60040000)){fprintf(stderr,"Timestamp initialization failed\n");return 9;}
  registerCurrentGuestThread(base,ctx.r13.u32);
  _xstart(ctx,base);
  printf("Guest entry returned. This does not imply a playable game.\n");

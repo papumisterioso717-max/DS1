@@ -8,10 +8,10 @@
   "unsupported_instruction_occurrences": 0,
   "full_compilation": "320/320 passed; full build and runtime test suites rerun",
   "instruction_checks_passed": 98408,
-  "runtime": "diagnostic; memory reserve and commit succeeded",
-  "diagnostic_exit_code": 21,
-  "next_unimplemented_import": "KeTimeStampBundle (data variable)",
-  "guest_lr": "0x82542B20",
+  "runtime": "diagnostic: six worker threads start; reaches graphics initialization",
+  "diagnostic_exit_code": 20,
+  "next_unimplemented_import": "VdInitializeEngines",
+  "guest_lr": "0x823F8040",
   "playable": false,
   "setjmp_longjmp": "not identified; unset",
   "memory_checks_passed": 43,
@@ -59,10 +59,11 @@
   "event_checks_passed": 35,
   "thread_checks_passed": 49,
   "thread_name_checks_passed": 3,
-  "guest_threads_created_at_startup": 1,
+  "guest_threads_created_at_startup": 6,
   "guest_worker_started_at_startup": true,
   "thread_stack_size_from_xex": 262144,
   "thread_support": "create flags 0/1, isolated KPCR/KTHREAD/TLS/stack, native resume, worker exit, single wait; affinity, APC, scheduling, other flags and lifecycle reclamation pending",
   "affinity_support": "single-bit guest masks 1..32 mapped cyclically onto process CPUs; KPCR/KTHREAD current CPU and prior mask; multi-bit masks rejected",
-  "next_fault_guest_address": "0xAD000110"
+  "timestamp_checks_passed": 16,
+  "timestamp_support": "24-byte Xenia-compatible diagnostic bundle; 32-bit elapsed milliseconds at +16; target 1 ms host timer cadence, other fields zero"
 }
