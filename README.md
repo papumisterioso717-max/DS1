@@ -4,7 +4,7 @@ Proyecto experimental de recompilación de Dead Space para Xbox 360 con XenonRec
 
 ## Estado
 
-El diagnóstico entra en el código recompilado y actualmente crea ocho hilos de trabajo y captura la configuración gráfica en modo de diagnóstico y registra las notificaciones de cierre e interrupción; los alias de memoria física ya comparten respaldo y se registra la dirección del identificador de comandos y se captura la configuración de la cola GPU sin ejecutar comandos y el siguiente servicio pendiente es `VdCallGraphicsNotificationRoutines`. Todavía no es jugable y no dispone de un renderizador.
+El diagnóstico entra en el código recompilado y actualmente crea ocho hilos de trabajo y captura la configuración gráfica en modo de diagnóstico y registra las notificaciones de cierre e interrupción; los alias de memoria física ya comparten respaldo y se registra la dirección del identificador de comandos y se captura la configuración de la cola GPU sin ejecutar comandos y el siguiente servicio pendiente es `VdGetCurrentDisplayGamma`. Todavía no es jugable y no dispone de un renderizador.
 
 Pruebas actuales: 320/320 archivos compilados y 50 comprobaciones de memoria física, además de las demás pruebas del runtime. El respaldo compartido requiere Windows 10 1803 o posterior.
 

@@ -40,6 +40,10 @@ run([tool/'clang++.exe',*flags,root/'tests/video-tests.cpp',video,'-o',bin/'Vide
 run([bin/'VideoTests.exe'])
 run([tool/'clang++.exe',*flags,root/'tests/gpu-tests.cpp',gpu,'-o',bin/'GpuTests.exe'])
 run([bin/'GpuTests.exe'])
+for case,expected in [('event',20),('pointer',22)]:
+ r=subprocess.run([str(bin/'GpuTests.exe'),case],capture_output=True,text=True)
+ if r.returncode!=expected:raise RuntimeError('Graphics notification validation failed: '+case)
+
 run([tool/'clang++.exe',*flags,root/'tests/gpu-ring-tests.cpp',gpu,'-o',bin/'GpuRingTests.exe'])
 run([bin/'GpuRingTests.exe'])
 for case in ['shift','alignment','unmapped','overflow','order','wbshift','wbunmapped']:

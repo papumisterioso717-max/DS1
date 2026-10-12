@@ -10,8 +10,8 @@
   "instruction_checks_passed": 98408,
   "runtime": "diagnostic: eight worker threads created; GPU configuration captured, rendering absent",
   "diagnostic_exit_code": 20,
-  "next_unimplemented_import": "__imp__VdCallGraphicsNotificationRoutines",
-  "guest_lr": "0x824126E0",
+  "next_unimplemented_import": "__imp__VdGetCurrentDisplayGamma",
+  "guest_lr": "0x823FAC20",
   "playable": false,
   "setjmp_longjmp": "not identified; unset",
   "memory_checks_passed": 43,
@@ -66,7 +66,7 @@
   "affinity_support": "single-bit guest masks 1..32 mapped cyclically onto process CPUs; KPCR/KTHREAD current CPU and prior mask; multi-bit masks rejected",
   "timestamp_checks_passed": 16,
   "timestamp_support": "24-byte Xenia-compatible diagnostic bundle; 32-bit elapsed milliseconds at +16; target 1 ms host timer cadence, other fields zero",
-  "gpu_diagnostic_checks_passed": 24,
+  "gpu_diagnostic_checks_passed": 28,
   "gpu_engine_support": "diagnostic request capture only; compatibility return 1; microcode execution, graphics callbacks and renderer absent",
   "gpu_request": {
     "flags": "0x1B530000",
@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "Graphics notification routine dispatch",
+  "next_blocker": "Current display gamma query",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -98,5 +98,13 @@
   "kernel_event_support": "Guest inline manual/auto events, non-alertable single wait, set/reset and BE signal state; known thread pointers supported; event address reuse/reinitialization, APC and atomic set-and-wait pending",
   "kernel_event_observed": "0xD9D27AFC manual reset, initially unsignaled",
   "kernel_event_checks_passed": 21,
-  "kernel_event_unsupported_type_test": "passed; exit 20"
+  "kernel_event_unsupported_type_test": "passed; exit 20",
+  "gpu_graphics_notification_support": "Event 1 captures four big-endian uint16 dimensions and returns zero; callback dispatch absent",
+  "gpu_graphics_notification_dimensions": [
+    1280,
+    720,
+    1280,
+    720
+  ],
+  "gpu_graphics_notification_negative_tests": "unknown event exits 20; invalid pointer exits 22"
 }

@@ -12,8 +12,8 @@ RESULTADO VERIFICADO
 - El ejecutable entra en el código recompilado y supera la consulta del módulo XEX.
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
-- Se detiene en VdCallGraphicsNotificationRoutines
-  (LR 0x824126E0, salida 20). Ver diagnostic.log.
+- Se detiene en VdGetCurrentDisplayGamma
+  (LR 0x823FAC20, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
 - Pasaron 16 401 comprobaciones de estado inicial, límites y memoria vecina.
@@ -378,3 +378,12 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
   secuencias atomicas set-and-wait y reinicializacion/reutilizacion de eventos.
 - Referencias: xenia/kernel/xobject.h, xevent.cc y xboxkrnl_threading.cc.
 - Pasaron 21 comprobaciones de eventos por direccion y el rechazo de un tipo no soportado.
+
+2026-10-12: notificacion de dimensiones graficas
+- VdCallGraphicsNotificationRoutines acepta el evento 1, valida los ocho
+  bytes y registra cuatro dimensiones uint16 big endian; devuelve cero.
+- Conserva el buffer original. Eventos desconocidos y punteros invalidos
+  detienen el diagnostico. No despacha callbacks ni presenta imagen.
+- El titulo informa front/back de 1280x720; siguiente exportacion pendiente:
+  VdGetCurrentDisplayGamma, LR 823FAC20, salida 20.
+- Referencia: https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_video.cc

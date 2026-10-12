@@ -87,3 +87,18 @@ PPC_FUNC(__imp__VdEnableRingBufferRPtrWriteBack){
  // No commands have been processed: do not publish a completion/read pointer.
  fprintf(stderr,"GPU_RING_WRITEBACK physical=%08X frequency=%u delivery=pending\n",address,it->second.readPointerUpdateFrequency);
 }
+
+PPC_FUNC(__imp__VdCallGraphicsNotificationRoutines){
+ // Xenia xboxkrnl_video.cc describes four BE uint16 scaling dimensions and
+ // returns zero for event 1. Capture only; callback dispatch remains absent.
+ const uint32_t event=ctx.r3.u32,address=ctx.r4.u32;
+ if(event!=1){fprintf(stderr,"PENDING_GPU_MODE graphics notification event=%u\n",event);std::_Exit(20);}
+ if(!readable(base,address,8)){fprintf(stderr,"INVALID_GRAPHICS_NOTIFICATION_BUFFER\n");std::_Exit(22);}
+ auto u16=[&](uint32_t offset){return uint16_t((uint16_t(base[address+offset])<<8)|base[address+offset+1]);};
+ const auto fw=u16(0),fh=u16(2),bw=u16(4),bh=u16(6);
+ std::lock_guard<std::mutex> guard(mutex);auto it=engines.find(base);
+ if(it==engines.end()){fprintf(stderr,"PENDING_GPU_MODE graphics notification before engine initialization\n");std::_Exit(20);}
+ auto& s=it->second;++s.notificationCount;s.frontWidth=fw;s.frontHeight=fh;s.backWidth=bw;s.backHeight=bh;
+ fprintf(stderr,"GPU_GRAPHICS_NOTIFICATION event=1 front=%ux%u back=%ux%u dispatch=pending\n",fw,fh,bw,bh);
+ ctx.r3.u64=0;
+}
