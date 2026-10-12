@@ -11,7 +11,13 @@ int main(){
  check(!queryDiagnosticGpu(b).initialized);check(init(0,0)==0);check(init(0xFFFFFFFF,0)==0);check(init(64,1)==0);check(!queryDiagnosticGpu(b).initialized);
  b[64]=0xAA;b[128]=0xBB;check(init(64,PPC_CODE_BASE)==1);auto s=queryDiagnosticGpu(b);check(s.initialized&&s.flags==0x1B530000&&s.callback==PPC_CODE_BASE&&s.argument==123&&s.pfp==64&&s.me==128);check(b[64]==0xAA&&b[128]==0xBB);
  c.r3.u64=PPC_CODE_BASE;c.r4.u64=1234;__imp__VdSetGraphicsInterruptCallback(c,b);check(queryDiagnosticGpu(b).interruptCallback==PPC_CODE_BASE&&queryDiagnosticGpu(b).interruptArgument==1234);c.r3.u64=0;c.r4.u64=0;__imp__VdSetGraphicsInterruptCallback(c,b);check(queryDiagnosticGpu(b).interruptCallback==0);
+ c.r3.u64=64;c.r4.u64=0x12345678;c.lr=0x87654320;__imp__VdSetSystemCommandBufferGpuIdentifierAddress(c,b);
+ check(queryDiagnosticGpu(b).systemCommandIdentifierAddress==64);check(c.r3.u32==64&&c.r4.u32==0x12345678&&c.lr==0x87654320);check(b[64]==0xAA);
+ c.r3.u64=128;__imp__VdSetSystemCommandBufferGpuIdentifierAddress(c,b);check(queryDiagnosticGpu(b).systemCommandIdentifierAddress==128);check(b[128]==0xBB);
+ c.r3.u64=0;__imp__VdSetSystemCommandBufferGpuIdentifierAddress(c,b);check(queryDiagnosticGpu(b).systemCommandIdentifierAddress==0);
+ c.r3.u64=64;__imp__VdSetSystemCommandBufferGpuIdentifierAddress(c,b);
  check(init(0,0)==0);check(queryDiagnosticGpu(b).pfp==64);__imp__VdShutdownEngines(c,b);check(!queryDiagnosticGpu(b).initialized);
+ check(queryDiagnosticGpu(b).systemCommandIdentifierAddress==0);c.r3.u64=0;__imp__VdSetSystemCommandBufferGpuIdentifierAddress(c,b);check(!queryDiagnosticGpu(b).initialized);
  check(init(64,0)==1);__imp__VdShutdownEngines(c,b);__imp__VdShutdownEngines(c,b);check(!queryDiagnosticGpu(b).initialized);
  VirtualFree(b,0,MEM_RELEASE);printf("PASS %d GPU diagnostic checks: captured state, bad inputs, unchanged microcode and shutdown\n",checks);
 }

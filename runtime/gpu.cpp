@@ -36,3 +36,19 @@ PPC_FUNC(__imp__VdSetGraphicsInterruptCallback){
  it->second.interruptCallback=callback;it->second.interruptArgument=argument;
  fprintf(stderr,"GPU_INTERRUPT_REGISTRATION callback=%08X argument=%08X delivery=pending\n",callback,argument);
 }
+
+PPC_FUNC(__imp__VdSetSystemCommandBufferGpuIdentifierAddress){
+ // Xenia's export is a void stub. Title call sites pass 0 to clear, or
+ // command-buffer storage + 8 to register. Retain the opaque address only:
+ // no identifier writes or GPU completion are fabricated.
+ // Reference: xenia/src/xenia/kernel/xboxkrnl/xboxkrnl_video.cc.
+ const uint32_t address=ctx.r3.u32;
+ std::lock_guard<std::mutex> guard(mutex);
+ auto it=engines.find(base);
+ if(it==engines.end()){
+  if(!address)return;
+  fprintf(stderr,"PENDING_GPU_MODE identifier registration before engine initialization\n");std::_Exit(20);
+ }
+ it->second.systemCommandIdentifierAddress=address;
+ fprintf(stderr,"GPU_SYSTEM_COMMAND_IDENTIFIER address=%08X processing=pending\n",address);
+}

@@ -12,8 +12,8 @@ RESULTADO VERIFICADO
 - El ejecutable entra en el código recompilado y supera la consulta del módulo XEX.
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
-- Se detiene en VdSetSystemCommandBufferGpuIdentifierAddress
-  (LR 0x823ECF58, salida 20). Ver diagnostic.log.
+- Se detiene en VdInitializeRingBuffer
+  (LR 0x823ED08C, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
 - Pasaron 16 401 comprobaciones de estado inicial, límites y memoria vecina.
@@ -333,3 +333,16 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
 - Requiere Windows 10 1803 o posterior. Cache de GPU y renderizador pendientes;
   este avance no produce una ventana jugable.
 - API de respaldo: https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-mapviewoffile3
+
+2026-10-12: registro del identificador del buffer de comandos
+- VdSetSystemCommandBufferGpuIdentifierAddress conserva, reemplaza o borra
+  la direccion solicitada. No escribe identificadores ni simula trabajo GPU.
+- Las llamadas del titulo verificadas usan cero para borrar o almacenamiento
+  del buffer + 8 para registrar; Xenia mantiene esta exportacion como void stub.
+- 24 comprobaciones GPU correctas, incluyendo preservacion de registros y
+  contenido, reemplazo, borrado y limpieza de estado al cerrar los motores.
+- Compilacion 320/320 y todas las pruebas del runtime correctas.
+- El arranque supera la llamada con cero y cuatro asignaciones adicionales;
+  siguiente servicio: VdInitializeRingBuffer, LR 823ED08C, salida 20.
+- Cola de comandos, ejecucion GPU y renderizador siguen pendientes.
+- Referencia: https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_video.cc

@@ -10,8 +10,8 @@
   "instruction_checks_passed": 98408,
   "runtime": "diagnostic: six worker threads start; reaches graphics initialization",
   "diagnostic_exit_code": 20,
-  "next_unimplemented_import": "__imp__VdSetSystemCommandBufferGpuIdentifierAddress",
-  "guest_lr": "0x823ECF58",
+  "next_unimplemented_import": "__imp__VdInitializeRingBuffer",
+  "guest_lr": "0x823ED08C",
   "playable": false,
   "setjmp_longjmp": "not identified; unset",
   "memory_checks_passed": 43,
@@ -66,7 +66,7 @@
   "affinity_support": "single-bit guest masks 1..32 mapped cyclically onto process CPUs; KPCR/KTHREAD current CPU and prior mask; multi-bit masks rejected",
   "timestamp_checks_passed": 16,
   "timestamp_support": "24-byte Xenia-compatible diagnostic bundle; 32-bit elapsed milliseconds at +16; target 1 ms host timer cadence, other fields zero",
-  "gpu_diagnostic_checks_passed": 16,
+  "gpu_diagnostic_checks_passed": 24,
   "gpu_engine_support": "diagnostic request capture only; compatibility return 1; microcode execution, graphics callbacks and renderer absent",
   "gpu_request": {
     "flags": "0x1B530000",
@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "GPU system command-buffer identifier address registration",
+  "next_blocker": "GPU ring buffer initialization; command processor and renderer absent",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -84,5 +84,7 @@
   "gpu_interrupt_argument": "0xD9D24E00",
   "callback_support": "registration/removal only; orderly title shutdown and GPU interrupt delivery pending",
   "physical_alias_regression": "Passed write at 0xBE010100 shared with 0xDE010100 and 0xFE00F100; title startup passes former fault",
-  "host_memory_requirement": "Windows 10 version 1803 or later, VirtualAlloc2/MapViewOfFile3 placeholders"
+  "host_memory_requirement": "Windows 10 version 1803 or later, VirtualAlloc2/MapViewOfFile3 placeholders",
+  "gpu_system_command_identifier_support": "Opaque address registration/replacement/clear only; void call preserves context; no GPU writes or completion simulated",
+  "gpu_system_command_identifier_observed": "0x00000000 (clear)"
 }

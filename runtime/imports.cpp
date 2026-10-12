@@ -143,7 +143,6 @@ PPC_FUNC(__imp__NtQueryVirtualMemory) { fprintf(stderr, "PENDING_IMPORT __imp__N
 PPC_FUNC(__imp__KiApcNormalRoutineNop) { fprintf(stderr, "PENDING_IMPORT __imp__KiApcNormalRoutineNop guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__KeAcquireSpinLockAtRaisedIrql) { fprintf(stderr, "PENDING_IMPORT __imp__KeAcquireSpinLockAtRaisedIrql guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__VdEnableRingBufferRPtrWriteBack) { fprintf(stderr, "PENDING_IMPORT __imp__VdEnableRingBufferRPtrWriteBack guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
-PPC_FUNC(__imp__VdSetSystemCommandBufferGpuIdentifierAddress) { fprintf(stderr, "PENDING_IMPORT __imp__VdSetSystemCommandBufferGpuIdentifierAddress guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__VdInitializeRingBuffer) { fprintf(stderr, "PENDING_IMPORT __imp__VdInitializeRingBuffer guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__KfAcquireSpinLock) { fprintf(stderr, "PENDING_IMPORT __imp__KfAcquireSpinLock guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__KfReleaseSpinLock) { fprintf(stderr, "PENDING_IMPORT __imp__KfReleaseSpinLock guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
