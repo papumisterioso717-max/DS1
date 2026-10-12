@@ -211,3 +211,26 @@ PPC_FUNC(__imp__NtResumeThread){
  if(previous==DWORD(-1)){if(address)base[address+0xBC]=old;ctx.r3.u64=invalid;return;}
  if(out)put(base,out,previous);ctx.r3.u64=0;
 }
+
+PPC_FUNC(__imp__KeSetAffinityThread){
+ const uint32_t address=ctx.r3.u32,mask=ctx.r4.u32,out=ctx.r5.u32;
+ if(!mask||(mask&~0x3Fu)||(mask&(mask-1))){ctx.r3.u64=invalid;return;}
+ if(out&&!valid(base,out,4,true)){ctx.r3.u64=invalid;return;}
+ std::lock_guard<std::mutex> guard(objectsMutex);
+ std::shared_ptr<KernelObject> object;uint32_t pcr=0;
+ for(const auto& item:threads)if(item.first.first==base&&item.second->guestAddress==address&&address){object=item.second;pcr=item.first.second;break;}
+ if(!object){ctx.r3.u64=badHandle;return;}
+ if(!valid(base,pcr+0x10C,1,true)||!valid(base,address+0xBF,1,true))pending("invalid affinity thread state",ctx);
+ unsigned cpu=0;while(!(mask&(1u<<cpu)))++cpu;
+ // Map six guest logical CPUs cyclically onto the process's available CPUs.
+ // This is a diagnostic mapping, not an emulation of Xbox topology or timing.
+ DWORD_PTR processMask=0,systemMask=0;
+ if(!GetProcessAffinityMask(GetCurrentProcess(),&processMask,&systemMask)||!processMask)pending("host affinity unavailable",ctx);
+ DWORD_PTR available[64]{};unsigned count=0;
+ for(unsigned i=0;i<sizeof(DWORD_PTR)*8;++i)if(processMask&(DWORD_PTR(1)<<i))available[count++]=DWORD_PTR(1)<<i;
+ const uint8_t old=base[pcr+0x10C];if(old>=6)pending("invalid previous guest CPU",ctx);
+ if(!SetThreadAffinityMask(object->handle,available[cpu%count]))pending("native affinity update failed",ctx);
+ base[pcr+0x10C]=uint8_t(cpu);base[address+0xBF]=uint8_t(cpu);
+ if(out)put(base,out,1u<<old);ctx.r3.u64=0;
+ fprintf(stderr,"KeSetAffinityThread thread=0x%08X guest_cpu=%u previous=%u host_mask=0x%llX\n",address,cpu,old,(unsigned long long)available[cpu%count]);
+}

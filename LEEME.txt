@@ -11,8 +11,8 @@ RESULTADO VERIFICADO
   saturación, alias de registros, endian, saltos calculados y destinos compartidos.
 - El ejecutable entra en el código recompilado y supera la consulta del módulo XEX.
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
-- Se detiene al solicitar KeSetAffinityThread
-  (LR 0x828930A4, salida 20). Ver diagnostic.log.
+- Se detiene por acceso a KeTimeStampBundle sin conectar
+  (LR 0x82542B20, direccion 0xAD000110, salida 21). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
 - Pasaron 16 401 comprobaciones de estado inicial, límites y memoria vecina.
@@ -245,3 +245,20 @@ Referencias:
 https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xthread.cc
 https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xthread.h
 https://learn.microsoft.com/en-us/visualstudio/debugger/tips-for-debugging-threads
+
+AFINIDAD Y PRIMEROS WORKERS REALES
+KeSetAffinityThread admite un bit entre los seis procesadores logicos de
+Xbox. Devuelve la mascara anterior por el puntero de salida y actualiza los
+campos de CPU en KPCR y KTHREAD. Asigna ciclicamente esos seis procesadores
+a los procesadores disponibles para el proceso Windows; no replica topologia
+ni tiempos de Xbox. Mascaras vacias, fuera de rango o con varios bits se
+rechazan. Las solicitudes de afinidad en ExCreateThread siguen pendientes.
+Los workers reales Job Manager y EARSJob ya empiezan a ejecutar codigo.
+El siguiente fallo es una variable importada sin conectar: KeTimeStampBundle
+(slot 820008E0). El acceso desde 82894870 intenta leer el contador de ms en
++16, usando el marcador de importacion AD000100 como puntero. Resultado:
+acceso no disponible AD000110, salida 21, LR 82542B20.
+Pendiente: asignar respaldo valido y actualizar el contador compartido.
+Referencia: https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_module.cc
+Pasaron 49 comprobaciones de hilos, incluidas afinidad y sus limites,
+y todas las pruebas anteriores del script de compilacion.

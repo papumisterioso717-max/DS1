@@ -9,9 +9,9 @@
   "full_compilation": "320/320 passed; full build and runtime test suites rerun",
   "instruction_checks_passed": 98408,
   "runtime": "diagnostic; memory reserve and commit succeeded",
-  "diagnostic_exit_code": 20,
-  "next_unimplemented_import": "KeSetAffinityThread",
-  "guest_lr": "0x828930A4",
+  "diagnostic_exit_code": 21,
+  "next_unimplemented_import": "KeTimeStampBundle (data variable)",
+  "guest_lr": "0x82542B20",
   "playable": false,
   "setjmp_longjmp": "not identified; unset",
   "memory_checks_passed": 43,
@@ -57,10 +57,12 @@
   "events_created_at_startup": 32,
   "event_support": "unnamed manual/auto reset; create, set, clear, single non-alertable wait, duplicate and close; named objects, pulse, guest event structures and multiwait pending",
   "event_checks_passed": 35,
-  "thread_checks_passed": 26,
+  "thread_checks_passed": 49,
   "thread_name_checks_passed": 3,
   "guest_threads_created_at_startup": 1,
-  "guest_worker_started_at_startup": false,
+  "guest_worker_started_at_startup": true,
   "thread_stack_size_from_xex": 262144,
-  "thread_support": "create flags 0/1, isolated KPCR/KTHREAD/TLS/stack, native resume, worker exit, single wait; affinity, APC, scheduling, other flags and lifecycle reclamation pending"
+  "thread_support": "create flags 0/1, isolated KPCR/KTHREAD/TLS/stack, native resume, worker exit, single wait; affinity, APC, scheduling, other flags and lifecycle reclamation pending",
+  "affinity_support": "single-bit guest masks 1..32 mapped cyclically onto process CPUs; KPCR/KTHREAD current CPU and prior mask; multi-bit masks rejected",
+  "next_fault_guest_address": "0xAD000110"
 }

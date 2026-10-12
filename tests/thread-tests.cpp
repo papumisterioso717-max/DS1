@@ -25,6 +25,11 @@ int main(){
  auto wait=[&](uint32_t h,uint32_t timeout){c.r3.u64=h;c.r4.u64=0;c.r5.u64=0;c.r6.u64=timeout;__imp__NtWaitForSingleObjectEx(c,b);return c.r3.u32;};
  check(create(0,1)==0);uint32_t h=get(b,0x10000);check(get(b,0x10004)==2);check(calls==0);check(wait(h,0x10010)==0x102);
  check(get(b,0x61000100)==0x61001000);check(get(b,0x61001068)==0x61002000);check(b[0x610010BC]==1);
+
+ auto affinity=[&](uint32_t mask,uint32_t out){c.r3.u64=0x61001000;c.r4.u64=mask;c.r5.u64=out;__imp__KeSetAffinityThread(c,b);return c.r3.u32;};
+ check(affinity(0,0x10018)==0xC000000D);check(affinity(3,0x10018)==0xC000000D);check(affinity(64,0x10018)==0xC000000D);
+ check(affinity(32,0xFFFFFFFF)==0xC000000D);check(b[0x6100010C]==0);
+ for(unsigned cpu=0;cpu<6;++cpu){check(affinity(1u<<cpu,0x10018)==0);check(get(b,0x10018)==(cpu?1u<<(cpu-1):1u));check(b[0x6100010C]==cpu&&b[0x610010BF]==cpu);}
  MEMORY_BASIC_INFORMATION m{};VirtualQuery(b+0x71000000,&m,sizeof(m));check(m.State==MEM_RESERVE);
  c.r3.u64=h;c.r4.u64=0x10008;c.r5.u64=2;__imp__NtDuplicateObject(c,b);check(c.r3.u32==0);uint32_t copy=get(b,0x10008);
  c.r3.u64=h;__imp__NtClose(c,b);check(c.r3.u32==0);

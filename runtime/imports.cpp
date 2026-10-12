@@ -70,7 +70,6 @@ PPC_FUNC(__imp__KeQueryBasePriorityThread) { fprintf(stderr, "PENDING_IMPORT __i
 PPC_FUNC(__imp__KeSetDisableBoostThread) { fprintf(stderr, "PENDING_IMPORT __imp__KeSetDisableBoostThread guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__NtSuspendThread) { fprintf(stderr, "PENDING_IMPORT __imp__NtSuspendThread guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__NtQueueApcThread) { fprintf(stderr, "PENDING_IMPORT __imp__NtQueueApcThread guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
-PPC_FUNC(__imp__KeSetAffinityThread) { fprintf(stderr, "PENDING_IMPORT __imp__KeSetAffinityThread guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__XexCheckExecutablePrivilege) {
  const uint32_t bit=ctx.r3.u32;
  ctx.r3.u64=0;

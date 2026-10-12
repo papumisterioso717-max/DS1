@@ -4,7 +4,7 @@ Proyecto experimental de recompilación de Dead Space para Xbox 360 con XenonRec
 
 ## Estado
 
-El diagnóstico entra en el código recompilado y actualmente crea el primer hilo suspendido y se detiene en `KeSetAffinityThread`. Todavía no es jugable y no dispone de un renderizador.
+El diagnóstico entra en el código recompilado y actualmente reanuda los primeros hilos y se detiene por un acceso a la variable `KeTimeStampBundle`, todavía sin conectar. Todavía no es jugable y no dispone de un renderizador.
 
 ## Contenido
 
