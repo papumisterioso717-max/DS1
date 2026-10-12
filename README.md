@@ -4,7 +4,7 @@ Proyecto experimental de recompilación de Dead Space para Xbox 360 con XenonRec
 
 ## Estado
 
-El diagnóstico crea ocho hilos de trabajo y llega a enviar la primera cola de comandos GPU. El procesador parcial reconoce la inicialización y las listas indirectas; registra la solicitud de coherencia de memoria y se detiene en `WAIT_REG_MEM`, cuya resolución sigue pendiente. No dispone de renderizador y aún no es jugable.
+El diagnóstico crea ocho hilos de trabajo y llega a enviar la primera cola de comandos GPU. El procesador parcial reconoce la inicialización y las listas indirectas; resuelve la primera espera de coherencia en memoria compartida y recibe una segunda lista, detenida en el registro GPU `0x0D02`. No dispone de renderizador y aún no es jugable.
 
 Pruebas actuales: 320/320 archivos compilados y 50 comprobaciones de memoria física, además de las demás pruebas del runtime. El respaldo compartido requiere Windows 10 1803 o posterior.
 

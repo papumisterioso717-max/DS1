@@ -4,6 +4,7 @@
 #include "gpu.h"
 #include <map>
 #include <vector>
+#include <atomic>
 #include <mutex>
 #include <cstdio>
 #include <cstdlib>
@@ -153,6 +154,29 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
     else state.coherStatus=value|0x80000000u;
     fprintf(stderr,"GPU_COHER_REGISTER index=%04X value=%08X\n",index,value);
    }
+  }
+  else if(type==3&&(head&1)==0&&opcode==0x3C&&count==5){
+   const uint32_t info=physicalWord(base,address(i+1)),reg=physicalWord(base,address(i+2));
+   const uint32_t ref=physicalWord(base,address(i+3)),mask=physicalWord(base,address(i+4));
+   const uint32_t interval=physicalWord(base,address(i+5));
+   fprintf(stderr,"GPU_WAIT info=%08X register=%08X ref=%08X mask=%08X interval=%u\n",info,reg,ref,mask,interval);
+   if((info&~7u)||reg<0xA2F||reg>0xA31){fprintf(stderr,"PENDING_GPU_WAIT_MODE\n");std::_Exit(20);}
+   if(reg==0xA31&&(state.coherStatus&0x80000000u)){
+    // Only the observed initial request is supported. All currently accepted
+    // packets use shared CPU memory; no textures, draws or host GPU caches exist.
+    // A future rendering backend must replace this path with resource barriers.
+    if(state.coherStatus!=0x81000000u){fprintf(stderr,"PENDING_GPU_COHERENCE_MODE status=%08X\n",state.coherStatus);std::_Exit(20);}
+    if(!physicalRange(base,state.coherBase,state.coherSize))invalidRing();
+    std::atomic_thread_fence(std::memory_order_seq_cst);
+    state.coherStatus=0;
+    fprintf(stderr,"GPU_COHERENCE_COMPLETE base=%08X bytes=%08X backend=shared-cpu-memory\n",state.coherBase,state.coherSize);
+   }
+   const uint32_t v=(reg==0xA2F?state.coherSize:reg==0xA30?state.coherBase:state.coherStatus)&mask;
+   bool matched=false;
+   switch(info&7){case 1:matched=v<ref;break;case 2:matched=v<=ref;break;case 3:matched=v==ref;break;case 4:matched=v!=ref;break;case 5:matched=v>=ref;break;case 6:matched=v>ref;break;case 7:matched=true;break;}
+   // The synchronous diagnostic has no producer for an unsatisfied register
+   // condition. Stop without publishing a completed ring read pointer.
+   if(!matched){fprintf(stderr,"PENDING_GPU_WAIT_CONDITION value=%08X\n",v);std::_Exit(20);}
   }
   else if(type==3&&(head&1)==0&&opcode==0x10){ /* NOP payload. */ }
   else if(type==3&&(head&1)==0&&opcode==0x48){

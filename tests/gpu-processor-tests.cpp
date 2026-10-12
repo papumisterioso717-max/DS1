@@ -19,6 +19,9 @@ int main(int argc,char**argv){
   if(!strcmp(argv[1],"unknown")){put(0,0xC0002200);put(1,0);diagnosticMmioStore32(base,0x7FC80714,2,0);}
   if(!strcmp(argv[1],"truncated")){put(0,0xC0034800);diagnosticMmioStore32(base,0x7FC80714,1,0);}
   if(!strcmp(argv[1],"register")){put(0,0x00000A32);put(1,0);diagnosticMmioStore32(base,0x7FC80714,2,0);}
+  if(!strcmp(argv[1],"waitfalse")||!strcmp(argv[1],"waitmemory")){
+   put(0,0xC0043C00);put(1,!strcmp(argv[1],"waitmemory")?0x13:3);put(2,0xA2F);put(3,1);put(4,0xffffffff);put(5,0);diagnosticMmioStore32(base,0x7FC80714,6,0);
+  }
   if(!strcmp(argv[1],"index"))diagnosticMmioStore32(base,0x7FC80714,8,0);
   if(!strcmp(argv[1],"cycle")){put(0,0xC0013F00);put(1,0x10000);put(2,3);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   return 1;
@@ -40,6 +43,16 @@ int main(int argc,char**argv){
  put(5,0x00018A30);put(6,0x10000);put(7,0x11000);
  diagnosticMmioStore32(base,0x7FC80714,0,0);check(queryDiagnosticGpu(base).coherBase==0x11000);
  check(queryDiagnosticGpu(base).coherStatus==0x80000123);
+ // Install the observed shared-memory coherence request, then wait for zero.
+ put(0,0x00000A31);put(1,0x01000000);diagnosticMmioStore32(base,0x7FC80714,2,0);
+ put(2,0xC0043C00);put(3,3);put(4,0xA31);put(5,0);put(6,0x80000000);put(7,16);
+ diagnosticMmioStore32(base,0x7FC80714,0,0);check(queryDiagnosticGpu(base).coherStatus==0);check(PPC_LOAD_U32(0xA0011000)==0);
+ // Verify the masked comparison against a nonzero size register.
+ for(auto compare:{1u,2u,3u,4u,5u,6u,7u}){
+  c.r3.u64=0x10000;c.r4.u64=2;__imp__VdInitializeRingBuffer(c,base);
+  put(0,0xC0043C00);put(1,compare);put(2,0xA2F);put(3,compare==1?4097:compare==4||compare==6?4095:4096);put(4,0xffffffff);put(5,0);
+  diagnosticMmioStore32(base,0x7FC80714,6,0);check(queryDiagnosticGpu(base).ringReadIndex==6);
+ }
  __imp__VdShutdownEngines(c,base);check(queryDiagnosticGpu(base).processedPackets==0);check(VirtualFree(base,0,MEM_RELEASE));
  printf("PASS %d processor checks: initialization, indirect list, wraparound, writeback and fallback\n",n);
 }

@@ -13,7 +13,7 @@ RESULTADO VERIFICADO
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
-- Se detiene en WAIT_REG_MEM (opcode 0x3C), fisica 0x1F8F0054
+- Completa la primera lista y se detiene en registro GPU 0x0D02, fisica 0x1F8E0000
   (LR 0x823EBC90, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
@@ -446,3 +446,14 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
 - 16 comprobaciones del procesador y 5 rechazos correctos, incluyendo
   registro sin soporte y conservacion del estado pendiente.
 - Referencias: xenia/gpu/register_table.inc y command_processor.cc.
+
+2026-10-12: espera de coherencia en memoria compartida
+- WAIT_REG_MEM evalua comparaciones de registros COHER con mascara.
+- La solicitud observada (estado 81000000) se resuelve validando memoria y
+  aplicando una barrera de CPU: este backend no tiene recursos/caches GPU.
+  Un renderizador futuro debe sustituir esta ruta por barreras de recursos.
+- Modos de memoria, otros estados y condiciones no satisfechas siguen pendientes.
+- El titulo completa las primeras 22 palabras y entrega una segunda lista,
+  con indice productor 25. Nuevo bloqueo: registro 0D02 en 1F8E0000.
+- 25 comprobaciones del procesador y 7 rechazos correctos.
+- Referencia: xenia/gpu/command_processor.cc, WAIT_REG_MEM y MakeCoherent.
