@@ -16,6 +16,7 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strcmp(argv[1],"vertexrange")){put(0,0x00012102);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"programrange")){put(0,0x00012181);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"shaderlength")||!strcmp(argv[1],"shaderstage")||!strcmp(argv[1],"shaderoffset")||!strcmp(argv[1],"shaderempty")){
    put(0,0xC0022B00);put(1,!strcmp(argv[1],"shaderstage")?2:0);
@@ -180,7 +181,14 @@ int main(int argc,char**argv){
  check(s.shaderWords[0]==std::vector<uint32_t>({0x55555555})&&s.shaderWords[1]==std::vector<uint32_t>({0xABCD1234}));
  put(7,0x0001A180);put(0,1);put(1,0);diagnosticMmioStore32(base,0x7FC80714,2,0);
  check(queryDiagnosticGpu(base).sqProgramControl==0&&queryDiagnosticGpu(base).sqContextMisc==0x87654321);
+ put(2,0x00022100);put(3,0xFFFFFF);put(4,0);put(5,0xFFFFFFFF);
+ diagnosticMmioStore32(base,0x7FC80714,6,0);s=queryDiagnosticGpu(base);
+ check(s.vertexIndexConfig[0]==0xFFFFFF&&s.vertexIndexConfig[1]==0&&s.vertexIndexConfig[2]==0xFFFFFFFF);
+ put(6,0x00002102);put(7,0);diagnosticMmioStore32(base,0x7FC80714,0,0);
+ check(queryDiagnosticGpu(base).vertexIndexConfig[2]==0&&queryDiagnosticGpu(base).vertexIndexConfig[0]==0xFFFFFF);
+ check(queryDiagnosticGpu(base).shaderWords[0]==s.shaderWords[0]&&queryDiagnosticGpu(base).sqContextMisc==s.sqContextMisc);
  __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
+ check(s.vertexIndexConfig[0]==0&&s.vertexIndexConfig[1]==0&&s.vertexIndexConfig[2]==0);
  check(s.sqProgramControl==0&&s.sqContextMisc==0);
  check(s.shaderWords[0].empty()&&s.shaderWords[1].empty()&&s.shaderUploadCount==0);
  check(s.invalidationCount==0&&s.invalidationMask==0);

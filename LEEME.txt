@@ -13,7 +13,7 @@ RESULTADO VERIFICADO
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
-- Completa la primera lista y se detiene en VGT_MAX_VTX_INDX (2100), fisica 0x1FCE90B0, profundidad 2
+- Completa la primera lista y se detiene en registro 2293, fisica 0x1FCE90C0, profundidad 2
   (LR 0x823EBC90, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
@@ -574,3 +574,11 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
 - Nuevo bloqueo: VGT_MAX_VTX_INDX (2100) en 1FCE90B0; paquete de tres registros.
 - Sigue sin renderizador ni imagen del juego.
 - Verificado: 89 comprobaciones del procesador, 26 rechazos y suite general.
+
+2026-10-13: configuracion de indices de vertices
+- Conserva VGT_MAX_VTX_INDX, VGT_MIN_VTX_INDX y VGT_INDX_OFFSET.
+- El titulo escribe 0000FFFF, 00000000 y 00000000 respectivamente.
+- No lee geometria ni dibuja. Los shaders y su configuracion se conservan.
+- Nuevo bloqueo: registro 2293 en 1FCE90C0.
+- Sigue sin renderizador ni imagen del juego.
+- Verificado: 93 comprobaciones del procesador, 27 rechazos y suite general.
