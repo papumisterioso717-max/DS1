@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "Unsupported PA_CL_CLIP_CNTL register 0x2204 at physical 0x1FCE90C8, depth 2",
+  "next_blocker": "Unsupported PA_SC_AA_MASK register 0x2312 at physical 0x1FCE90D8, depth 2",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -121,8 +121,8 @@
   "gpu_ring_inspector": "Read-only PM4 header inspection; producer boundary unknown; execution absent",
   "gpu_ring_inspector_test_cases": 6,
   "gpu_processor_support": "Bounded synchronous CP_RB_WPTR dispatch; zero/type2/NOP packets, ME_INIT data storage, INDIRECT_BUFFER/PFD traversal; unknown/predicated commands stop; no renderer",
-  "gpu_processor_checks_passed": 96,
-  "gpu_processor_negative_cases": 29,
+  "gpu_processor_checks_passed": 100,
+  "gpu_processor_negative_cases": 30,
   "gpu_first_submission_words": 22,
   "gpu_first_submission_write_index": 22,
   "gpu_first_indirect_physical": "0x1F8F0040",
@@ -210,5 +210,11 @@
     "0x00000000"
   ],
   "gpu_viz_query_config_support": "Raw PA_SC_VIZ_QUERY storage only; VIZ_QUERY execution remains unsupported; no fabricated visibility results",
-  "gpu_viz_query_config_observed": "0x00000000"
+  "gpu_viz_query_config_observed": "0x00000000",
+  "gpu_clip_transform_support": "Raw PA_CL_CLIP_CNTL, PA_SU_SC_MODE_CNTL and PA_CL_VTE_CNTL storage; no geometry processing",
+  "gpu_clip_transform_observed": [
+    "0x00010000",
+    "0x00010000",
+    "0x00000300"
+  ]
 }

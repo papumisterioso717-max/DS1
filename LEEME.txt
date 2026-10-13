@@ -13,7 +13,7 @@ RESULTADO VERIFICADO
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
-- Completa la primera lista y se detiene en PA_CL_CLIP_CNTL (2204), fisica 0x1FCE90C8, profundidad 2
+- Completa la primera lista y se detiene en PA_SC_AA_MASK (2312), fisica 0x1FCE90D8, profundidad 2
   (LR 0x823EBC90, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
@@ -591,3 +591,11 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
 - Fuente: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/register_table.inc
 - Sigue sin renderizador ni imagen del juego.
 - Verificado: 96 comprobaciones del procesador, 29 rechazos y suite general.
+
+2026-10-13: configuracion de recorte y transformacion
+- Conserva PA_CL_CLIP_CNTL, PA_SU_SC_MODE_CNTL y PA_CL_VTE_CNTL.
+- El titulo escribe 00010000, 00010000 y 00000300 respectivamente.
+- No transforma geometria ni aplica recorte; esas operaciones requieren renderizador.
+- Nuevo bloqueo: PA_SC_AA_MASK (2312) en 1FCE90D8.
+- Sigue sin renderizador ni imagen del juego.
+- Verificado: 100 comprobaciones del procesador, 30 rechazos y suite general.
