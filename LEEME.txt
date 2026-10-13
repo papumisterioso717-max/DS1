@@ -13,7 +13,7 @@ RESULTADO VERIFICADO
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
-- Completa la primera lista y se detiene en registro 0x0082 de REG_RMW, fisica 0x1F8E0054
+- Completa la primera lista y se detiene en registro 0x0E42, fisica 0x1F8E0064
   (LR 0x823EBC90, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
@@ -524,3 +524,15 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
 - 69 comprobaciones del procesador, 18 rechazos y suite general correctos.
 - Fuentes: Xenia register_file.cc y command_processor.cc.
 - Sigue sin renderizador ni imagen del juego.
+
+2026-10-12: registro opaco 0082 y vista previa de listas
+- 0082 conserva valores desde cero como compatibilidad; semantica hardware pendiente.
+- El titulo supera su REG_RMW. Nuevo bloqueo: 0E42, valor solicitado 00001F60.
+- Captura hasta 64 palabras de cada lista indirecta de primer nivel sin ejecutarlas.
+- La vista previa muestra despues 0C85, scratch 057C/057B, 2080..2082,
+  WAIT_UNTIL y 0F01; despues listas indirectas, opcode 3B y opcode 58.
+- Estos comandos posteriores NO se han ejecutado. No implican progreso de renderizado.
+- Proximo trabajo: investigar 0E42, 0C85, 2080..2082 y 0F01 como conjunto;
+  luego revisar las listas indirectas y eventos antes de completar esta entrega.
+- Sigue sin renderizador ni imagen del juego.
+- Verificado: 72 comprobaciones del procesador, 18 rechazos y suite general.

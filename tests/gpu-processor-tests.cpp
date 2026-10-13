@@ -16,7 +16,7 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
-  if(!strcmp(argv[1],"opaqueadjacent")){put(0,0x00010081);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
+  if(!strcmp(argv[1],"opaqueadjacent")){put(0,0x00010082);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"rmwunknown")||!strcmp(argv[1],"rmwshort")||!strcmp(argv[1],"rmwmode")){
    put(0,!strcmp(argv[1],"rmwshort")?0xC0012100:0xC0022100);
    put(1,!strcmp(argv[1],"rmwmode")?0x2000D04:0xD03);put(2,0);put(3,1);
@@ -132,7 +132,12 @@ int main(int argc,char**argv){
  put(2,0xC0022100);put(3,0x81);put(4,0xFFFFFFFF);put(5,0x80010000);
  diagnosticMmioStore32(base,0x7FC80714,6,0);
  check(queryDiagnosticGpu(base).unknown0081==0x92355678&&PPC_LOAD_U32(0xA0011000)==6);
+ check(queryDiagnosticGpu(base).unknown0082==0);
+ put(6,0x00000082);put(7,0x1234ABCD);diagnosticMmioStore32(base,0x7FC80714,0,0);
+ put(0,0xC0022100);put(1,0x82);put(2,0xFFFFFFFF);put(3,0);diagnosticMmioStore32(base,0x7FC80714,4,0);
+ check(queryDiagnosticGpu(base).unknown0082==0x1234ABCD&&queryDiagnosticGpu(base).unknown0081==0x92355678);
  __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
+ check(s.unknown0082==0);
  check(s.unknown0081==0);
  check(s.sqEoRt==0);
  check(s.waitUntil==0);

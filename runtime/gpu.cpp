@@ -130,7 +130,7 @@ uint32_t physicalWord(uint8_t* base,uint32_t address){
 }
 uint32_t& gpuRegister(DiagnosticGpuState& s,uint32_t index){
  switch(index){
- case 0x81:return s.unknown0081;
+ case 0x81:return s.unknown0081;case 0x82:return s.unknown0082;
  case 0xA2F:return s.coherSize;case 0xA30:return s.coherBase;case 0xA31:return s.coherStatus;
  case 0xD00:return s.sqGprManagement;case 0xD01:return s.sqFlowControl;case 0xD02:return s.sqInstStoreManagement;case 0xD04:return s.sqEoRt;
  case 0x5C8:return s.waitUntil;case 0x1DC:return s.scratchMask;case 0x1DD:return s.scratchAddress;
@@ -144,6 +144,7 @@ void writeGpuRegister(uint8_t* base,DiagnosticGpuState& state,uint32_t index,uin
     // Opaque compatibility storage, matching Xenia's zero-initialized register
     // file and generic WriteRegister fallback. Hardware semantics are unknown.
     if(index==0x81)state.unknown0081=value;
+    else if(index==0x82)state.unknown0082=value;
     else if(index==0xA2F)state.coherSize=value;
     else if(index==0xA30)state.coherBase=value;
     else if(index==0xA31)state.coherStatus=value|0x80000000u;
@@ -201,7 +202,7 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    // Match Xenia's WriteRegister behavior without pretending to flush a GPU.
    for(uint32_t n=0;n<count;++n){
     const uint32_t index=first+(single?0:n);
-    if(!((index>=0xA2F&&index<=0xA31)||(index>=0xD00&&index<=0xD02)||(index>=0xA02&&index<=0xA05)||index==0x81||index==0xD04||index==0x5C8||index==0x1DC||index==0x1DD||(index>=0x578&&index<=0x57F))){fprintf(stderr,"PENDING_GPU_REGISTER_PACKET index=%04X physical=%08X\n",index,address(i));std::_Exit(20);}
+    if(!((index>=0xA2F&&index<=0xA31)||(index>=0xD00&&index<=0xD02)||(index>=0xA02&&index<=0xA05)||index==0x81||index==0x82||index==0xD04||index==0x5C8||index==0x1DC||index==0x1DD||(index>=0x578&&index<=0x57F))){fprintf(stderr,"PENDING_GPU_REGISTER_PACKET index=%04X physical=%08X\n",index,address(i));std::_Exit(20);}
    }
    for(uint32_t n=0;n<count;++n){
     const uint32_t index=first+(single?0:n),value=physicalWord(base,address(i+1+n));
@@ -252,6 +253,13 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    const uint32_t child=physicalWord(base,address(i+1))&0x1FFFFFFF;
    const uint32_t length=physicalWord(base,address(i+2));
    if(length>65536||(child&3)||!physicalRange(base,child,uint64_t(length)*4))invalidRing();
+   // Read-only bounded preview. Capture upcoming data before execution stops;
+   // these words have not executed and do not advance the completion pointer.
+   if(depth==0){
+    const uint32_t preview=length<64?length:64;
+    fprintf(stderr,"GPU_IB_PREVIEW physical=%08X total_words=%u captured=%u execution=not-implied\n",child,length,preview);
+    for(uint32_t n=0;n<preview;++n)fprintf(stderr,"GPU_IB_WORD physical=%08X value=%08X\n",child+n*4,physicalWord(base,child+n*4));
+   }
    processPackets(base,state,child,length,0,0,depth+1,budget);
   }else{
    fprintf(stderr,"PENDING_GPU_PACKET type=%u opcode=%02X physical=%08X depth=%u execution=incomplete\n",type,opcode,address(i),depth);std::_Exit(20);
