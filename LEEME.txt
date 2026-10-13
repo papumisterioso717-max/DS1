@@ -13,7 +13,7 @@ RESULTADO VERIFICADO
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
-- Completa la primera lista y se detiene en registro 2293, fisica 0x1FCE90C0, profundidad 2
+- Completa la primera lista y se detiene en PA_CL_CLIP_CNTL (2204), fisica 0x1FCE90C8, profundidad 2
   (LR 0x823EBC90, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
@@ -582,3 +582,12 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
 - Nuevo bloqueo: registro 2293 en 1FCE90C0.
 - Sigue sin renderizador ni imagen del juego.
 - Verificado: 93 comprobaciones del procesador, 27 rechazos y suite general.
+
+2026-10-13: configuracion de consulta de visibilidad
+- Conserva PA_SC_VIZ_QUERY (2293); el titulo escribe cero.
+- El comando VIZ_QUERY sigue detenido: no hay calculo ni resultados de visibilidad.
+- Nuevo bloqueo: paquete de tres registros desde PA_CL_CLIP_CNTL (2204),
+  seguido de PA_SU_SC_MODE_CNTL y PA_CL_VTE_CNTL, en 1FCE90C8.
+- Fuente: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/register_table.inc
+- Sigue sin renderizador ni imagen del juego.
+- Verificado: 96 comprobaciones del procesador, 29 rechazos y suite general.
