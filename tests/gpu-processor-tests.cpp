@@ -16,6 +16,7 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strcmp(argv[1],"aarange")){put(0,0x00012312);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"cliprange")){put(0,0x00012206);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"vizexecute")){put(0,0xC0002300);put(1,0);diagnosticMmioStore32(base,0x7FC80714,2,0);}
   if(!strcmp(argv[1],"vizrange")){put(0,0x00012293);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
@@ -200,7 +201,12 @@ int main(int argc,char**argv){
  put(0,0x00002205);put(1,0);diagnosticMmioStore32(base,0x7FC80714,2,0);
  check(queryDiagnosticGpu(base).clipTransformConfig[1]==0&&queryDiagnosticGpu(base).clipTransformConfig[0]==0x12345678);
  check(queryDiagnosticGpu(base).shaderWords[0]==s.shaderWords[0]&&queryDiagnosticGpu(base).vizQueryConfig==s.vizQueryConfig);
+ put(2,0x00002312);put(3,0xA5A5FFFF);diagnosticMmioStore32(base,0x7FC80714,4,0);s=queryDiagnosticGpu(base);
+ check(s.aaMask==0xA5A5FFFF&&s.clipTransformConfig[0]==0x12345678);
+ put(4,0x0001A312);put(5,1);put(6,0);diagnosticMmioStore32(base,0x7FC80714,7,0);
+ check(queryDiagnosticGpu(base).aaMask==0&&queryDiagnosticGpu(base).shaderWords[0]==s.shaderWords[0]);
  __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
+ check(s.aaMask==0);
  check(s.clipTransformConfig[0]==0&&s.clipTransformConfig[1]==0&&s.clipTransformConfig[2]==0);
  check(s.vizQueryConfig==0);
  check(s.vertexIndexConfig[0]==0&&s.vertexIndexConfig[1]==0&&s.vertexIndexConfig[2]==0);
