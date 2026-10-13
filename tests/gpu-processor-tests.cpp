@@ -16,6 +16,7 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strcmp(argv[1],"depthneighbor")){put(0,0x00012200);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"destneighbor")){put(0,0x0001200D);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"aarange")){put(0,0x00012312);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"cliprange")){put(0,0x00012206);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
@@ -214,7 +215,12 @@ int main(int argc,char**argv){
  check(s.coherStatus==0&&PPC_LOAD_U32(0xA0012000)==0xABCDEF12);
  put(2,0x0000200D);put(3,0);diagnosticMmioStore32(base,0x7FC80714,4,0);
  check(queryDiagnosticGpu(base).coherDestBase[7]==0&&queryDiagnosticGpu(base).coherDestBase[0]==0x1000);
+ put(4,0x00002200);put(5,0xFEDCBA98);diagnosticMmioStore32(base,0x7FC80714,6,0);s=queryDiagnosticGpu(base);
+ check(s.depthControl==0xFEDCBA98&&s.coherStatus==0&&s.coherDestBase[0]==0x1000);
+ put(6,0x00002200);put(7,0);diagnosticMmioStore32(base,0x7FC80714,0,0);
+ check(queryDiagnosticGpu(base).depthControl==0&&queryDiagnosticGpu(base).shaderWords[0]==s.shaderWords[0]);
  __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
+ check(s.depthControl==0);
  check(s.coherDestBase[0]==0&&s.coherDestBase[7]==0);
  check(s.aaMask==0);
  check(s.clipTransformConfig[0]==0&&s.clipTransformConfig[1]==0&&s.clipTransformConfig[2]==0);
