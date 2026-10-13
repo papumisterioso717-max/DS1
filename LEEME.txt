@@ -13,7 +13,7 @@ RESULTADO VERIFICADO
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
-- Completa la primera lista y se detiene en registro 0x0E42, fisica 0x1F8E0064
+- Completa la primera lista y se detiene en INVALIDATE_STATE (3B), fisica 0x1FCE9000, profundidad 2
   (LR 0x823EBC90, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
@@ -536,3 +536,13 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
   luego revisar las listas indirectas y eventos antes de completar esta entrega.
 - Sigue sin renderizador ni imagen del juego.
 - Verificado: 72 comprobaciones del procesador, 18 rechazos y suite general.
+
+2026-10-12: grupo de configuracion inicial GPU
+- Conserva UNKNOWN_0E42, PA_CL_ENHANCE, RB_BC_CONTROL y tres registros
+  PA_SC_WINDOW de desplazamiento y recorte. Sin dibujado ni efectos EDRAM.
+- El titulo supera el grupo y escribe scratch slot 4: 1FCED010 = 0BADF00D.
+- Entra en lista indirecta de profundidad 2 en 1FCE9000, detenida en
+  INVALIDATE_STATE (opcode 3B). La segunda entrega sigue incompleta.
+- Referencia: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/register_table.inc
+- Sigue sin renderizador ni imagen del juego.
+- Verificado: 76 comprobaciones del procesador, 19 rechazos y suite general.

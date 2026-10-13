@@ -16,6 +16,7 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strcmp(argv[1],"windowrange")){put(0,0x00012082);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"opaqueadjacent")){put(0,0x00010082);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"rmwunknown")||!strcmp(argv[1],"rmwshort")||!strcmp(argv[1],"rmwmode")){
    put(0,!strcmp(argv[1],"rmwshort")?0xC0012100:0xC0022100);
@@ -136,7 +137,19 @@ int main(int argc,char**argv){
  put(6,0x00000082);put(7,0x1234ABCD);diagnosticMmioStore32(base,0x7FC80714,0,0);
  put(0,0xC0022100);put(1,0x82);put(2,0xFFFFFFFF);put(3,0);diagnosticMmioStore32(base,0x7FC80714,4,0);
  check(queryDiagnosticGpu(base).unknown0082==0x1234ABCD&&queryDiagnosticGpu(base).unknown0081==0x92355678);
+ // Startup register group and sequential window coordinates, including wrap.
+ for(auto index:{0xE42u,0xC85u,0xF01u}){
+  c.r3.u64=0x10000;c.r4.u64=2;__imp__VdInitializeRingBuffer(c,base);
+  put(0,index);put(1,index^0xABCDEF00);diagnosticMmioStore32(base,0x7FC80714,2,0);
+ }
+ s=queryDiagnosticGpu(base);check(s.unknownE42==(0xE42u^0xABCDEF00)&&s.paClEnhance==(0xC85u^0xABCDEF00)&&s.rbBcControl==(0xF01u^0xABCDEF00));
+ put(2,0x00022080);put(3,0xFFFF8000);put(4,0x80010002);put(5,0x00030004);
+ diagnosticMmioStore32(base,0x7FC80714,6,0);s=queryDiagnosticGpu(base);
+ check(s.windowConfig[0]==0xFFFF8000&&s.windowConfig[1]==0x80010002&&s.windowConfig[2]==0x00030004);
+ put(6,0x00012081);put(7,0);put(0,0);diagnosticMmioStore32(base,0x7FC80714,1,0);s=queryDiagnosticGpu(base);
+ check(s.windowConfig[0]==0xFFFF8000&&s.windowConfig[1]==0&&s.windowConfig[2]==0);
  __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
+ check(s.unknownE42==0&&s.paClEnhance==0&&s.rbBcControl==0&&s.windowConfig[0]==0);
  check(s.unknown0082==0);
  check(s.unknown0081==0);
  check(s.sqEoRt==0);

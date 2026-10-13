@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "Unsupported type-0 register 0x0E42 at physical 0x1F8E0064",
+  "next_blocker": "Unsupported INVALIDATE_STATE opcode 0x3B at physical 0x1FCE9000, indirect depth 2",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -121,8 +121,8 @@
   "gpu_ring_inspector": "Read-only PM4 header inspection; producer boundary unknown; execution absent",
   "gpu_ring_inspector_test_cases": 6,
   "gpu_processor_support": "Bounded synchronous CP_RB_WPTR dispatch; zero/type2/NOP packets, ME_INIT data storage, INDIRECT_BUFFER/PFD traversal; unknown/predicated commands stop; no renderer",
-  "gpu_processor_checks_passed": 72,
-  "gpu_processor_negative_cases": 18,
+  "gpu_processor_checks_passed": 76,
+  "gpu_processor_negative_cases": 19,
   "gpu_first_submission_words": 22,
   "gpu_first_submission_write_index": 22,
   "gpu_first_indirect_physical": "0x1F8F0040",
@@ -178,5 +178,17 @@
     "0x3F",
     "0x3B",
     "0x58"
-  ]
+  ],
+  "gpu_initial_config_support": "Raw storage only for UNKNOWN_0E42, PA_CL_ENHANCE, RB_BC_CONTROL and PA_SC_WINDOW_OFFSET/SCISSOR_TL/SCISSOR_BR; no rendering or EDRAM effects",
+  "gpu_initial_config_observed": {
+    "0xE42": "0x00001F60",
+    "0xC85": "0x00000003",
+    "0xF01": "0x0000200E",
+    "0x2080..0x2082": "zero"
+  },
+  "gpu_title_scratch_write": {
+    "slot": 4,
+    "physical": "0x1FCED010",
+    "value": "0x0BADF00D"
+  }
 }
