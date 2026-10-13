@@ -13,7 +13,7 @@ RESULTADO VERIFICADO
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
-- Completa la primera lista y se detiene en comando GPU REG_RMW 0x21, fisica 0x1F8E0044
+- Completa la primera lista y se detiene en registro 0x0081 de REG_RMW, fisica 0x1F8E0044
   (LR 0x823EBC90, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
@@ -504,3 +504,13 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
 - Referencias Xenia: register_table.inc, command_processor.cc y xenos.h.
 - Sigue sin renderizador ni imagen del juego.
 - Verificado: 60 comprobaciones del procesador, 14 rechazos y suite general.
+
+2026-10-12: interpretacion REG_RMW
+- Implementa (registro AND operando) OR operando con inmediatos o registros.
+- Usa una ruta comun de escritura para mantener efectos como scratch writeback.
+- Rechaza registros no soportados, modos desconocidos y longitud incorrecta.
+- El titulo pide registro 0081, AND FFFFFFFF, OR 80010000. Se detiene antes
+  de modificarlo: su comportamiento aun no esta implementado.
+- 65 comprobaciones del procesador, 17 rechazos y suite general correctos.
+- Fuente: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/command_processor.cc
+- Sin renderizador ni imagen del juego.

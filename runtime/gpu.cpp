@@ -128,27 +128,18 @@ uint32_t physicalWord(uint8_t* base,uint32_t address){
  const auto* p=base+0xA0000000ull+address;
  return (uint32_t(p[0])<<24)|(uint32_t(p[1])<<16)|(uint32_t(p[2])<<8)|p[3];
 }
-void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint32_t words,uint32_t ringStart,uint32_t ringBytes,unsigned depth,uint32_t& budget){
- if(depth>8||words>65536)invalidRing();
- auto address=[&](uint32_t i){return ringBytes?ringStart+((start-ringStart+i*4)%ringBytes):start+i*4;};
- for(uint32_t i=0;i<words;){
-  if(!budget--)invalidRing();
-  const uint32_t head=physicalWord(base,address(i)),type=head>>30;
-  const uint32_t count=head==0||type==2?0:type==1?2:((head>>16)&0x3FFF)+1;
-  if(count>words-i-1)invalidRing();
-  const uint32_t opcode=(head>>8)&0x7F;
-  fprintf(stderr,"GPU_PACKET depth=%u physical=%08X header=%08X payload=%u\n",depth,address(i),head,count);
-  if(head==0||type==2){ /* Explicit no-op packet. */ }
-  else if(type==0){
-   const uint32_t first=head&0x7FFF;const bool single=(head&0x8000)!=0;
-   // COHER_* writes stage a cache-coherence request; status remains pending.
-   // Match Xenia's WriteRegister behavior without pretending to flush a GPU.
-   for(uint32_t n=0;n<count;++n){
-    const uint32_t index=first+(single?0:n);
-    if(!((index>=0xA2F&&index<=0xA31)||(index>=0xD00&&index<=0xD02)||(index>=0xA02&&index<=0xA05)||index==0xD04||index==0x5C8||index==0x1DC||index==0x1DD||(index>=0x578&&index<=0x57F))){fprintf(stderr,"PENDING_GPU_REGISTER_PACKET index=%04X physical=%08X\n",index,address(i));std::_Exit(20);}
-   }
-   for(uint32_t n=0;n<count;++n){
-    const uint32_t index=first+(single?0:n),value=physicalWord(base,address(i+1+n));
+uint32_t& gpuRegister(DiagnosticGpuState& s,uint32_t index){
+ switch(index){
+ case 0xA2F:return s.coherSize;case 0xA30:return s.coherBase;case 0xA31:return s.coherStatus;
+ case 0xD00:return s.sqGprManagement;case 0xD01:return s.sqFlowControl;case 0xD02:return s.sqInstStoreManagement;case 0xD04:return s.sqEoRt;
+ case 0x5C8:return s.waitUntil;case 0x1DC:return s.scratchMask;case 0x1DD:return s.scratchAddress;
+ }
+ if(index>=0xA02&&index<=0xA05)return s.unknownA02[index-0xA02];
+ if(index>=0x578&&index<=0x57F)return s.scratch[index-0x578];
+ fprintf(stderr,"PENDING_GPU_REGISTER_ACCESS index=%04X\n",index);std::_Exit(20);
+}
+void writeGpuRegister(uint8_t* base,DiagnosticGpuState& state,uint32_t index,uint32_t value){
+ (void)gpuRegister(state,index); // Reject unsupported indices before side effects.
     if(index==0xA2F)state.coherSize=value;
     else if(index==0xA30)state.coherBase=value;
     else if(index==0xA31)state.coherStatus=value|0x80000000u;
@@ -188,7 +179,42 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
       state.scratch[slot]=value;
      }
     fprintf(stderr,"GPU_REGISTER index=%04X value=%08X\n",index,value);
+}
+void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint32_t words,uint32_t ringStart,uint32_t ringBytes,unsigned depth,uint32_t& budget){
+ if(depth>8||words>65536)invalidRing();
+ auto address=[&](uint32_t i){return ringBytes?ringStart+((start-ringStart+i*4)%ringBytes):start+i*4;};
+ for(uint32_t i=0;i<words;){
+  if(!budget--)invalidRing();
+  const uint32_t head=physicalWord(base,address(i)),type=head>>30;
+  const uint32_t count=head==0||type==2?0:type==1?2:((head>>16)&0x3FFF)+1;
+  if(count>words-i-1)invalidRing();
+  const uint32_t opcode=(head>>8)&0x7F;
+  fprintf(stderr,"GPU_PACKET depth=%u physical=%08X header=%08X payload=%u\n",depth,address(i),head,count);
+  if(head==0||type==2){ /* Explicit no-op packet. */ }
+  else if(type==0){
+   const uint32_t first=head&0x7FFF;const bool single=(head&0x8000)!=0;
+   // COHER_* writes stage a cache-coherence request; status remains pending.
+   // Match Xenia's WriteRegister behavior without pretending to flush a GPU.
+   for(uint32_t n=0;n<count;++n){
+    const uint32_t index=first+(single?0:n);
+    if(!((index>=0xA2F&&index<=0xA31)||(index>=0xD00&&index<=0xD02)||(index>=0xA02&&index<=0xA05)||index==0xD04||index==0x5C8||index==0x1DC||index==0x1DD||(index>=0x578&&index<=0x57F))){fprintf(stderr,"PENDING_GPU_REGISTER_PACKET index=%04X physical=%08X\n",index,address(i));std::_Exit(20);}
    }
+   for(uint32_t n=0;n<count;++n){
+    const uint32_t index=first+(single?0:n),value=physicalWord(base,address(i+1+n));
+    writeGpuRegister(base,state,index,value);
+   }
+  }
+  else if(type==3&&(head&1)==0&&opcode==0x21){
+   if(count!=3)invalidRing();
+   const uint32_t info=physicalWord(base,address(i+1));
+   const uint32_t andWord=physicalWord(base,address(i+2)),orWord=physicalWord(base,address(i+3));
+   fprintf(stderr,"GPU_REG_RMW info=%08X and=%08X or=%08X\n",info,andWord,orWord);
+   if(info&0x3FFFE000u){fprintf(stderr,"PENDING_GPU_RMW_MODE\n");std::_Exit(20);}
+   const uint32_t index=info&0x1FFF;
+   const uint32_t before=gpuRegister(state,index);
+   const uint32_t andValue=(info&0x80000000u)?gpuRegister(state,andWord&0x1FFF):andWord;
+   const uint32_t orValue=(info&0x40000000u)?gpuRegister(state,orWord&0x1FFF):orWord;
+   writeGpuRegister(base,state,index,(before&andValue)|orValue);
   }
   else if(type==3&&(head&1)==0&&opcode==0x3C&&count==5){
    const uint32_t info=physicalWord(base,address(i+1)),reg=physicalWord(base,address(i+2));

@@ -16,6 +16,11 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strcmp(argv[1],"rmwunknown")||!strcmp(argv[1],"rmwshort")||!strcmp(argv[1],"rmwmode")){
+   put(0,!strcmp(argv[1],"rmwshort")?0xC0012100:0xC0022100);
+   put(1,!strcmp(argv[1],"rmwmode")?0x2000D04:0xD03);put(2,0);put(3,1);
+   diagnosticMmioStore32(base,0x7FC80714,!strcmp(argv[1],"rmwshort")?3:4,0);
+  }
   if(!strcmp(argv[1],"sqgap")){put(0,0x00010D02);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"waitvsync")||!strcmp(argv[1],"waitfifo")||!strcmp(argv[1],"waitdirty")){
    put(0,0x000005C8);put(1,!strcmp(argv[1],"waitvsync")?8:0x400);uint32_t producer=2;
@@ -106,6 +111,18 @@ int main(int argc,char**argv){
  check(queryDiagnosticGpu(base).sqEoRt==0);
  put(7,0x00000D04);put(0,123);diagnosticMmioStore32(base,0x7FC80714,1,0);
  check(queryDiagnosticGpu(base).sqEoRt==123);
+ // All immediate/register operand combinations. Sources may alias destination.
+ for(uint32_t mode=0;mode<4;++mode){
+  c.r3.u64=0x10000;c.r4.u64=2;__imp__VdInitializeRingBuffer(c,base);
+  put(0,0x00000D04);put(1,0xF0);diagnosticMmioStore32(base,0x7FC80714,2,0);
+  put(2,0xC0022100);put(3,0xD04|(mode<<30));put(4,(mode&2)?0xD04:0x0F);put(5,(mode&1)?0xD04:1);
+  diagnosticMmioStore32(base,0x7FC80714,6,0);
+  check(queryDiagnosticGpu(base).sqEoRt==((0xF0&((mode&2)?0xF0:0x0F))|((mode&1)?0xF0:1)));
+ }
+ // RMW must take the normal scratch writeback path.
+ put(6,0x000001DC);put(7,1);diagnosticMmioStore32(base,0x7FC80714,0,0);
+ put(0,0xC0022100);put(1,0x578);put(2,0);put(3,0xABCDEF12);diagnosticMmioStore32(base,0x7FC80714,4,0);
+ check(PPC_LOAD_U32(0xA0012000)==0xABCDEF12&&queryDiagnosticGpu(base).scratch[0]==0xABCDEF12);
  __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
  check(s.sqEoRt==0);
  check(s.waitUntil==0);

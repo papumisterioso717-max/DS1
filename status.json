@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "Unsupported GPU REG_RMW packet opcode 0x21 at physical 0x1F8E0044 in second submission",
+  "next_blocker": "REG_RMW targets unsupported register 0x0081 at physical 0x1F8E0044; packet decoded but not completed",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -121,8 +121,8 @@
   "gpu_ring_inspector": "Read-only PM4 header inspection; producer boundary unknown; execution absent",
   "gpu_ring_inspector_test_cases": 6,
   "gpu_processor_support": "Bounded synchronous CP_RB_WPTR dispatch; zero/type2/NOP packets, ME_INIT data storage, INDIRECT_BUFFER/PFD traversal; unknown/predicated commands stop; no renderer",
-  "gpu_processor_checks_passed": 60,
-  "gpu_processor_negative_cases": 14,
+  "gpu_processor_checks_passed": 65,
+  "gpu_processor_negative_cases": 17,
   "gpu_first_submission_words": 22,
   "gpu_first_submission_write_index": 22,
   "gpu_first_indirect_physical": "0x1F8F0040",
@@ -153,5 +153,11 @@
   "gpu_wait_until_support": "Only 2D/3D idle and idleclean bits in synchronous diagnostic with no rendering resources; pending coherence, display and FIFO waits stop",
   "gpu_wait_until_observed": "0x00020000",
   "gpu_sq_eort_support": "Raw SQ_EO_RT configuration storage only; no shader execution",
-  "gpu_sq_eort_observed": "0x00000000"
+  "gpu_sq_eort_observed": "0x00000000",
+  "gpu_rmw_support": "Three-word nonpredicated REG_RMW on supported registers; immediate and register AND/OR operands; shared write path preserves side effects; unknown registers and modes stop",
+  "gpu_rmw_observed": {
+    "info": "0x00000081",
+    "and": "0xFFFFFFFF",
+    "or": "0x80010000"
+  }
 }
