@@ -145,7 +145,7 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    // Match Xenia's WriteRegister behavior without pretending to flush a GPU.
    for(uint32_t n=0;n<count;++n){
     const uint32_t index=first+(single?0:n);
-    if(!((index>=0xA2F&&index<=0xA31)||(index>=0xD00&&index<=0xD02)||(index>=0xA02&&index<=0xA05))){fprintf(stderr,"PENDING_GPU_REGISTER_PACKET index=%04X physical=%08X\n",index,address(i));std::_Exit(20);}
+    if(!((index>=0xA2F&&index<=0xA31)||(index>=0xD00&&index<=0xD02)||(index>=0xA02&&index<=0xA05)||index==0x1DC||index==0x1DD||(index>=0x578&&index<=0x57F))){fprintf(stderr,"PENDING_GPU_REGISTER_PACKET index=%04X physical=%08X\n",index,address(i));std::_Exit(20);}
    }
    for(uint32_t n=0;n<count;++n){
     const uint32_t index=first+(single?0:n),value=physicalWord(base,address(i+1+n));
@@ -158,7 +158,22 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
      else if(index==0xD02)state.sqInstStoreManagement=value;
      // Xenia retains UNKNOWN_0A02..0A05 as raw register words. Their hardware
      // semantics remain unknown; this is diagnostic storage, not GPU execution.
-     else state.unknownA02[index-0xA02]=value;
+     else if(index>=0xA02&&index<=0xA05)state.unknownA02[index-0xA02]=value;
+     else if(index==0x1DC)state.scratchMask=value;
+     else if(index==0x1DD)state.scratchAddress=value;
+     else {
+      const uint32_t slot=index-0x578;
+      if(state.scratchMask&(1u<<slot)){
+       const uint64_t target=uint64_t(state.scratchAddress)+slot*4;
+       if(target+4>0x20000000ull||(target&3)||!physicalRange(base,uint32_t(target),4))invalidRing();
+       MEMORY_BASIC_INFORMATION m{};
+       VirtualQuery(base+0xA0000000ull+target,&m,sizeof(m));
+       if(!(m.Protect&(PAGE_READWRITE|PAGE_WRITECOPY|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))invalidRing();
+       PPC_STORE_U32(0xA0000000u+uint32_t(target),value);
+       fprintf(stderr,"GPU_SCRATCH_WRITE slot=%u physical=%08X value=%08X\n",slot,uint32_t(target),value);
+      }
+      state.scratch[slot]=value;
+     }
     fprintf(stderr,"GPU_REGISTER index=%04X value=%08X\n",index,value);
    }
   }

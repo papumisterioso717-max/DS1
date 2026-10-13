@@ -16,6 +16,11 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strcmp(argv[1],"scratchbad")||!strcmp(argv[1],"scratchreadonly")){
+   put(0,0x000101DC);put(1,1);put(2,!strcmp(argv[1],"scratchbad")?0x1FFFFFFF:0x12000);
+   if(!strcmp(argv[1],"scratchreadonly")){DWORD old;VirtualProtect(base+0xA0012000,4096,PAGE_READONLY,&old);}
+   put(3,0x00000578);put(4,123);diagnosticMmioStore32(base,0x7FC80714,5,0);
+  }
   if(!strcmp(argv[1],"unknown")){put(0,0xC0002200);put(1,0);diagnosticMmioStore32(base,0x7FC80714,2,0);}
   if(!strcmp(argv[1],"truncated")){put(0,0xC0034800);diagnosticMmioStore32(base,0x7FC80714,1,0);}
   if(!strcmp(argv[1],"unknownrange")){put(0,0x00010A05);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
@@ -70,7 +75,21 @@ int main(int argc,char**argv){
  put(2,0x00018A03);put(3,1);put(4,2);
  diagnosticMmioStore32(base,0x7FC80714,5,0);s=queryDiagnosticGpu(base);
  check(s.unknownA02[1]==2&&s.unknownA02[0]==0x80000001&&s.unknownA02[3]==0x12345678);
+ // Scratch writes are gated per slot; setup alone must not touch memory.
+ put(5,0x000101DC);put(6,0x81);put(7,0x12000);
+ diagnosticMmioStore32(base,0x7FC80714,0,0);
+ check(PPC_LOAD_U32(0xA0012000)==0x80000000);
+ put(0,0x00010578);put(1,0x12345678);put(2,0xFFFFFFFF);
+ diagnosticMmioStore32(base,0x7FC80714,3,0);s=queryDiagnosticGpu(base);
+ check(PPC_LOAD_U32(0xA0012000)==0x12345678&&PPC_LOAD_U32(0xA0012004)==0);
+ check(s.scratch[0]==0x12345678&&s.scratch[1]==0xFFFFFFFF);
+ put(3,0x0000057F);put(4,0xABCDEF01);diagnosticMmioStore32(base,0x7FC80714,5,0);
+ check(PPC_LOAD_U32(0xA001201C)==0xABCDEF01&&base[0xA001201C]==0xAB);
+ put(5,0x000001DC);put(6,0);diagnosticMmioStore32(base,0x7FC80714,7,0);
+ put(7,0x00000578);put(0,0);diagnosticMmioStore32(base,0x7FC80714,1,0);
+ check(PPC_LOAD_U32(0xA0012000)==0x12345678&&queryDiagnosticGpu(base).scratch[0]==0);
  __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
+ check(s.scratchAddress==0&&s.scratchMask==0&&s.scratch[7]==0);
  check(s.unknownA02[0]==0&&s.unknownA02[1]==0&&s.unknownA02[2]==0&&s.unknownA02[3]==0);
  check(s.sqGprManagement==0&&s.sqFlowControl==0&&s.sqInstStoreManagement==0);
  check(queryDiagnosticGpu(base).processedPackets==0);check(VirtualFree(base,0,MEM_RELEASE));

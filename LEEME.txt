@@ -13,7 +13,7 @@ RESULTADO VERIFICADO
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
-- Completa la primera lista y se detiene en registro GPU SCRATCH_ADDR 0x01DD, fisica 0x1F8E001C
+- Completa la primera lista y se detiene en registro GPU WAIT_UNTIL 0x05C8, fisica 0x1F8E002C
   (LR 0x823EBC90, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
@@ -476,3 +476,13 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
 - Fuentes consultadas:
   https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/register_table.inc
   https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/command_processor.cc
+
+2026-10-12: escritura scratch del procesador de comandos
+- SCRATCH_ADDR y SCRATCH_UMSK conservan destino y mascara.
+- Los ocho registros scratch guardan valores y escriben en memoria fisica
+  en big-endian solo cuando su bit esta habilitado. No entrega interrupciones.
+- Se valida limite fisico, alineacion y proteccion de escritura del destino.
+- Arranque observado: destino 1FCED000, mascara 00020037.
+- Nuevo bloqueo: WAIT_UNTIL 05C8 en 1F8E002C. Sigue sin renderizador.
+- Referencia: Xenia command_processor.cc, WriteRegister, scratch writeback.
+- Verificado: 39 comprobaciones del procesador, 10 rechazos y suite general.
