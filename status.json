@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "Unsupported SQ_PROGRAM_CNTL register 0x2180 at physical 0x1FCE90A4, depth 2",
+  "next_blocker": "Unsupported VGT_MAX_VTX_INDX register 0x2100 at physical 0x1FCE90B0, depth 2",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -121,8 +121,8 @@
   "gpu_ring_inspector": "Read-only PM4 header inspection; producer boundary unknown; execution absent",
   "gpu_ring_inspector_test_cases": 6,
   "gpu_processor_support": "Bounded synchronous CP_RB_WPTR dispatch; zero/type2/NOP packets, ME_INIT data storage, INDIRECT_BUFFER/PFD traversal; unknown/predicated commands stop; no renderer",
-  "gpu_processor_checks_passed": 85,
-  "gpu_processor_negative_cases": 25,
+  "gpu_processor_checks_passed": 89,
+  "gpu_processor_negative_cases": 26,
   "gpu_first_submission_words": 22,
   "gpu_first_submission_write_index": 22,
   "gpu_first_indirect_physical": "0x1F8F0040",
@@ -197,5 +197,10 @@
   "gpu_inline_shader_observed": {
     "vertex_words": 24,
     "pixel_words": 9
+  },
+  "gpu_program_configuration": "Raw SQ_PROGRAM_CNTL and SQ_CONTEXT_MISC storage; shader execution and translation absent",
+  "gpu_program_configuration_observed": {
+    "SQ_PROGRAM_CNTL": "0x1000000E",
+    "SQ_CONTEXT_MISC": "0x00000000"
   }
 }
