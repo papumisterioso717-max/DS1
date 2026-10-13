@@ -13,7 +13,7 @@ RESULTADO VERIFICADO
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
-- Completa la primera lista y se detiene en RB_HIZCONTROL (2203), fisica 0x1FCE90F0, profundidad 2
+- Completa la primera lista y se detiene en RB_MODECONTROL (2208), fisica 0x1FCE90F8, profundidad 2
   (LR 0x823EBC90, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
@@ -620,3 +620,10 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
 - Nuevo bloqueo: RB_HIZCONTROL (2203) en 1FCE90F0.
 - Sigue sin imagen del juego.
 - Verificado: 117 comprobaciones del procesador, 33 rechazos y suite general.
+
+2026-10-13: configuracion de profundidad jerarquica
+- Conserva RB_HIZCONTROL; el titulo escribe cero.
+- No procesa profundidad jerarquica ni dibuja.
+- Nuevo bloqueo: RB_MODECONTROL (2208) en 1FCE90F8.
+- Sigue sin imagen del juego.
+- Verificado: 120 comprobaciones del procesador, 33 rechazos y suite general.

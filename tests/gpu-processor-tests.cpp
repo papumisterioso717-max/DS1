@@ -219,7 +219,12 @@ int main(int argc,char**argv){
  check(s.depthControl==0xFEDCBA98&&s.coherStatus==0&&s.coherDestBase[0]==0x1000);
  put(6,0x00002200);put(7,0);diagnosticMmioStore32(base,0x7FC80714,0,0);
  check(queryDiagnosticGpu(base).depthControl==0&&queryDiagnosticGpu(base).shaderWords[0]==s.shaderWords[0]);
+ put(0,0x00002203);put(1,0xFEDCBA98);diagnosticMmioStore32(base,0x7FC80714,2,0);s=queryDiagnosticGpu(base);
+ check(s.hizControl==0xFEDCBA98&&s.depthControl==0&&s.coherStatus==0);
+ put(2,0x00002203);put(3,0);diagnosticMmioStore32(base,0x7FC80714,4,0);
+ check(queryDiagnosticGpu(base).hizControl==0&&queryDiagnosticGpu(base).shaderWords[0]==s.shaderWords[0]);
  __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
+ check(s.hizControl==0);
  check(s.depthControl==0);
  check(s.coherDestBase[0]==0&&s.coherDestBase[7]==0);
  check(s.aaMask==0);

@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "Unsupported RB_HIZCONTROL register 0x2203 at physical 0x1FCE90F0, depth 2",
+  "next_blocker": "Unsupported RB_MODECONTROL register 0x2208 at physical 0x1FCE90F8, depth 2",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -121,7 +121,7 @@
   "gpu_ring_inspector": "Read-only PM4 header inspection; producer boundary unknown; execution absent",
   "gpu_ring_inspector_test_cases": 6,
   "gpu_processor_support": "Bounded synchronous CP_RB_WPTR dispatch; zero/type2/NOP packets, ME_INIT data storage, INDIRECT_BUFFER/PFD traversal; unknown/predicated commands stop; no renderer",
-  "gpu_processor_checks_passed": 117,
+  "gpu_processor_checks_passed": 120,
   "gpu_processor_negative_cases": 33,
   "gpu_first_submission_words": 22,
   "gpu_first_submission_write_index": 22,
@@ -222,5 +222,7 @@
   "gpu_coher_dest_support": "Raw storage for eight COHER_DEST_BASE registers; no destination writes, cache barriers or completion implied",
   "gpu_coher_dest7_observed": "0x00000000",
   "gpu_depth_control_support": "Raw RB_DEPTHCONTROL storage only; depth and stencil testing require a renderer",
-  "gpu_depth_control_observed": "0x00000000"
+  "gpu_depth_control_observed": "0x00000000",
+  "gpu_hiz_control_support": "Raw RB_HIZCONTROL storage only; no hierarchical depth processing",
+  "gpu_hiz_control_observed": "0x00000000"
 }
