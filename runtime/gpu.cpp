@@ -145,7 +145,7 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    // Match Xenia's WriteRegister behavior without pretending to flush a GPU.
    for(uint32_t n=0;n<count;++n){
     const uint32_t index=first+(single?0:n);
-    if(!((index>=0xA2F&&index<=0xA31)||(index>=0xD00&&index<=0xD02)||(index>=0xA02&&index<=0xA05)||index==0x5C8||index==0x1DC||index==0x1DD||(index>=0x578&&index<=0x57F))){fprintf(stderr,"PENDING_GPU_REGISTER_PACKET index=%04X physical=%08X\n",index,address(i));std::_Exit(20);}
+    if(!((index>=0xA2F&&index<=0xA31)||(index>=0xD00&&index<=0xD02)||(index>=0xA02&&index<=0xA05)||index==0xD04||index==0x5C8||index==0x1DC||index==0x1DD||(index>=0x578&&index<=0x57F))){fprintf(stderr,"PENDING_GPU_REGISTER_PACKET index=%04X physical=%08X\n",index,address(i));std::_Exit(20);}
    }
    for(uint32_t n=0;n<count;++n){
     const uint32_t index=first+(single?0:n),value=physicalWord(base,address(i+1+n));
@@ -156,6 +156,8 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
      else if(index==0xD00)state.sqGprManagement=value;
      else if(index==0xD01)state.sqFlowControl=value;
      else if(index==0xD02)state.sqInstStoreManagement=value;
+     // Retain SQ_EO_RT configuration only; no shader execution is implied.
+     else if(index==0xD04)state.sqEoRt=value;
      // Xenia retains UNKNOWN_0A02..0A05 as raw register words. Their hardware
      // semantics remain unknown; this is diagnostic storage, not GPU execution.
      else if(index>=0xA02&&index<=0xA05)state.unknownA02[index-0xA02]=value;

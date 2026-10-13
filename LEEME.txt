@@ -13,7 +13,7 @@ RESULTADO VERIFICADO
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
-- Completa la primera lista y se detiene en registro GPU SQ_EO_RT 0x0D04, fisica 0x1F8E0034
+- Completa la primera lista y se detiene en comando GPU REG_RMW 0x21, fisica 0x1F8E0044
   (LR 0x823EBC90, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
@@ -496,3 +496,11 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
 - Nuevo bloqueo real: SQ_EO_RT (0D04) en 1F8E0034. Sin imagen del juego.
 - Referencia de bits: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/registers.h
 - Verificado: 56 comprobaciones del procesador, 13 rechazos y suite general.
+
+2026-10-12: configuracion SQ_EO_RT
+- Conserva el valor de SQ_EO_RT (0D04), sin ejecutar shaders.
+- El titulo escribe cero, luego SQ_FLOW_CONTROL=04000000.
+- Siguiente bloqueo: REG_RMW, opcode 21 en 1F8E0044, tres palabras de carga.
+- Referencias Xenia: register_table.inc, command_processor.cc y xenos.h.
+- Sigue sin renderizador ni imagen del juego.
+- Verificado: 60 comprobaciones del procesador, 14 rechazos y suite general.
