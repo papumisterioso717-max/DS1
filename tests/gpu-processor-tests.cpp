@@ -16,6 +16,10 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strcmp(argv[1],"invalidatelength")||!strcmp(argv[1],"invalidatepred")){
+   put(0,!strcmp(argv[1],"invalidatelength")?0xC0013B00:0xC0003B01);put(1,0x7FFF);put(2,0);
+   diagnosticMmioStore32(base,0x7FC80714,!strcmp(argv[1],"invalidatelength")?3:2,0);
+  }
   if(!strcmp(argv[1],"windowrange")){put(0,0x00012082);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"opaqueadjacent")){put(0,0x00010082);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"rmwunknown")||!strcmp(argv[1],"rmwshort")||!strcmp(argv[1],"rmwmode")){
@@ -148,7 +152,14 @@ int main(int argc,char**argv){
  check(s.windowConfig[0]==0xFFFF8000&&s.windowConfig[1]==0x80010002&&s.windowConfig[2]==0x00030004);
  put(6,0x00012081);put(7,0);put(0,0);diagnosticMmioStore32(base,0x7FC80714,1,0);s=queryDiagnosticGpu(base);
  check(s.windowConfig[0]==0xFFFF8000&&s.windowConfig[1]==0&&s.windowConfig[2]==0);
+ const auto beforeInvalidate=queryDiagnosticGpu(base);
+ put(1,0xC0003B00);put(2,0x7FFF);diagnosticMmioStore32(base,0x7FC80714,3,0);s=queryDiagnosticGpu(base);
+ check(s.invalidationMask==0x7FFF&&s.invalidationCount==1&&s.processedPackets==beforeInvalidate.processedPackets+1);
+ check(s.windowConfig[0]==beforeInvalidate.windowConfig[0]&&s.coherStatus==beforeInvalidate.coherStatus&&s.scratch[0]==beforeInvalidate.scratch[0]&&PPC_LOAD_U32(0xA0012000)==0xABCDEF12);
+ put(3,0xC0003B00);put(4,0);diagnosticMmioStore32(base,0x7FC80714,5,0);
+ check(queryDiagnosticGpu(base).invalidationMask==0&&queryDiagnosticGpu(base).invalidationCount==2&&PPC_LOAD_U32(0xA0011000)==5);
  __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
+ check(s.invalidationCount==0&&s.invalidationMask==0);
  check(s.unknownE42==0&&s.paClEnhance==0&&s.rbBcControl==0&&s.windowConfig[0]==0);
  check(s.unknown0082==0);
  check(s.unknown0081==0);

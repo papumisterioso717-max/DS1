@@ -13,7 +13,7 @@ RESULTADO VERIFICADO
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
-- Completa la primera lista y se detiene en INVALIDATE_STATE (3B), fisica 0x1FCE9000, profundidad 2
+- Completa la primera lista y se detiene en IM_LOAD_IMMEDIATE (2B), fisica 0x1FCE9008, profundidad 2
   (LR 0x823EBC90, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
@@ -546,3 +546,13 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
 - Referencia: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/register_table.inc
 - Sigue sin renderizador ni imagen del juego.
 - Verificado: 76 comprobaciones del procesador, 19 rechazos y suite general.
+
+2026-10-12: invalidacion sin caches graficas
+- INVALIDATE_STATE de una palabra conserva mascara y cuenta de peticiones.
+- No borra registros, memoria ni estado de coherencia. No hay caches graficas
+  derivadas en este diagnostico; un renderizador futuro debe invalidarlas aqui.
+- Rechaza longitud incorrecta y paquetes predicados.
+- El titulo supera mascara 00000300 y llega a IM_LOAD_IMMEDIATE (opcode 2B),
+  carga de shader con 26 palabras de payload en 1FCE9008. Aun no procesada.
+- Sigue sin renderizador ni imagen del juego.
+- Verificado: 80 comprobaciones del procesador, 21 rechazos y suite general.

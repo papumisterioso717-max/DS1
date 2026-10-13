@@ -249,6 +249,15 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    // condition. Stop without publishing a completed ring read pointer.
    if(!matched){fprintf(stderr,"PENDING_GPU_WAIT_CONDITION value=%08X\n",v);std::_Exit(20);}
   }
+  else if(type==3&&(head&1)==0&&opcode==0x3B){
+   if(count!=1)invalidRing();
+   // No derived GPU state or shader/resource caches exist in this diagnostic.
+   // Record the request without resetting architectural registers or memory.
+   // A future renderer must invalidate its actual cached state here.
+   state.invalidationMask=physicalWord(base,address(i+1));
+   ++state.invalidationCount;
+   fprintf(stderr,"GPU_INVALIDATE_STATE mask=%08X backend=no-derived-state\n",state.invalidationMask);
+  }
   else if(type==3&&(head&1)==0&&opcode==0x10){ /* NOP payload. */ }
   else if(type==3&&(head&1)==0&&opcode==0x48){
    auto& data=microEngine[base];data.clear();
