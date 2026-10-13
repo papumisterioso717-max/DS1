@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "REG_RMW targets unsupported register 0x0081 at physical 0x1F8E0044; packet decoded but not completed",
+  "next_blocker": "REG_RMW targets unsupported register 0x0082 at physical 0x1F8E0054",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -121,8 +121,8 @@
   "gpu_ring_inspector": "Read-only PM4 header inspection; producer boundary unknown; execution absent",
   "gpu_ring_inspector_test_cases": 6,
   "gpu_processor_support": "Bounded synchronous CP_RB_WPTR dispatch; zero/type2/NOP packets, ME_INIT data storage, INDIRECT_BUFFER/PFD traversal; unknown/predicated commands stop; no renderer",
-  "gpu_processor_checks_passed": 65,
-  "gpu_processor_negative_cases": 17,
+  "gpu_processor_checks_passed": 69,
+  "gpu_processor_negative_cases": 18,
   "gpu_first_submission_words": 22,
   "gpu_first_submission_write_index": 22,
   "gpu_first_indirect_physical": "0x1F8F0040",
@@ -159,5 +159,7 @@
     "info": "0x00000081",
     "and": "0xFFFFFFFF",
     "or": "0x80010000"
-  }
+  },
+  "gpu_0081_support": "Opaque zero-initialized compatibility storage only, using Xenia generic register-file behavior; hardware semantics unknown",
+  "gpu_0081_observed": "0x80010000"
 }

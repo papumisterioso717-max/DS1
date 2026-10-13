@@ -130,6 +130,7 @@ uint32_t physicalWord(uint8_t* base,uint32_t address){
 }
 uint32_t& gpuRegister(DiagnosticGpuState& s,uint32_t index){
  switch(index){
+ case 0x81:return s.unknown0081;
  case 0xA2F:return s.coherSize;case 0xA30:return s.coherBase;case 0xA31:return s.coherStatus;
  case 0xD00:return s.sqGprManagement;case 0xD01:return s.sqFlowControl;case 0xD02:return s.sqInstStoreManagement;case 0xD04:return s.sqEoRt;
  case 0x5C8:return s.waitUntil;case 0x1DC:return s.scratchMask;case 0x1DD:return s.scratchAddress;
@@ -140,7 +141,10 @@ uint32_t& gpuRegister(DiagnosticGpuState& s,uint32_t index){
 }
 void writeGpuRegister(uint8_t* base,DiagnosticGpuState& state,uint32_t index,uint32_t value){
  (void)gpuRegister(state,index); // Reject unsupported indices before side effects.
-    if(index==0xA2F)state.coherSize=value;
+    // Opaque compatibility storage, matching Xenia's zero-initialized register
+    // file and generic WriteRegister fallback. Hardware semantics are unknown.
+    if(index==0x81)state.unknown0081=value;
+    else if(index==0xA2F)state.coherSize=value;
     else if(index==0xA30)state.coherBase=value;
     else if(index==0xA31)state.coherStatus=value|0x80000000u;
      // SQ configuration is retained for a future shader backend; no shader runs.
@@ -197,7 +201,7 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    // Match Xenia's WriteRegister behavior without pretending to flush a GPU.
    for(uint32_t n=0;n<count;++n){
     const uint32_t index=first+(single?0:n);
-    if(!((index>=0xA2F&&index<=0xA31)||(index>=0xD00&&index<=0xD02)||(index>=0xA02&&index<=0xA05)||index==0xD04||index==0x5C8||index==0x1DC||index==0x1DD||(index>=0x578&&index<=0x57F))){fprintf(stderr,"PENDING_GPU_REGISTER_PACKET index=%04X physical=%08X\n",index,address(i));std::_Exit(20);}
+    if(!((index>=0xA2F&&index<=0xA31)||(index>=0xD00&&index<=0xD02)||(index>=0xA02&&index<=0xA05)||index==0x81||index==0xD04||index==0x5C8||index==0x1DC||index==0x1DD||(index>=0x578&&index<=0x57F))){fprintf(stderr,"PENDING_GPU_REGISTER_PACKET index=%04X physical=%08X\n",index,address(i));std::_Exit(20);}
    }
    for(uint32_t n=0;n<count;++n){
     const uint32_t index=first+(single?0:n),value=physicalWord(base,address(i+1+n));
