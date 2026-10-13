@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "Unsupported COHER_DEST_BASE_7 register 0x200D at physical 0x1FCE90E0, depth 2",
+  "next_blocker": "Unsupported RB_DEPTHCONTROL register 0x2200 at physical 0x1FCE90E8, depth 2",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -121,8 +121,8 @@
   "gpu_ring_inspector": "Read-only PM4 header inspection; producer boundary unknown; execution absent",
   "gpu_ring_inspector_test_cases": 6,
   "gpu_processor_support": "Bounded synchronous CP_RB_WPTR dispatch; zero/type2/NOP packets, ME_INIT data storage, INDIRECT_BUFFER/PFD traversal; unknown/predicated commands stop; no renderer",
-  "gpu_processor_checks_passed": 103,
-  "gpu_processor_negative_cases": 31,
+  "gpu_processor_checks_passed": 114,
+  "gpu_processor_negative_cases": 32,
   "gpu_first_submission_words": 22,
   "gpu_first_submission_write_index": 22,
   "gpu_first_indirect_physical": "0x1F8F0040",
@@ -218,5 +218,7 @@
     "0x00000300"
   ],
   "gpu_aa_mask_support": "Raw PA_SC_AA_MASK storage only; no multisample coverage or rasterization",
-  "gpu_aa_mask_observed": "0x0000FFFF"
+  "gpu_aa_mask_observed": "0x0000FFFF",
+  "gpu_coher_dest_support": "Raw storage for eight COHER_DEST_BASE registers; no destination writes, cache barriers or completion implied",
+  "gpu_coher_dest7_observed": "0x00000000"
 }

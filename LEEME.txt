@@ -13,7 +13,7 @@ RESULTADO VERIFICADO
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
-- Completa la primera lista y se detiene en COHER_DEST_BASE_7 (200D), fisica 0x1FCE90E0, profundidad 2
+- Completa la primera lista y se detiene en RB_DEPTHCONTROL (2200), fisica 0x1FCE90E8, profundidad 2
   (LR 0x823EBC90, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
@@ -606,3 +606,10 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
 - Nuevo bloqueo: COHER_DEST_BASE_7 (200D) en 1FCE90E0.
 - Sigue sin imagen del juego.
 - Verificado: 103 comprobaciones del procesador, 31 rechazos y suite general.
+
+2026-10-13: destinos de coherencia
+- Conserva COHER_DEST_BASE_0..7 (2006..200D).
+- Configurar destinos no escribe memoria ni completa sincronizacion.
+- El titulo escribe cero en destino 7 y avanza a RB_DEPTHCONTROL (2200).
+- Nuevo bloqueo en 1FCE90E8. Sin renderizador ni imagen del juego.
+- Verificado: 114 comprobaciones del procesador, 32 rechazos y suite general.
