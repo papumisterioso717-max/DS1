@@ -13,7 +13,7 @@ RESULTADO VERIFICADO
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
-- Completa la primera lista y se detiene en registro GPU WAIT_UNTIL 0x05C8, fisica 0x1F8E002C
+- Completa la primera lista y se detiene en registro GPU SQ_EO_RT 0x0D04, fisica 0x1F8E0034
   (LR 0x823EBC90, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
@@ -486,3 +486,13 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
 - Nuevo bloqueo: WAIT_UNTIL 05C8 en 1F8E002C. Sigue sin renderizador.
 - Referencia: Xenia command_processor.cc, WriteRegister, scratch writeback.
 - Verificado: 39 comprobaciones del procesador, 10 rechazos y suite general.
+
+2026-10-12: WAIT_UNTIL limitado al diagnostico sin renderizador
+- Admite bits idle/idleclean 2D y 3D solo sin coherencia pendiente.
+- Las operaciones aceptadas son sincronas; no existen dibujos ni recursos GPU.
+  Un renderizador futuro debe sustituir esta ruta por esperas de GPU reales.
+- Esperas de pantalla, FIFO y otros bits siguen deteniendose.
+- El titulo pide 00020000 (3D idleclean) y supera esta espera.
+- Nuevo bloqueo real: SQ_EO_RT (0D04) en 1F8E0034. Sin imagen del juego.
+- Referencia de bits: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/registers.h
+- Verificado: 56 comprobaciones del procesador, 13 rechazos y suite general.

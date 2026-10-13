@@ -16,6 +16,11 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strcmp(argv[1],"waitvsync")||!strcmp(argv[1],"waitfifo")||!strcmp(argv[1],"waitdirty")){
+   put(0,0x000005C8);put(1,!strcmp(argv[1],"waitvsync")?8:0x400);uint32_t producer=2;
+   if(!strcmp(argv[1],"waitdirty")){put(0,0x00000A31);put(1,0x01000000);put(2,0x000005C8);put(3,0x20000);producer=4;}
+   diagnosticMmioStore32(base,0x7FC80714,producer,0);
+  }
   if(!strcmp(argv[1],"scratchbad")||!strcmp(argv[1],"scratchreadonly")){
    put(0,0x000101DC);put(1,1);put(2,!strcmp(argv[1],"scratchbad")?0x1FFFFFFF:0x12000);
    if(!strcmp(argv[1],"scratchreadonly")){DWORD old;VirtualProtect(base+0xA0012000,4096,PAGE_READONLY,&old);}
@@ -88,7 +93,14 @@ int main(int argc,char**argv){
  put(5,0x000001DC);put(6,0);diagnosticMmioStore32(base,0x7FC80714,7,0);
  put(7,0x00000578);put(0,0);diagnosticMmioStore32(base,0x7FC80714,1,0);
  check(PPC_LOAD_U32(0xA0012000)==0x12345678&&queryDiagnosticGpu(base).scratch[0]==0);
+ // All combinations of idle bits, including clearing the register.
+ for(uint32_t bits=0;bits<16;++bits){
+  c.r3.u64=0x10000;c.r4.u64=2;__imp__VdInitializeRingBuffer(c,base);
+  put(0,0x000005C8);put(1,bits<<14);diagnosticMmioStore32(base,0x7FC80714,2,0);
+  s=queryDiagnosticGpu(base);check(s.waitUntil==(bits<<14)&&s.ringReadIndex==2&&PPC_LOAD_U32(0xA0011000)==2&&s.coherStatus==0);
+ }
  __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
+ check(s.waitUntil==0);
  check(s.scratchAddress==0&&s.scratchMask==0&&s.scratch[7]==0);
  check(s.unknownA02[0]==0&&s.unknownA02[1]==0&&s.unknownA02[2]==0&&s.unknownA02[3]==0);
  check(s.sqGprManagement==0&&s.sqFlowControl==0&&s.sqInstStoreManagement==0);

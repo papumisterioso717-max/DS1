@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "Unsupported GPU WAIT_UNTIL register 0x05C8 at physical 0x1F8E002C in second submission",
+  "next_blocker": "Unsupported GPU SQ_EO_RT register 0x0D04 at physical 0x1F8E0034 in second submission",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -121,8 +121,8 @@
   "gpu_ring_inspector": "Read-only PM4 header inspection; producer boundary unknown; execution absent",
   "gpu_ring_inspector_test_cases": 6,
   "gpu_processor_support": "Bounded synchronous CP_RB_WPTR dispatch; zero/type2/NOP packets, ME_INIT data storage, INDIRECT_BUFFER/PFD traversal; unknown/predicated commands stop; no renderer",
-  "gpu_processor_checks_passed": 39,
-  "gpu_processor_negative_cases": 10,
+  "gpu_processor_checks_passed": 56,
+  "gpu_processor_negative_cases": 13,
   "gpu_first_submission_words": 22,
   "gpu_first_submission_write_index": 22,
   "gpu_first_indirect_physical": "0x1F8F0040",
@@ -149,5 +149,7 @@
   ],
   "gpu_scratch_support": "SCRATCH_ADDR and SCRATCH_UMSK storage; eight scratch registers with masked big-endian physical writeback; destination range, alignment and write protection validated; no interrupt delivery",
   "gpu_scratch_address": "0x1FCED000",
-  "gpu_scratch_mask": "0x00020037"
+  "gpu_scratch_mask": "0x00020037",
+  "gpu_wait_until_support": "Only 2D/3D idle and idleclean bits in synchronous diagnostic with no rendering resources; pending coherence, display and FIFO waits stop",
+  "gpu_wait_until_observed": "0x00020000"
 }
