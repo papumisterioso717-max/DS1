@@ -249,6 +249,19 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    // condition. Stop without publishing a completed ring read pointer.
    if(!matched){fprintf(stderr,"PENDING_GPU_WAIT_CONDITION value=%08X\n",v);std::_Exit(20);}
   }
+  else if(type==3&&(head&1)==0&&opcode==0x2B){
+   if(count<2)invalidRing();
+   const uint32_t stage=physicalWord(base,address(i+1)),descriptor=physicalWord(base,address(i+2));
+   const uint32_t offset=descriptor>>16,length=descriptor&0xFFFF;
+   fprintf(stderr,"GPU_SHADER_UPLOAD stage=%u offset=%u words=%u validation=packet-only\n",stage,offset,length);
+   if(stage>1||offset){fprintf(stderr,"PENDING_GPU_SHADER_MODE\n");std::_Exit(20);}
+   if(!length||length!=count-2)invalidRing();
+   // Retain host-order microcode words. No translation, instruction validation,
+   // shader execution or resource binding is performed by this diagnostic.
+   std::vector<uint32_t> code;code.reserve(length);
+   for(uint32_t n=0;n<length;++n)code.push_back(physicalWord(base,address(i+3+n)));
+   state.shaderWords[stage]=std::move(code);++state.shaderUploadCount;
+  }
   else if(type==3&&(head&1)==0&&opcode==0x3B){
    if(count!=1)invalidRing();
    // No derived GPU state or shader/resource caches exist in this diagnostic.

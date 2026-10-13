@@ -13,7 +13,7 @@ RESULTADO VERIFICADO
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
-- Completa la primera lista y se detiene en IM_LOAD_IMMEDIATE (2B), fisica 0x1FCE9008, profundidad 2
+- Completa la primera lista y se detiene en SQ_PROGRAM_CNTL (2180), fisica 0x1FCE90A4, profundidad 2
   (LR 0x823EBC90, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
@@ -556,3 +556,14 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
   carga de shader con 26 palabras de payload en 1FCE9008. Aun no procesada.
 - Sigue sin renderizador ni imagen del juego.
 - Verificado: 80 comprobaciones del procesador, 21 rechazos y suite general.
+
+2026-10-12: recepcion de shaders inmediatos
+- IM_LOAD_IMMEDIATE valida tipo, offset cero y longitud exacta del paquete.
+- Conserva palabras big-endian convertidas a orden del host por separado para
+  vertices y pixeles, con reemplazo y limpieza al apagar el motor.
+- La validacion es del paquete: instrucciones, traduccion y ejecucion pendientes.
+- El titulo carga 24 palabras de vertices y 9 de pixeles. Nuevo bloqueo:
+  SQ_PROGRAM_CNTL 2180 en 1FCE90A4. No se han ejecutado los shaders.
+- Referencia: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/command_processor.cc
+- Sigue sin renderizador ni imagen del juego.
+- Verificado: 85 comprobaciones del procesador, 25 rechazos y suite general.

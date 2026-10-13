@@ -16,6 +16,11 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strcmp(argv[1],"shaderlength")||!strcmp(argv[1],"shaderstage")||!strcmp(argv[1],"shaderoffset")||!strcmp(argv[1],"shaderempty")){
+   put(0,0xC0022B00);put(1,!strcmp(argv[1],"shaderstage")?2:0);
+   put(2,!strcmp(argv[1],"shaderlength")?2:!strcmp(argv[1],"shaderoffset")?0x10001:!strcmp(argv[1],"shaderempty")?0:1);put(3,0);
+   diagnosticMmioStore32(base,0x7FC80714,4,0);
+  }
   if(!strcmp(argv[1],"invalidatelength")||!strcmp(argv[1],"invalidatepred")){
    put(0,!strcmp(argv[1],"invalidatelength")?0xC0013B00:0xC0003B01);put(1,0x7FFF);put(2,0);
    diagnosticMmioStore32(base,0x7FC80714,!strcmp(argv[1],"invalidatelength")?3:2,0);
@@ -158,7 +163,18 @@ int main(int argc,char**argv){
  check(s.windowConfig[0]==beforeInvalidate.windowConfig[0]&&s.coherStatus==beforeInvalidate.coherStatus&&s.scratch[0]==beforeInvalidate.scratch[0]&&PPC_LOAD_U32(0xA0012000)==0xABCDEF12);
  put(3,0xC0003B00);put(4,0);diagnosticMmioStore32(base,0x7FC80714,5,0);
  check(queryDiagnosticGpu(base).invalidationMask==0&&queryDiagnosticGpu(base).invalidationCount==2&&PPC_LOAD_U32(0xA0011000)==5);
+ // Inline shader uploads preserve big-endian words across ring wrap.
+ put(5,0xC0032B00);put(6,0);put(7,2);put(0,0x12345678);put(1,0xFEDCBA98);
+ diagnosticMmioStore32(base,0x7FC80714,2,0);s=queryDiagnosticGpu(base);
+ check(s.shaderWords[0]==std::vector<uint32_t>({0x12345678,0xFEDCBA98})&&s.shaderWords[1].empty()&&s.shaderUploadCount==1);
+ put(2,0xC0022B00);put(3,1);put(4,1);put(5,0xABCD1234);diagnosticMmioStore32(base,0x7FC80714,6,0);
+ check(queryDiagnosticGpu(base).shaderWords[1]==std::vector<uint32_t>({0xABCD1234}));
+ put(6,0xC0022B00);put(7,0);put(0,1);put(1,0x55555555);diagnosticMmioStore32(base,0x7FC80714,2,0);s=queryDiagnosticGpu(base);
+ check(s.shaderWords[0]==std::vector<uint32_t>({0x55555555})&&s.shaderWords[1]==std::vector<uint32_t>({0xABCD1234})&&s.shaderUploadCount==3);
+ put(2,0xC0003B00);put(3,0x7FFF);diagnosticMmioStore32(base,0x7FC80714,4,0);
+ check(queryDiagnosticGpu(base).shaderWords[0]==s.shaderWords[0]);
  __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
+ check(s.shaderWords[0].empty()&&s.shaderWords[1].empty()&&s.shaderUploadCount==0);
  check(s.invalidationCount==0&&s.invalidationMask==0);
  check(s.unknownE42==0&&s.paClEnhance==0&&s.rbBcControl==0&&s.windowConfig[0]==0);
  check(s.unknown0082==0);

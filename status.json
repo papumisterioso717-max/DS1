@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "Unsupported IM_LOAD_IMMEDIATE shader upload opcode 0x2B at physical 0x1FCE9008, depth 2, payload 26 words",
+  "next_blocker": "Unsupported SQ_PROGRAM_CNTL register 0x2180 at physical 0x1FCE90A4, depth 2",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -121,8 +121,8 @@
   "gpu_ring_inspector": "Read-only PM4 header inspection; producer boundary unknown; execution absent",
   "gpu_ring_inspector_test_cases": 6,
   "gpu_processor_support": "Bounded synchronous CP_RB_WPTR dispatch; zero/type2/NOP packets, ME_INIT data storage, INDIRECT_BUFFER/PFD traversal; unknown/predicated commands stop; no renderer",
-  "gpu_processor_checks_passed": 80,
-  "gpu_processor_negative_cases": 21,
+  "gpu_processor_checks_passed": 85,
+  "gpu_processor_negative_cases": 25,
   "gpu_first_submission_words": 22,
   "gpu_first_submission_write_index": 22,
   "gpu_first_indirect_physical": "0x1F8F0040",
@@ -192,5 +192,10 @@
     "value": "0x0BADF00D"
   },
   "gpu_invalidate_support": "Nonpredicated one-word INVALIDATE_STATE records mask/count; no derived graphics state exists; preserves registers, memory and coherence; future renderer must invalidate real caches",
-  "gpu_invalidate_observed": "0x00000300"
+  "gpu_invalidate_observed": "0x00000300",
+  "gpu_inline_shader_support": "Stores separate vertex/pixel microcode vectors; validates packet size, stage and zero load offset; no shader instruction validation, translation or execution",
+  "gpu_inline_shader_observed": {
+    "vertex_words": 24,
+    "pixel_words": 9
+  }
 }
