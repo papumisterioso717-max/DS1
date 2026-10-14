@@ -4,7 +4,7 @@ Proyecto experimental de recompilación de Dead Space para Xbox 360 con XenonRec
 
 ## Estado
 
-El diagnóstico arranca el código traducido, completa la primera entrega de comandos GPU y procesa dos listas de configuración anidadas de la segunda entrega. Conserva un shader de vértices y uno de píxeles, junto con su configuración. Se detiene en el primer comando DRAW_INDX_2 observado (0x36, dirección 0x1FCEA980). No traduce ni ejecuta shaders y no dispone de renderizador: aún no muestra imagen ni es jugable.
+El diagnóstico arranca el código traducido, completa la primera entrega de comandos GPU y procesa dos listas de configuración anidadas de la segunda entrega. Conserva un shader de vértices y uno de píxeles, junto con su configuración. Captura y decodifica el primer DRAW_INDX_2 (0x1FCEA980): cuenta 1, máscara de color cero y profundidad desactivada; se detiene antes de ejecutarlo. No traduce ni ejecuta shaders y no dispone de renderizador: aún no muestra imagen ni es jugable.
 
 Pruebas actuales: 320/320 archivos compilados y 50 comprobaciones de memoria física, además de las demás pruebas del runtime. El respaldo compartido requiere Windows 10 1803 o posterior.
 

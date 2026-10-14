@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "Unsupported DRAW_INDX_2 opcode 0x36 at physical 0x1FCEA980, depth 2; no draw executed",
+  "next_blocker": "DRAW_INDX_2 captured but not executed at 0x1FCEA980; shader analysis and rendering backend pending",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -122,7 +122,7 @@
   "gpu_ring_inspector_test_cases": 6,
   "gpu_processor_support": "Bounded synchronous CP_RB_WPTR dispatch; zero/type2/NOP packets, ME_INIT data storage, INDIRECT_BUFFER/PFD traversal; unknown/predicated commands stop; no renderer",
   "gpu_processor_checks_passed": 132,
-  "gpu_processor_negative_cases": 37,
+  "gpu_processor_negative_cases": 38,
   "gpu_first_submission_words": 22,
   "gpu_first_submission_write_index": 22,
   "gpu_first_indirect_physical": "0x1F8F0040",
@@ -242,5 +242,20 @@
     "physical": "0x1FCEA980",
     "payload_words": 1,
     "executed": false
-  }
+  },
+  "gpu_draw_capture": {
+    "raw": "0x00010081",
+    "primitive": 1,
+    "source": 2,
+    "count": 1,
+    "mode": 4,
+    "color_mask": 0,
+    "depth": 0,
+    "ring_read": 22,
+    "executed": false
+  },
+  "gpu_shader_capture_sha256": [
+    "a5ffccb2a2cdccd0093b55f9051330166881a987052e76249b4841ee7170c608",
+    "9d4a64e81064abb794c5cba3642feda86a5a1e6b75a13cd4c4d7917bea83e01e"
+  ]
 }

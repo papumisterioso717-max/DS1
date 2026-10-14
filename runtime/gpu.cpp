@@ -261,6 +261,17 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    // condition. Stop without publishing a completed ring read pointer.
    if(!matched){fprintf(stderr,"PENDING_GPU_WAIT_CONDITION value=%08X\n",v);std::_Exit(20);}
   }
+  else if(type==3&&(head&1)==0&&opcode==0x36){
+   const uint32_t draw=physicalWord(base,address(i+1));
+   fprintf(stderr,"GPU_DRAW_CAPTURE raw=%08X primitive=%u source=%u major=%u index32=%u count=%u payload=%u execution=absent\n",draw,draw&63,(draw>>6)&3,(draw>>8)&3,(draw>>11)&1,draw>>16,count);
+   fprintf(stderr,"GPU_DRAW_STATE mode=%08X color_mask=%08X depth=%08X program=%08X context=%08X scissor_tl=%08X scissor_br=%08X ring_read=%u\n",state.modeControl,state.colorMask,state.depthControl,state.sqProgramControl,state.sqContextMisc,state.windowConfig[1],state.windowConfig[2],state.ringReadIndex);
+   for(uint32_t stage=0;stage<2;++stage){
+    fprintf(stderr,"GPU_DRAW_SHADER stage=%u words=%u\n",stage,uint32_t(state.shaderWords[stage].size()));
+    for(uint32_t n=0;n<state.shaderWords[stage].size();++n)fprintf(stderr,"GPU_SHADER_WORD stage=%u index=%u value=%08X\n",stage,n,state.shaderWords[stage][n]);
+   }
+   // Capture only: no draw completion, register mutation or read-pointer update.
+   fprintf(stderr,"PENDING_GPU_DRAW renderer=absent\n");std::_Exit(20);
+  }
   else if(type==3&&(head&1)==0&&opcode==0x2B){
    if(count<2)invalidRing();
    const uint32_t stage=physicalWord(base,address(i+1)),descriptor=physicalWord(base,address(i+2));

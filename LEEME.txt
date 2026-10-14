@@ -658,3 +658,14 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
   despues implementar el trabajo grafico requerido sin fingir resultados.
 - Sigue sin renderizador ni imagen del juego.
 - Verificado: 132 comprobaciones del procesador, 37 rechazos y suite general.
+
+2026-10-14: captura del primer comando de dibujo
+- DRAW_INDX_2 se decodifica y registra, pero sigue detenido sin ejecutarse.
+- Argumento 00010081: primitiva 1, fuente 2, major 0, indices de 16 bits, cuenta 1.
+- Estado observado: modo 4, mascara color 0, profundidad 0, recorte 16x16.
+- Conserva el puntero de lectura en 22. No anuncia finalizacion del dibujo.
+- Captura local first-draw-capture.json: shaders de 24 y 9 palabras para analisis.
+- No se ha validado la semantica de sus instrucciones ni posibles efectos de memoria.
+- 132 comprobaciones positivas, 38 casos detenidos y suite general correctos.
+- Prueba adicional verifica la decodificacion de campos con argumento sintetico.
+- Fuente: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/registers.h
