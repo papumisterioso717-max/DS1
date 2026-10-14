@@ -283,5 +283,12 @@
     "memory_export_destinations_observed": false,
     "draw_executed": false,
     "synthetic_test_assertions_cases": 13
+  },
+  "gpu_shader_offline_evaluation": {
+    "vertex_exports_confirmed": true,
+    "pixel_output_without_inputs": "unknown",
+    "synthetic_assertions_cases": 17,
+    "gpu_execution": false,
+    "linkage_modeled": false
   }
 }

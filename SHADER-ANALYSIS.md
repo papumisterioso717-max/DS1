@@ -17,3 +17,11 @@ The analyzer recognizes only a limited unpredicated MAX/RETAIN_PREV subset with 
 Validation: 10 existing flow assertions/cases and 13 synthetic ALU assertions/cases passed. The local capture reproduces the five outputs above. Raw shader captures remain local.
 
 Layout reference: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/ucode.h
+
+## Offline export evaluation
+
+`evaluate-shader-exports.py` now evaluates the limited export-only subset using caller-supplied temporary inputs. Missing input components stay unknown (JSON null); they are never silently zero-initialized. The captured vertex exports evaluate to interpolator (0,0,0,0) and position (0,0,0,1) without inputs. The pixel export remains four unknown components until r0 is supplied. This does not establish the actual hardware input linkage.
+
+The tool rejects unsupported operations, temporary writes, scalar result writes, clamps and unsupported export destinations. It uses finite Python numbers for this limited offline model, not a bit-exact implementation of Xenos floating point; NaN and infinity inputs are rejected. No GPU execution, interpolation, clipping, rasterization or framebuffer output was added. The runtime still stops at the first DRAW_INDX_2.
+
+Validation: 17 offline evaluator assertions/cases pass, alongside the previous 23 decoder checks. Local capture results are in first-draw-exports.json (not committed).

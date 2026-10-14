@@ -685,3 +685,7 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
 Interpolador VS=(0,0,0,0), posicion=(0,0,0,1), color PS=MAX(r0,r0).
 13 comprobaciones ALU y 10 de flujo pasan. Ver SHADER-ANALYSIS.md.
 No ejecuta el dibujo, no demuestra que pueda omitirse y no produce imagen.
+
+Evaluador offline de exportaciones agregado: conserva entradas desconocidas.
+Confirma salidas VS; color PS desconocido sin r0. 17 pruebas nuevas pasan.
+No se ejecuta en el runtime ni genera imagen; falta enlace de entradas y rasterizacion.
