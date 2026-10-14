@@ -680,3 +680,8 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
   El dibujado permanece bloqueado. Informe local: first-draw-flow.json.
 - 10 comprobaciones/casos sinteticos correctos; captura real analizada correctamente.
 - Fuente: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/ucode.h
+
+2026-10-14: Semantica MAX/RETAIN_PREV y mascaras de salida decodificadas.
+Interpolador VS=(0,0,0,0), posicion=(0,0,0,1), color PS=MAX(r0,r0).
+13 comprobaciones ALU y 10 de flujo pasan. Ver SHADER-ANALYSIS.md.
+No ejecuta el dibujo, no demuestra que pueda omitirse y no produce imagen.

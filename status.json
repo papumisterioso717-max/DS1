@@ -259,11 +259,29 @@
     "9d4a64e81064abb794c5cba3642feda86a5a1e6b75a13cd4c4d7917bea83e01e"
   ],
   "gpu_shader_flow_analysis": {
-    "scope": "linear control flow only; ALU semantics unresolved",
+    "scope": "Linear flow and captured MAX/RETAIN_PREV output routing decoded; no shader execution or draw safety proof",
     "vertex_scheduled_alu": 4,
     "pixel_scheduled_alu": 1,
     "scheduled_fetch": 0,
     "draw_can_be_skipped": false
   },
-  "gpu_shader_flow_tests": 10
+  "gpu_shader_flow_tests": 10,
+  "gpu_shader_alu_analysis": {
+    "vertex_interpolator_0": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "vertex_position": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "pixel_color_0": "MAX(r0, r0); input linkage not executed",
+    "memory_export_destinations_observed": false,
+    "draw_executed": false,
+    "synthetic_test_assertions_cases": 13
+  }
 }
