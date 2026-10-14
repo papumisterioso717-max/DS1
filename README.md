@@ -38,3 +38,5 @@ La captura del runtime ahora distingue escrituras del juego de valores iniciales
 La vista previa posterior al primer dibujo revela otros 23 dibujos idénticos en la misma lista, sin cambios de configuración. Es una inspección de lectura: ninguno se ejecuta ni se omite.
 
 Se localizaron los generadores recompilados de la secuencia y se verificaron en aislamiento: 24 dibujos y la lista previa de configuración GPR coinciden con la captura. Véase DRAW-SEQUENCE.md. La ejecución gráfica sigue pendiente.
+
+Existe una prueba opcional `DS1_PROBE_ZERO_SURFACE=1`, desactivada por defecto, que omite hasta 24 dibujos con estado restringido siguiendo una compatibilidad de Xenia. Sus efectos de shader no están verificados. La prueba llega a `EVENT_WRITE_SHD` y se detiene; no genera imagen. El modo normal conserva el bloqueo del primer dibujo. Detalles en DRAW-SEQUENCE.md.

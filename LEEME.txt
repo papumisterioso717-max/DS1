@@ -709,3 +709,8 @@ Sin escrituras de configuracion posteriores en esa lista. No se ejecutan ni omit
 Identificados generadores originales de dibujos y configuracion GPR.
 Pruebas aisladas de las funciones recompiladas coinciden con 48 y 13 palabras capturadas.
 Ver DRAW-SEQUENCE.md; efecto hardware pendiente, runtime sin cambios.
+
+Modo experimental opcional DS1_PROBE_ZERO_SURFACE=1: maximo 24 dibujos omitidos.
+No verifica efectos de shader ni renderiza. Desactivado por defecto.
+Prueba real alcanza EVENT_WRITE_SHD 0x58 en 1F8E00E0, termina con 20.
+Modo normal comprobado: sigue detenido en primer dibujo.

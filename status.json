@@ -348,5 +348,15 @@
     "isolated_configuration_builder_passed": true,
     "hardware_purpose": "unconfirmed shader-register reconfiguration transition",
     "draw_executed": false
+  },
+  "gpu_zero_surface_experiment": {
+    "opt_in_environment": "DS1_PROBE_ZERO_SURFACE=1",
+    "default_enabled": false,
+    "bypassed_draws": 24,
+    "limit": 24,
+    "next_blocker": "EVENT_WRITE_SHD opcode 0x58 at 0x1F8E00E0",
+    "shader_side_effects_verified": false,
+    "rendered_image": false,
+    "normal_mode_still_stops_at_first_draw": true
   }
 }

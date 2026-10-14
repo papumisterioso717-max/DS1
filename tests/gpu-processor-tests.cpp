@@ -16,6 +16,15 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strcmp(argv[1],"zeroprobe")){
+   put(0,0x00002208);put(1,4);put(2,0xC0003600);put(3,0x00010081);
+   diagnosticMmioStore32(base,0x7FC80714,4,0);
+   const auto probe=queryDiagnosticGpu(base);
+   check(probe.diagnosticBypassedDraws==1&&probe.ringReadIndex==4);
+   __imp__VdShutdownEngines(c,base);check(queryDiagnosticGpu(base).diagnosticBypassedDraws==0);
+   puts("PASS opt-in zero-surface investigation");return 0;
+  }
+
   if(!strcmp(argv[1],"drawcapture")){put(0,0xC0003600);put(1,0x12340883);put(2,0x00002000);put(3,0x12345678);diagnosticMmioStore32(base,0x7FC80714,4,0);}
   if(!strcmp(argv[1],"vertexcontrolneighbor")){put(0,0x00012302);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"pointneighbor")){put(0,0x00012280);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}

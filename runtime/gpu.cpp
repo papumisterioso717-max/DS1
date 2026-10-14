@@ -268,6 +268,18 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
   }
   else if(type==3&&(head&1)==0&&opcode==0x36){
    const uint32_t draw=physicalWord(base,address(i+1));
+   // Opt-in investigation only. Xenia D3D12 IssueDraw accepts zero-pitch
+   // draws without rendering (with a documented memexport limitation).
+   // This does NOT prove shader side effects absent or hardware equivalence.
+   const char* probe=std::getenv("DS1_PROBE_ZERO_SURFACE");
+   if(probe&&probe[0]=='1'&&probe[1]=='\0'&&count==1&&draw==0x00010081&&
+      state.surfaceInfo==0&&state.modeControl==4&&state.colorMask==0&&
+      state.depthControl==0&&state.vizQueryConfig==0&&state.diagnosticBypassedDraws<24){
+    ++state.diagnosticBypassedDraws;
+    fprintf(stderr,"GPU_EXPERIMENTAL_DRAW_BYPASS number=%u physical=%08X policy=zero-surface rendering=absent side-effects=unverified\n",state.diagnosticBypassedDraws,address(i));
+    ++state.processedPackets;i+=count+1;continue;
+   }
+
    fprintf(stderr,"GPU_DRAW_CAPTURE raw=%08X primitive=%u source=%u major=%u index32=%u count=%u payload=%u execution=absent\n",draw,draw&63,(draw>>6)&3,(draw>>8)&3,(draw>>11)&1,draw>>16,count);
    fprintf(stderr,"GPU_DRAW_STATE mode=%08X color_mask=%08X depth=%08X program=%08X context=%08X scissor_tl=%08X scissor_br=%08X ring_read=%u\n",state.modeControl,state.colorMask,state.depthControl,state.sqProgramControl,state.sqContextMisc,state.windowConfig[1],state.windowConfig[2],state.ringReadIndex);
    fprintf(stderr,"GPU_DRAW_COVERAGE surface=%08X screen_tl=%08X screen_br=%08X written_mask=%u defaults=diagnostic-zero-not-hardware\n",state.surfaceInfo,state.screenScissor[0],state.screenScissor[1],state.coverageWrittenMask);

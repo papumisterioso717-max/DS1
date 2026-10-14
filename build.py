@@ -61,6 +61,13 @@ for case,expected in [('unknown',20),('truncated',22),('index',22),('cycle',22),
  if case=='drawcapture' and 'written_mask=0 defaults=diagnostic-zero-not-hardware' not in r.stderr:raise RuntimeError('Coverage provenance capture mismatch')
  if case=='drawcapture' and ('GPU_DRAW_TAIL remaining=2 limit=2 execution=absent' not in r.stderr or 'value=12345678' not in r.stderr or 'GPU_REGISTER index=2000' in r.stderr):raise RuntimeError('Draw lookahead executed or lost data')
 
+# Default still rejects the same candidate; only an explicit probe may bypass.
+r=subprocess.run([str(bin/'GpuProcessorTests.exe'),'zeroprobe'],capture_output=True,text=True,env={k:v for k,v in os.environ.items() if k!='DS1_PROBE_ZERO_SURFACE'})
+if r.returncode!=20:raise RuntimeError('Default draw guard disabled')
+probe_env=os.environ.copy();probe_env['DS1_PROBE_ZERO_SURFACE']='1'
+r=subprocess.run([str(bin/'GpuProcessorTests.exe'),'zeroprobe'],capture_output=True,text=True,env=probe_env)
+if r.returncode!=0 or 'side-effects=unverified' not in r.stderr:raise RuntimeError('Opt-in zero surface probe failed')
+
 for case in ['shift','alignment','unmapped','overflow','order','wbshift','wbunmapped']:
  r=subprocess.run([str(bin/'GpuRingTests.exe'),case],capture_output=True,text=True)
  if r.returncode!=(20 if case=='order' else 22):raise RuntimeError('GPU ring invalid case failed: '+case)
