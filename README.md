@@ -30,3 +30,5 @@ El analizador `inspect-shader-flow.py` identifica el flujo lineal de los shaders
 `evaluate-shader-exports.py` evalúa las salidas del subconjunto capturado fuera del runtime. Confirma las constantes de vértices y conserva como desconocido el color de píxel si falta r0. Sus 17 pruebas pasan; aún no ejecuta el dibujo ni genera imagen.
 
 `link-point-shaders.py` conecta fuera del runtime el interpolador del primer punto con r0 del shader de píxeles. Produce color hipotético (0,0,0,0), sin calcular cobertura ni escribir imagen. Solo admite la configuración capturada; nueve pruebas verifican el enlace y sus rechazos.
+
+El inspector de geometría identifica un punto de 1x1 y el píxel candidato (0,0). La cobertura final sigue pendiente del recorte global y el estado de muestreo; no hay imagen renderizada.

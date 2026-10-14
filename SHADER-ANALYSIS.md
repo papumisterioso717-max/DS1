@@ -35,3 +35,12 @@ The CLI verifies that the shader words and draw identity match the supplied diag
 Register and linkage references:
 - https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/registers.h
 - https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/shader_translator.cc (GetInterpolatorInputMask)
+
+## Point geometry inspection
+
+`inspect-point-geometry.py` reads the last logged configuration writes before the single captured draw; it never substitutes zero for missing state. The inspected state disables viewport scaling/offset, uses a fixed 1x1 point (half-size 8/16 per axis), integer pixel centers, zero window offset, and window scissor [0,0,16,16). With position (0,0,0,1), the point bounds are [-0.5,-0.5,0.5,0.5]; the candidate pixel center is (0,0).
+
+This is only a candidate after the window scissor. Global screen scissor and surface multisample state have not been captured, and hardware sample coverage is not implemented. Final coverage remains unknown; no shader invocation, framebuffer write or GPU completion is claimed. Next runtime work needs explicit capture/modeling of the missing state before integrating drawing.
+
+Eight geometry checks and the nine linkage checks pass. The combined report remains local in first-draw-link.json.
+Sources: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/registers.h and https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/xenos.h

@@ -52,4 +52,6 @@ if __name__ == '__main__':
     if len(states) != 1 or logged != expected or draws != [(capture['raw'], str(capture['primitive']), str(capture['source']), str(capture['count']))]:
         raise ValueError('Capture and diagnostic log do not identify the same single draw')
     result = link_point(*shaders, *(int(v,16) for v in states[0]), capture['primitive'], capture['count'])
+    inspect_geometry = runpy.run_path(str(Path(__file__).with_name('inspect-point-geometry.py')))['inspect_geometry']
+    result['geometry'] = inspect_geometry(log, result['position'])
     print(json.dumps(result, indent=2))

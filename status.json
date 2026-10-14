@@ -308,5 +308,21 @@
     "coverage_determined": false,
     "draw_executed": false,
     "tests": 9
+  },
+  "gpu_point_geometry_analysis": {
+    "point_size": [
+      1,
+      1
+    ],
+    "candidate_pixel": [
+      0,
+      0
+    ],
+    "final_coverage_known": false,
+    "geometry_tests": 8,
+    "missing_capture": [
+      "global screen scissor",
+      "surface multisample state"
+    ]
   }
 }

@@ -692,3 +692,7 @@ No se ejecuta en el runtime ni genera imagen; falta enlace de entradas y rasteri
 
 Enlace offline de un punto: interpolador VS0 -> PS r0; color hipotetico (0,0,0,0).
 9 pruebas pasan. Cobertura no calculada; runtime sigue detenido en DRAW_INDX_2.
+
+Geometria del punto: tamano 1x1, centro (0,0), candidato pixel (0,0).
+Faltan captura del recorte global y estado multimuestreo; cobertura final desconocida.
+8 comprobaciones nuevas pasan. El runtime no ejecuta el dibujo.
