@@ -36,3 +36,5 @@ El inspector de geometría identifica un punto de 1x1 y el píxel candidato (0,0
 La captura del runtime ahora distingue escrituras del juego de valores iniciales en superficie y recorte global. Antes del primer dibujo no se observaron escrituras de esos tres registros: su inicialización sigue por resolver. El diagnóstico permanece detenido, sin imagen.
 
 La vista previa posterior al primer dibujo revela otros 23 dibujos idénticos en la misma lista, sin cambios de configuración. Es una inspección de lectura: ninguno se ejecuta ni se omite.
+
+Se localizaron los generadores recompilados de la secuencia y se verificaron en aislamiento: 24 dibujos y la lista previa de configuración GPR coinciden con la captura. Véase DRAW-SEQUENCE.md. La ejecución gráfica sigue pendiente.

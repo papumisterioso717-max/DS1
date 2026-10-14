@@ -338,5 +338,15 @@
     "following_configuration_writes": 0,
     "executed": false,
     "preview_checks": 5
+  },
+  "gpu_draw_sequence_provenance": {
+    "draw_builder": "0x823EDA70",
+    "configuration_builder": "0x823EDA10",
+    "constructor": "0x823EDAA8",
+    "submission_builder": "0x823EF448",
+    "isolated_draw_builder_passed": true,
+    "isolated_configuration_builder_passed": true,
+    "hardware_purpose": "unconfirmed shader-register reconfiguration transition",
+    "draw_executed": false
   }
 }

@@ -705,3 +705,7 @@ No son valores de hardware verificados; inicializacion pendiente. Exit 20, ring_
 Vista previa limitada despues del dibujo: 46 palabras, 23 dibujos identicos adicionales.
 Sin escrituras de configuracion posteriores en esa lista. No se ejecutan ni omiten.
 5 pruebas del decodificador de vista previa pasan; salida real sigue en 20.
+
+Identificados generadores originales de dibujos y configuracion GPR.
+Pruebas aisladas de las funciones recompiladas coinciden con 48 y 13 palabras capturadas.
+Ver DRAW-SEQUENCE.md; efecto hardware pendiente, runtime sin cambios.
