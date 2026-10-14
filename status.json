@@ -257,5 +257,13 @@
   "gpu_shader_capture_sha256": [
     "a5ffccb2a2cdccd0093b55f9051330166881a987052e76249b4841ee7170c608",
     "9d4a64e81064abb794c5cba3642feda86a5a1e6b75a13cd4c4d7917bea83e01e"
-  ]
+  ],
+  "gpu_shader_flow_analysis": {
+    "scope": "linear control flow only; ALU semantics unresolved",
+    "vertex_scheduled_alu": 4,
+    "pixel_scheduled_alu": 1,
+    "scheduled_fetch": 0,
+    "draw_can_be_skipped": false
+  },
+  "gpu_shader_flow_tests": 10
 }

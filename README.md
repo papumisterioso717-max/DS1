@@ -24,3 +24,5 @@ Esta es una instantánea del proyecto de desarrollo. Los scripts todavía contie
 Repositorio de XenonRecomp: https://github.com/hedge-dev/XenonRecomp
 
 No se asigna una licencia general a los componentes de terceros; se conservan sus avisos en los archivos correspondientes.
+
+El analizador `inspect-shader-flow.py` identifica el flujo lineal de los shaders capturados: cuatro instrucciones ALU de vértices y una de píxeles. La semántica ALU y los posibles efectos de memoria siguen pendientes; este informe no autoriza omitir el dibujo.

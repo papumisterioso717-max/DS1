@@ -669,3 +669,14 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
 - 132 comprobaciones positivas, 38 casos detenidos y suite general correctos.
 - Prueba adicional verifica la decodificacion de campos con argumento sintetico.
 - Fuente: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/registers.h
+
+2026-10-14: analisis de flujo de shaders
+- inspect-shader-flow.py analiza NOP, EXEC, EXEC_END y ALLOC sin ejecutar codigo.
+- Rechaza longitud invalida, rangos fuera del shader, solapamiento con flujo,
+  opcodes de flujo sin soporte y ausencia de terminacion incondicional.
+- Captura real: cuatro ALU programadas en vertices y una en pixeles; sin FETCH
+  en el flujo analizado. Reservas de posicion/interpoladores y color.
+- NO analiza aun semantica ALU ni demuestra ausencia de efectos de memoria.
+  El dibujado permanece bloqueado. Informe local: first-draw-flow.json.
+- 10 comprobaciones/casos sinteticos correctos; captura real analizada correctamente.
+- Fuente: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/ucode.h
