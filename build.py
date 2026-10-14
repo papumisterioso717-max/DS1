@@ -54,7 +54,7 @@ run([tool/'clang++.exe',*flags,root/'tests/gpu-ring-tests.cpp',gpu,'-o',bin/'Gpu
 run([bin/'GpuRingTests.exe'])
 run([tool/'clang++.exe',*flags,root/'tests/gpu-processor-tests.cpp',gpu,'-o',bin/'GpuProcessorTests.exe'])
 run([bin/'GpuProcessorTests.exe'])
-for case,expected in [('unknown',20),('truncated',22),('index',22),('cycle',22),('register',20),('waitfalse',20),('waitmemory',20),('unknownrange',20),('scratchbad',22),('scratchreadonly',22),('waitvsync',20),('waitfifo',20),('waitdirty',20),('sqgap',20),('rmwunknown',20),('rmwshort',22),('rmwmode',20),('opaqueadjacent',20),('windowrange',20),('invalidatelength',22),('invalidatepred',20),('shaderlength',22),('shaderstage',20),('shaderoffset',20),('shaderempty',22),('programrange',20),('vertexrange',20),('vizexecute',20),('vizrange',20),('cliprange',20),('aarange',20),('destneighbor',20),('depthneighbor',20)]:
+for case,expected in [('unknown',20),('truncated',22),('index',22),('cycle',22),('register',20),('waitfalse',20),('waitmemory',20),('unknownrange',20),('scratchbad',22),('scratchreadonly',22),('waitvsync',20),('waitfifo',20),('waitdirty',20),('sqgap',20),('rmwunknown',20),('rmwshort',22),('rmwmode',20),('opaqueadjacent',20),('windowrange',20),('invalidatelength',22),('invalidatepred',20),('shaderlength',22),('shaderstage',20),('shaderoffset',20),('shaderempty',22),('programrange',20),('vertexrange',20),('vizexecute',20),('vizrange',20),('cliprange',20),('aarange',20),('destneighbor',20),('depthneighbor',20),('modeneighbor',20)]:
  r=subprocess.run([str(bin/'GpuProcessorTests.exe'),case],capture_output=True,text=True)
  if r.returncode!=expected:raise RuntimeError('GPU processor rejection failed: '+case)
 
