@@ -13,7 +13,7 @@ RESULTADO VERIFICADO
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
-- Completa la primera lista y se detiene en PA_SU_VTX_CNTL (2302), fisica 0x1FCE9110, profundidad 2
+- Completa la primera lista y se detiene en DRAW_INDX_2 (36), fisica 0x1FCEA980, profundidad 2
   (LR 0x823EBC90, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
@@ -648,3 +648,13 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
 - Nuevo bloqueo: PA_SU_VTX_CNTL (2302) en 1FCE9110.
 - Sigue sin renderizador ni imagen del juego.
 - Verificado: 129 comprobaciones del procesador, 36 rechazos y suite general.
+
+2026-10-14: fin de listas de configuracion y primer draw observado
+- Conserva PA_SU_VTX_CNTL; el titulo escribe 00000004.
+- Completa las listas de configuracion 1FCE9000 y 1FCE9D40.
+- Llega a DRAW_INDX_2 (opcode 36) en 1FCEA980, con una palabra de payload.
+- El dibujado NO se ejecuta. La segunda entrega sigue incompleta.
+- Proximo paso: capturar y decodificar el argumento de dibujo y su estado;
+  despues implementar el trabajo grafico requerido sin fingir resultados.
+- Sigue sin renderizador ni imagen del juego.
+- Verificado: 132 comprobaciones del procesador, 37 rechazos y suite general.

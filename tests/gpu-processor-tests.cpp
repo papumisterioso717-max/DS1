@@ -16,6 +16,7 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strcmp(argv[1],"vertexcontrolneighbor")){put(0,0x00012302);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"pointneighbor")){put(0,0x00012280);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"colorneighbor")){put(0,0x00012104);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"modeneighbor")){put(0,0x00012208);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
@@ -238,7 +239,12 @@ int main(int argc,char**argv){
  check(s.pointSize==0xABCD1234&&s.colorMask==0&&s.coherStatus==0);
  put(6,0x00002280);put(7,0);diagnosticMmioStore32(base,0x7FC80714,0,0);
  check(queryDiagnosticGpu(base).pointSize==0&&queryDiagnosticGpu(base).shaderWords[0]==s.shaderWords[0]);
+ put(0,0x00002302);put(1,0xA5A51234);diagnosticMmioStore32(base,0x7FC80714,2,0);s=queryDiagnosticGpu(base);
+ check(s.vertexControl==0xA5A51234&&s.pointSize==0&&s.coherStatus==0);
+ put(2,0x00002302);put(3,0);diagnosticMmioStore32(base,0x7FC80714,4,0);
+ check(queryDiagnosticGpu(base).vertexControl==0&&queryDiagnosticGpu(base).shaderWords[0]==s.shaderWords[0]);
  __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
+ check(s.vertexControl==0);
  check(s.pointSize==0);
  check(s.colorMask==0);
  check(s.modeControl==0);

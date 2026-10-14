@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "Unsupported PA_SU_VTX_CNTL register 0x2302 at physical 0x1FCE9110, depth 2",
+  "next_blocker": "Unsupported DRAW_INDX_2 opcode 0x36 at physical 0x1FCEA980, depth 2; no draw executed",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -121,8 +121,8 @@
   "gpu_ring_inspector": "Read-only PM4 header inspection; producer boundary unknown; execution absent",
   "gpu_ring_inspector_test_cases": 6,
   "gpu_processor_support": "Bounded synchronous CP_RB_WPTR dispatch; zero/type2/NOP packets, ME_INIT data storage, INDIRECT_BUFFER/PFD traversal; unknown/predicated commands stop; no renderer",
-  "gpu_processor_checks_passed": 129,
-  "gpu_processor_negative_cases": 36,
+  "gpu_processor_checks_passed": 132,
+  "gpu_processor_negative_cases": 37,
   "gpu_first_submission_words": 22,
   "gpu_first_submission_write_index": 22,
   "gpu_first_indirect_physical": "0x1F8F0040",
@@ -230,5 +230,17 @@
   "gpu_color_mask_support": "Raw RB_COLOR_MASK storage only; no pixel color writes or rasterization",
   "gpu_color_mask_observed": "0x00000000",
   "gpu_point_size_support": "Raw PA_SU_POINT_SIZE storage only; point rasterization absent",
-  "gpu_point_size_observed": "0x00080008"
+  "gpu_point_size_observed": "0x00080008",
+  "gpu_vertex_control_support": "Raw PA_SU_VTX_CNTL storage only; no vertex processing",
+  "gpu_vertex_control_observed": "0x00000004",
+  "gpu_completed_nested_configuration_lists": [
+    "0x1FCE9000",
+    "0x1FCE9D40"
+  ],
+  "gpu_first_draw_observed": {
+    "opcode": "0x36",
+    "physical": "0x1FCEA980",
+    "payload_words": 1,
+    "executed": false
+  }
 }
