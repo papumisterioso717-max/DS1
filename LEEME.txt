@@ -13,7 +13,7 @@ RESULTADO VERIFICADO
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
-- Completa la primera lista y se detiene en RB_COLOR_MASK (2104), fisica 0x1FCE9100, profundidad 2
+- Completa la primera lista y se detiene en PA_SU_POINT_SIZE (2280), fisica 0x1FCE9108, profundidad 2
   (LR 0x823EBC90, salida 20). Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
@@ -634,3 +634,10 @@ https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/kernel_state
 - Nuevo bloqueo: RB_COLOR_MASK (2104) en 1FCE9100.
 - Sigue sin renderizador ni imagen del juego.
 - Verificado: 123 comprobaciones del procesador, 34 rechazos y suite general.
+
+2026-10-14: mascara de escritura de color
+- Conserva RB_COLOR_MASK; el titulo escribe cero.
+- No escribe pixeles ni ejecuta dibujado.
+- Nuevo bloqueo: PA_SU_POINT_SIZE (2280) en 1FCE9108.
+- Sigue sin renderizador ni imagen del juego.
+- Verificado: 126 comprobaciones del procesador, 35 rechazos y suite general.
