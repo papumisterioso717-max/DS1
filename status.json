@@ -290,5 +290,23 @@
     "synthetic_assertions_cases": 17,
     "gpu_execution": false,
     "linkage_modeled": false
+  },
+  "gpu_offline_point_linkage": {
+    "configuration": "0x1000000E / context 0",
+    "pixel_input_r0": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "hypothetical_sample_color": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "coverage_determined": false,
+    "draw_executed": false,
+    "tests": 9
   }
 }

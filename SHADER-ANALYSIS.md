@@ -25,3 +25,13 @@ Layout reference: https://github.com/xenia-project/xenia/blob/master/src/xenia/g
 The tool rejects unsupported operations, temporary writes, scalar result writes, clamps and unsupported export destinations. It uses finite Python numbers for this limited offline model, not a bit-exact implementation of Xenos floating point; NaN and infinity inputs are rejected. No GPU execution, interpolation, clipping, rasterization or framebuffer output was added. The runtime still stops at the first DRAW_INDX_2.
 
 Validation: 17 offline evaluator assertions/cases pass, alongside the previous 23 decoder checks. Local capture results are in first-draw-exports.json (not committed).
+
+## Offline single-point linkage
+
+`link-point-shaders.py` accepts only program 0x1000000E, context 0, one point and the inspected export pattern. This configuration has one interpolator, one pixel register, no parameter generation, and position-only vertex export mode. The model supplies vertex interpolator 0 to pixel r0: (0,0,0,0). The pixel result is consequently (0,0,0,0) IF a pixel invocation occurs. It does not determine sample coverage, clipping, point expansion, or framebuffer effects. The captured color mask is zero. This is not a visible game frame or permission to skip the draw.
+
+The CLI verifies that the shader words and draw identity match the supplied diagnostic log before using its program/context state. Unsupported configurations and missing pixel inputs are rejected. Nine synthetic linkage checks passed; the local capture produces first-draw-link.json. No runtime change was made.
+
+Register and linkage references:
+- https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/registers.h
+- https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/shader_translator.cc (GetInterpolatorInputMask)

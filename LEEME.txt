@@ -689,3 +689,6 @@ No ejecuta el dibujo, no demuestra que pueda omitirse y no produce imagen.
 Evaluador offline de exportaciones agregado: conserva entradas desconocidas.
 Confirma salidas VS; color PS desconocido sin r0. 17 pruebas nuevas pasan.
 No se ejecuta en el runtime ni genera imagen; falta enlace de entradas y rasterizacion.
+
+Enlace offline de un punto: interpolador VS0 -> PS r0; color hipotetico (0,0,0,0).
+9 pruebas pasan. Cobertura no calculada; runtime sigue detenido en DRAW_INDX_2.

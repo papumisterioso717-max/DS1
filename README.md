@@ -28,3 +28,5 @@ No se asigna una licencia general a los componentes de terceros; se conservan su
 El analizador `inspect-shader-flow.py` identifica el flujo lineal de los shaders capturados: cuatro instrucciones ALU de vértices y una de píxeles. Las cinco operaciones MAX/RETAIN_PREV y sus máscaras de salida están decodificadas: interpolador cero, posición (0,0,0,1) y color MAX(r0,r0). No aparecen destinos de exportación a memoria en ellas. Falta ejecutar los shaders y rasterizar; este informe no autoriza omitir el dibujo. Véase SHADER-ANALYSIS.md.
 
 `evaluate-shader-exports.py` evalúa las salidas del subconjunto capturado fuera del runtime. Confirma las constantes de vértices y conserva como desconocido el color de píxel si falta r0. Sus 17 pruebas pasan; aún no ejecuta el dibujo ni genera imagen.
+
+`link-point-shaders.py` conecta fuera del runtime el interpolador del primer punto con r0 del shader de píxeles. Produce color hipotético (0,0,0,0), sin calcular cobertura ni escribir imagen. Solo admite la configuración capturada; nueve pruebas verifican el enlace y sus rechazos.
