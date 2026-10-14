@@ -696,3 +696,8 @@ Enlace offline de un punto: interpolador VS0 -> PS r0; color hipotetico (0,0,0,0
 Geometria del punto: tamano 1x1, centro (0,0), candidato pixel (0,0).
 Faltan captura del recorte global y estado multimuestreo; cobertura final desconocida.
 8 comprobaciones nuevas pasan. El runtime no ejecuta el dibujo.
+
+Captura runtime de superficie y recorte global agregada con procedencia.
+Arranque real: tres ceros, written_mask=0 (sin escrituras del juego observadas).
+No son valores de hardware verificados; inicializacion pendiente. Exit 20, ring_read=22.
+137 pruebas del procesador y 12 de geometria/procedencia pasan.

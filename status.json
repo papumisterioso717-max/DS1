@@ -121,7 +121,7 @@
   "gpu_ring_inspector": "Read-only PM4 header inspection; producer boundary unknown; execution absent",
   "gpu_ring_inspector_test_cases": 6,
   "gpu_processor_support": "Bounded synchronous CP_RB_WPTR dispatch; zero/type2/NOP packets, ME_INIT data storage, INDIRECT_BUFFER/PFD traversal; unknown/predicated commands stop; no renderer",
-  "gpu_processor_checks_passed": 132,
+  "gpu_processor_checks_passed": 137,
   "gpu_processor_negative_cases": 38,
   "gpu_first_submission_words": 22,
   "gpu_first_submission_write_index": 22,
@@ -319,10 +319,17 @@
       0
     ],
     "final_coverage_known": false,
-    "geometry_tests": 8,
+    "geometry_tests": 12,
     "missing_capture": [
-      "global screen scissor",
-      "surface multisample state"
+      "No guest writes observed for surface info or global screen scissor; initialization semantics unresolved"
     ]
+  },
+  "gpu_coverage_capture": {
+    "surface_info": 0,
+    "screen_scissor_tl": 0,
+    "screen_scissor_br": 0,
+    "guest_written_mask": 0,
+    "provenance": "diagnostic initial storage only, not established hardware defaults",
+    "draw_executed": false
   }
 }

@@ -131,6 +131,8 @@ uint32_t physicalWord(uint8_t* base,uint32_t address){
 uint32_t& gpuRegister(DiagnosticGpuState& s,uint32_t index){
  if(index>=0x2006&&index<=0x200D)return s.coherDestBase[index-0x2006];
  switch(index){
+ case 0x2000:return s.surfaceInfo;
+ case 0x200E:return s.screenScissor[0];case 0x200F:return s.screenScissor[1];
  case 0x2302:return s.vertexControl;
  case 0x2280:return s.pointSize;
  case 0x2104:return s.colorMask;
@@ -155,11 +157,14 @@ uint32_t& gpuRegister(DiagnosticGpuState& s,uint32_t index){
 }
 void writeGpuRegister(uint8_t* base,DiagnosticGpuState& state,uint32_t index,uint32_t value){
  (void)gpuRegister(state,index); // Reject unsupported indices before side effects.
+ if(index==0x2000)state.coverageWrittenMask|=1;
+ if(index==0x200E)state.coverageWrittenMask|=2;
+ if(index==0x200F)state.coverageWrittenMask|=4;
     // Opaque compatibility storage, matching Xenia's zero-initialized register
     // file and generic WriteRegister fallback. Hardware semantics are unknown.
     // Initialization/configuration storage only. Rendering and EDRAM effects
     // are not implemented; draws and events still stop before completion.
-    if(index==0x2302||index==0x2280||index==0x2104||index==0x2208||index==0x2203||index==0x2200||(index>=0x2006&&index<=0x200D)||index==0x2312||(index>=0x2204&&index<=0x2206)||index==0x2293||(index>=0x2100&&index<=0x2102)||index==0x2180||index==0x2181||index==0xE42||index==0xC85||index==0xF01||(index>=0x2080&&index<=0x2082))gpuRegister(state,index)=value;
+    if(index==0x2000||index==0x200E||index==0x200F||index==0x2302||index==0x2280||index==0x2104||index==0x2208||index==0x2203||index==0x2200||(index>=0x2006&&index<=0x200D)||index==0x2312||(index>=0x2204&&index<=0x2206)||index==0x2293||(index>=0x2100&&index<=0x2102)||index==0x2180||index==0x2181||index==0xE42||index==0xC85||index==0xF01||(index>=0x2080&&index<=0x2082))gpuRegister(state,index)=value;
     else if(index==0x81)state.unknown0081=value;
     else if(index==0x82)state.unknown0082=value;
     else if(index==0xA2F)state.coherSize=value;
@@ -219,7 +224,7 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    // Match Xenia's WriteRegister behavior without pretending to flush a GPU.
    for(uint32_t n=0;n<count;++n){
     const uint32_t index=first+(single?0:n);
-    if(!(index==0x2302||index==0x2280||index==0x2104||index==0x2208||index==0x2203||index==0x2200||(index>=0x2006&&index<=0x200D)||index==0x2312||(index>=0x2204&&index<=0x2206)||index==0x2293||(index>=0xA2F&&index<=0xA31)||(index>=0xD00&&index<=0xD02)||(index>=0xA02&&index<=0xA05)||(index>=0x2100&&index<=0x2102)||index==0x2180||index==0x2181||index==0xE42||index==0xC85||index==0xF01||(index>=0x2080&&index<=0x2082)||index==0x81||index==0x82||index==0xD04||index==0x5C8||index==0x1DC||index==0x1DD||(index>=0x578&&index<=0x57F))){fprintf(stderr,"PENDING_GPU_REGISTER_PACKET index=%04X physical=%08X\n",index,address(i));std::_Exit(20);}
+    if(!(index==0x2000||index==0x200E||index==0x200F||index==0x2302||index==0x2280||index==0x2104||index==0x2208||index==0x2203||index==0x2200||(index>=0x2006&&index<=0x200D)||index==0x2312||(index>=0x2204&&index<=0x2206)||index==0x2293||(index>=0xA2F&&index<=0xA31)||(index>=0xD00&&index<=0xD02)||(index>=0xA02&&index<=0xA05)||(index>=0x2100&&index<=0x2102)||index==0x2180||index==0x2181||index==0xE42||index==0xC85||index==0xF01||(index>=0x2080&&index<=0x2082)||index==0x81||index==0x82||index==0xD04||index==0x5C8||index==0x1DC||index==0x1DD||(index>=0x578&&index<=0x57F))){fprintf(stderr,"PENDING_GPU_REGISTER_PACKET index=%04X physical=%08X\n",index,address(i));std::_Exit(20);}
    }
    for(uint32_t n=0;n<count;++n){
     const uint32_t index=first+(single?0:n),value=physicalWord(base,address(i+1+n));
@@ -265,6 +270,7 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    const uint32_t draw=physicalWord(base,address(i+1));
    fprintf(stderr,"GPU_DRAW_CAPTURE raw=%08X primitive=%u source=%u major=%u index32=%u count=%u payload=%u execution=absent\n",draw,draw&63,(draw>>6)&3,(draw>>8)&3,(draw>>11)&1,draw>>16,count);
    fprintf(stderr,"GPU_DRAW_STATE mode=%08X color_mask=%08X depth=%08X program=%08X context=%08X scissor_tl=%08X scissor_br=%08X ring_read=%u\n",state.modeControl,state.colorMask,state.depthControl,state.sqProgramControl,state.sqContextMisc,state.windowConfig[1],state.windowConfig[2],state.ringReadIndex);
+   fprintf(stderr,"GPU_DRAW_COVERAGE surface=%08X screen_tl=%08X screen_br=%08X written_mask=%u defaults=diagnostic-zero-not-hardware\n",state.surfaceInfo,state.screenScissor[0],state.screenScissor[1],state.coverageWrittenMask);
    for(uint32_t stage=0;stage<2;++stage){
     fprintf(stderr,"GPU_DRAW_SHADER stage=%u words=%u\n",stage,uint32_t(state.shaderWords[stage].size()));
     for(uint32_t n=0;n<state.shaderWords[stage].size();++n)fprintf(stderr,"GPU_SHADER_WORD stage=%u index=%u value=%08X\n",stage,n,state.shaderWords[stage][n]);

@@ -16,10 +16,25 @@ def inspect_geometry(log, position):
     tl,br=registers[0x2081],registers[0x2082]
     if tl != 0 or br != 0x100010:
         raise ValueError('Unsupported window scissor')
-    return {'point_size_pixels':[1.0,1.0], 'center':[0.0,0.0],
+    result = {'point_size_pixels':[1.0,1.0], 'center':[0.0,0.0],
         'bounds_before_global_clipping':[-0.5,-0.5,0.5,0.5],
         'window_scissor':[0,0,16,16], 'pixel_center_convention':'integer',
         'candidate_pixel_centers':[[0,0]], 'viewport_transform_enabled':False,
         'final_coverage_known':False,
         'unresolved':['global screen scissor not captured','surface multisample state not captured','hardware sample coverage not implemented'],
         'draw_executed':False}
+    snapshots = re.findall(r'GPU_DRAW_COVERAGE surface=([0-9A-F]{8}) screen_tl=([0-9A-F]{8}) screen_br=([0-9A-F]{8}) written_mask=(\d+)', log)
+    if len(snapshots)>1:
+        raise ValueError('Ambiguous coverage snapshot')
+    if snapshots:
+        surface,tl,br,mask=snapshots[0]; mask=int(mask)
+        if mask & ~7:
+            raise ValueError('Invalid coverage provenance mask')
+        result['runtime_coverage_snapshot']={
+            name:{'stored_value':int(value,16),'guest_write_observed':bool(mask&bit)}
+            for name,value,bit in (('surface',surface,1),('screen_tl',tl,2),('screen_br',br,4))}
+        result['unresolved']=['hardware sample coverage not implemented']
+        result['unresolved'] += [name+' has only a diagnostic default' for name,item in result['runtime_coverage_snapshot'].items() if not item['guest_write_observed']]
+        if mask==7:
+            result['unresolved'].append('captured global clipping and multisample values not yet evaluated')
+    return result

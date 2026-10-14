@@ -13,3 +13,10 @@ for bad in ('',log(regs)*2,log({k:v for k,v in regs.items() if k!=0x2206}),log(d
     except ValueError: pass
     else: raise AssertionError('Incomplete or unsupported state accepted')
 print('PASS 8 geometry assertions/cases')
+# Provenance distinguishes explicit zero from an unobserved default.
+for mask in (0,7):
+    snapshot=f'GPU_DRAW_COVERAGE surface=00000000 screen_tl=00000000 screen_br=00000000 written_mask={mask} defaults=diagnostic-zero-not-hardware\n'
+    result=inspect(log(regs)+snapshot,[0,0,0,1])
+    assert all(item['guest_write_observed']==bool(mask) for item in result['runtime_coverage_snapshot'].values())
+    assert not result['final_coverage_known']
+print('PASS 4 coverage provenance assertions')

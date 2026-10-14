@@ -22,7 +22,7 @@ int main(int argc,char**argv){
   if(!strcmp(argv[1],"colorneighbor")){put(0,0x00012104);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"modeneighbor")){put(0,0x00012208);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"depthneighbor")){put(0,0x00012200);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
-  if(!strcmp(argv[1],"destneighbor")){put(0,0x0001200D);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
+  if(!strcmp(argv[1],"destneighbor")){put(0,0x0001200F);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"aarange")){put(0,0x00012312);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"cliprange")){put(0,0x00012206);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"vizexecute")){put(0,0xC0002300);put(1,0);diagnosticMmioStore32(base,0x7FC80714,2,0);}
@@ -244,7 +244,15 @@ int main(int argc,char**argv){
  check(s.vertexControl==0xA5A51234&&s.pointSize==0&&s.coherStatus==0);
  put(2,0x00002302);put(3,0);diagnosticMmioStore32(base,0x7FC80714,4,0);
  check(queryDiagnosticGpu(base).vertexControl==0&&queryDiagnosticGpu(base).shaderWords[0]==s.shaderWords[0]);
+ check(s.coverageWrittenMask==0&&s.surfaceInfo==0&&s.screenScissor[0]==0&&s.screenScissor[1]==0);
+ put(4,0x00002000);put(5,0x12345678);diagnosticMmioStore32(base,0x7FC80714,6,0);
+ s=queryDiagnosticGpu(base);check(s.surfaceInfo==0x12345678&&s.coverageWrittenMask==1);
+ put(6,0x0001200E);put(7,0x00010002);put(0,0x00100020);diagnosticMmioStore32(base,0x7FC80714,1,0);
+ s=queryDiagnosticGpu(base);check(s.screenScissor[0]==0x00010002&&s.screenScissor[1]==0x00100020&&s.coverageWrittenMask==7);
+ put(1,0x00002000);put(2,0);diagnosticMmioStore32(base,0x7FC80714,3,0);
+ s=queryDiagnosticGpu(base);check(s.surfaceInfo==0&&s.coverageWrittenMask==7);
  __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
+ check(s.coverageWrittenMask==0&&s.surfaceInfo==0&&s.screenScissor[0]==0&&s.screenScissor[1]==0);
  check(s.vertexControl==0);
  check(s.pointSize==0);
  check(s.colorMask==0);

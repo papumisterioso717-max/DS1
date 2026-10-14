@@ -44,3 +44,11 @@ This is only a candidate after the window scissor. Global screen scissor and sur
 
 Eight geometry checks and the nine linkage checks pass. The combined report remains local in first-draw-link.json.
 Sources: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/registers.h and https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/xenos.h
+
+## Runtime coverage-state capture
+
+The runtime now stores RB_SURFACE_INFO (0x2000) and PA_SC_SCREEN_SCISSOR_TL/BR (0x200E/0x200F), tracks writes separately from initial storage, and emits GPU_DRAW_COVERAGE before stopping. The repeated real diagnostic reports all three stored words zero and written_mask=0: no guest writes to these registers were observed before the first draw. These are diagnostic defaults, not verified console reset values. This supersedes the earlier description of the state as merely missing from the capture: its lack of initialization is now explicit.
+
+Do not infer an empty screen scissor or one-sample rendering from those zeros. Initialization semantics remain unresolved. The draw still stops with exit 20 and ring_read=22. No pixel execution or completion was added. Tests cover writes, wraparound, explicit zero provenance, reset and draw capture; 137 processor checks pass. Geometry/provenance tests total 12 checks.
+
+Register indices: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/register_table.inc

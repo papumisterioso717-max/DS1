@@ -58,6 +58,7 @@ for case,expected in [('unknown',20),('truncated',22),('index',22),('cycle',22),
  r=subprocess.run([str(bin/'GpuProcessorTests.exe'),case],capture_output=True,text=True)
  if r.returncode!=expected:raise RuntimeError('GPU processor rejection failed: '+case)
  if case=='drawcapture' and 'primitive=3 source=2 major=0 index32=1 count=4660 payload=1 execution=absent' not in r.stderr:raise RuntimeError('Draw capture decode mismatch')
+ if case=='drawcapture' and 'written_mask=0 defaults=diagnostic-zero-not-hardware' not in r.stderr:raise RuntimeError('Coverage provenance capture mismatch')
 
 for case in ['shift','alignment','unmapped','overflow','order','wbshift','wbunmapped']:
  r=subprocess.run([str(bin/'GpuRingTests.exe'),case],capture_output=True,text=True)

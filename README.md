@@ -32,3 +32,5 @@ El analizador `inspect-shader-flow.py` identifica el flujo lineal de los shaders
 `link-point-shaders.py` conecta fuera del runtime el interpolador del primer punto con r0 del shader de píxeles. Produce color hipotético (0,0,0,0), sin calcular cobertura ni escribir imagen. Solo admite la configuración capturada; nueve pruebas verifican el enlace y sus rechazos.
 
 El inspector de geometría identifica un punto de 1x1 y el píxel candidato (0,0). La cobertura final sigue pendiente del recorte global y el estado de muestreo; no hay imagen renderizada.
+
+La captura del runtime ahora distingue escrituras del juego de valores iniciales en superficie y recorte global. Antes del primer dibujo no se observaron escrituras de esos tres registros: su inicialización sigue por resolver. El diagnóstico permanece detenido, sin imagen.
