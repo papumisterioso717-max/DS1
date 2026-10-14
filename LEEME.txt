@@ -701,3 +701,7 @@ Captura runtime de superficie y recorte global agregada con procedencia.
 Arranque real: tres ceros, written_mask=0 (sin escrituras del juego observadas).
 No son valores de hardware verificados; inicializacion pendiente. Exit 20, ring_read=22.
 137 pruebas del procesador y 12 de geometria/procedencia pasan.
+
+Vista previa limitada despues del dibujo: 46 palabras, 23 dibujos identicos adicionales.
+Sin escrituras de configuracion posteriores en esa lista. No se ejecutan ni omiten.
+5 pruebas del decodificador de vista previa pasan; salida real sigue en 20.

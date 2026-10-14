@@ -52,3 +52,11 @@ The runtime now stores RB_SURFACE_INFO (0x2000) and PA_SC_SCREEN_SCISSOR_TL/BR (
 Do not infer an empty screen scissor or one-sample rendering from those zeros. Initialization semantics remain unresolved. The draw still stops with exit 20 and ring_read=22. No pixel execution or completion was added. Tests cover writes, wraparound, explicit zero provenance, reset and draw capture; 137 processor checks pass. Geometry/provenance tests total 12 checks.
 
 Register indices: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/register_table.inc
+
+## Initialization investigation and bounded lookahead
+
+Xenia's RegisterFile constructor zeros its storage, and its VdInitializeEngines entry is a stub returning success. Neither establishes console reset values for these registers. No missing concrete register setup was identified in those reference entry points. Sources: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/register_file.cc and https://github.com/xenia-project/xenia/blob/master/src/xenia/kernel/xboxkrnl/xboxkrnl_video.cc
+
+The diagnostic now previews at most 64 words after the stopped draw, limited to the current submitted list. It does not recurse into indirect buffers, execute commands, or advance completion. Unreadable preview memory stops only the preview. The real capture contains 46 remaining words: 23 additional identical DRAW_INDX_2 packets, each raw 0x00010081, with no intervening configuration writes. Together with the stopped draw this is a run of 24 identical draws. A setup/warm-up purpose is plausible but unproven; the preview does not justify skipping them.
+
+`inspect-gpu-ring.py --draw-tail diagnostic.log` decodes the preview including payloads. Five parser checks pass, and the runtime draw test verifies that a following register write is captured without execution. The real diagnostic still exits 20 at the first draw, with ring_read=22. The local report is first-draw-tail.json.

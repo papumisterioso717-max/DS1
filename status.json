@@ -331,5 +331,12 @@
     "guest_written_mask": 0,
     "provenance": "diagnostic initial storage only, not established hardware defaults",
     "draw_executed": false
+  },
+  "gpu_draw_lookahead": {
+    "remaining_words": 46,
+    "following_identical_draws": 23,
+    "following_configuration_writes": 0,
+    "executed": false,
+    "preview_checks": 5
   }
 }

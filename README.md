@@ -34,3 +34,5 @@ El analizador `inspect-shader-flow.py` identifica el flujo lineal de los shaders
 El inspector de geometría identifica un punto de 1x1 y el píxel candidato (0,0). La cobertura final sigue pendiente del recorte global y el estado de muestreo; no hay imagen renderizada.
 
 La captura del runtime ahora distingue escrituras del juego de valores iniciales en superficie y recorte global. Antes del primer dibujo no se observaron escrituras de esos tres registros: su inicialización sigue por resolver. El diagnóstico permanece detenido, sin imagen.
+
+La vista previa posterior al primer dibujo revela otros 23 dibujos idénticos en la misma lista, sin cambios de configuración. Es una inspección de lectura: ninguno se ejecuta ni se omite.

@@ -271,6 +271,15 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    fprintf(stderr,"GPU_DRAW_CAPTURE raw=%08X primitive=%u source=%u major=%u index32=%u count=%u payload=%u execution=absent\n",draw,draw&63,(draw>>6)&3,(draw>>8)&3,(draw>>11)&1,draw>>16,count);
    fprintf(stderr,"GPU_DRAW_STATE mode=%08X color_mask=%08X depth=%08X program=%08X context=%08X scissor_tl=%08X scissor_br=%08X ring_read=%u\n",state.modeControl,state.colorMask,state.depthControl,state.sqProgramControl,state.sqContextMisc,state.windowConfig[1],state.windowConfig[2],state.ringReadIndex);
    fprintf(stderr,"GPU_DRAW_COVERAGE surface=%08X screen_tl=%08X screen_br=%08X written_mask=%u defaults=diagnostic-zero-not-hardware\n",state.surfaceInfo,state.screenScissor[0],state.screenScissor[1],state.coverageWrittenMask);
+   // Read-only lookahead within the current submitted list, never following IBs.
+   // A preview must not turn an unmapped later word into an earlier draw fault.
+   const uint32_t after=i+count+1,remaining=words-after,limit=remaining<64?remaining:64;
+   fprintf(stderr,"GPU_DRAW_TAIL remaining=%u limit=%u execution=absent\n",remaining,limit);
+   for(uint32_t n=0;n<limit;++n){
+    const uint32_t physical=address(after+n);
+    if(!physicalRange(base,physical,4)){fprintf(stderr,"GPU_DRAW_TAIL_UNREADABLE offset=%u\n",n);break;}
+    fprintf(stderr,"GPU_DRAW_TAIL_WORD offset=%u physical=%08X value=%08X\n",n,physical,physicalWord(base,physical));
+   }
    for(uint32_t stage=0;stage<2;++stage){
     fprintf(stderr,"GPU_DRAW_SHADER stage=%u words=%u\n",stage,uint32_t(state.shaderWords[stage].size()));
     for(uint32_t n=0;n<state.shaderWords[stage].size();++n)fprintf(stderr,"GPU_SHADER_WORD stage=%u index=%u value=%08X\n",stage,n,state.shaderWords[stage][n]);
