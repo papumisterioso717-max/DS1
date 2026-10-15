@@ -304,8 +304,23 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    const uint32_t initiator=physicalWord(base,address(i+1));
    const uint32_t target=physicalWord(base,address(i+2)),value=physicalWord(base,address(i+3));
    fprintf(stderr,"GPU_SHADER_EVENT_CAPTURE initiator=%08X event=%u counter=%u address=%08X physical=%08X endian=%u value=%08X bypassed_draws=%u write=absent\n",initiator,initiator&63,initiator>>31,target,target&~3u,target&3,value,state.diagnosticBypassedDraws);
-   // A bypassed draw has not established shader completion. Never signal it.
-   fprintf(stderr,"PENDING_GPU_SHADER_EVENT completion=unverified\n");std::_Exit(20);
+   // All accepted work is synchronous, but an experimental bypass is not
+   // completed shader work. Its taint persists until engine reinitialization.
+   if(state.diagnosticBypassedDraws){fprintf(stderr,"PENDING_GPU_SHADER_EVENT completion=unverified\n");std::_Exit(20);}
+   if(initiator!=3){fprintf(stderr,"PENDING_GPU_SHADER_EVENT unsupported-initiator=%08X\n",initiator);std::_Exit(20);}
+   const uint32_t physical=target&~3u;
+   if(!physicalRange(base,physical,4))invalidRing();
+   MEMORY_BASIC_INFORMATION info{};VirtualQuery(base+0xA0000000ull+physical,&info,sizeof(info));
+   if(!(info.Protect&(PAGE_READWRITE|PAGE_WRITECOPY|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))invalidRing();
+   // Address low bits specify GPU byte order, not address misalignment.
+   static constexpr uint8_t order[4][4]={{0,1,2,3},{1,0,3,2},{3,2,1,0},{2,3,0,1}};
+   auto* destination=base+0xA0000000ull+physical;
+   uint32_t encoded=0;
+   for(unsigned byte=0;byte<4;++byte)encoded|=uint32_t(uint8_t(value>>(8*order[target&3][byte])))<<(8*byte);
+   // One aligned publication, not four independently visible byte writes.
+   InterlockedExchange(reinterpret_cast<volatile LONG*>(destination),static_cast<LONG>(encoded));
+   state.shaderEventInitiator=initiator;++state.completedShaderEvents;
+   fprintf(stderr,"GPU_SHADER_EVENT_COMPLETE physical=%08X value=%08X backend=synchronous-no-renderer\n",physical,value);
   }
   else if(type==3&&(head&1)==0&&opcode==0x2B){
    if(count<2)invalidRing();

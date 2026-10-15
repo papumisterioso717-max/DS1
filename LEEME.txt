@@ -721,3 +721,7 @@ No escribe finalizacion despues de dibujos omitidos. 9 pruebas del decodificador
 Protocolo CPU/GPU identificado: dos eventos, posicion etiquetada y numero de secuencia.
 Productor y dos lectores recompilados probados en aislamiento; ver COMPLETION-PROTOCOL.md.
 No modifica completados del runtime ni ejecuta los shaders.
+
+2026-10-15: PS_DONE_TS literal implementado para trabajo sincronico sin dibujos omitidos.
+Escritura atomica de 32 bits, cuatro ordenes de bytes, validacion de memoria.
+Pruebas pasan; evento real sigue bloqueado tras 24 omisiones experimentales.

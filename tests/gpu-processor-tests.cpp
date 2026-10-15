@@ -16,17 +16,39 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
-  if(!strcmp(argv[1],"shaderevent")||!strcmp(argv[1],"shadereventshort")){
-   put(0,!strcmp(argv[1],"shadereventshort")?0xC0015800:0xC0025800);
-   put(1,4);put(2,0x11002);put(3,0x12345678);
-   diagnosticMmioStore32(base,0x7FC80714,!strcmp(argv[1],"shadereventshort")?3:4,0);
+  if(!strncmp(argv[1],"shaderevent",11)){
+   const bool shortPacket=!strcmp(argv[1],"shadereventshort");
+   uint32_t initiator=3,target=0x12002;
+   if(!strcmp(argv[1],"shadereventcounter"))initiator=0x80000003;
+   if(!strcmp(argv[1],"shadereventtype"))initiator=4;
+   if(!strcmp(argv[1],"shadereventbad"))target=0x20000002;
+   if(!strcmp(argv[1],"shadereventreadonly")){DWORD old;VirtualProtect(base+0xA0012000,4096,PAGE_READONLY,&old);}
+   put(0,shortPacket?0xC0015800:0xC0025800);put(1,initiator);put(2,target);put(3,0x12345678);
+   diagnosticMmioStore32(base,0x7FC80714,shortPacket?3:4,0);
+   check(PPC_LOAD_U32(0xA0012000)==0x12345678);
+   check(queryDiagnosticGpu(base).completedShaderEvents==1&&queryDiagnosticGpu(base).shaderEventInitiator==3);
+   const uint8_t expected[4][4]={{0x78,0x56,0x34,0x12},{0x56,0x78,0x12,0x34},{0x12,0x34,0x56,0x78},{0x34,0x12,0x78,0x56}};
+   for(uint32_t mode=0;mode<4;++mode){
+    c.r3.u32=0x10000;c.r4.u32=2;__imp__VdInitializeRingBuffer(c,base);
+    memset(base+0xA0012000,0xA5,12);put(0,0xC0025800);put(1,3);put(2,0x12004|mode);put(3,0x12345678);
+    diagnosticMmioStore32(base,0x7FC80714,4,0);
+    check(!memcmp(base+0xA0012004,expected[mode],4));
+    check(base[0xA0012003]==0xA5&&base[0xA0012008]==0xA5);
+   }
+   __imp__VdShutdownEngines(c,base);check(queryDiagnosticGpu(base).completedShaderEvents==0);
+   puts("PASS shader events: literal write, four byte orders, neighboring memory and reset");return 0;
   }
 
-  if(!strcmp(argv[1],"zeroprobe")){
+  if(!strcmp(argv[1],"zeroprobe")||!strcmp(argv[1],"zeroprobeevent")){
    put(0,0x00002208);put(1,4);put(2,0xC0003600);put(3,0x00010081);
    diagnosticMmioStore32(base,0x7FC80714,4,0);
    const auto probe=queryDiagnosticGpu(base);
    check(probe.diagnosticBypassedDraws==1&&probe.ringReadIndex==4);
+   if(!strcmp(argv[1],"zeroprobeevent")){
+    put(4,0xC0025800);put(5,3);put(6,0x12002);put(7,0x12345678);
+    diagnosticMmioStore32(base,0x7FC80714,0,0);return 1;
+   }
+
    __imp__VdShutdownEngines(c,base);check(queryDiagnosticGpu(base).diagnosticBypassedDraws==0);
    puts("PASS opt-in zero-surface investigation");return 0;
   }

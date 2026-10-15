@@ -122,7 +122,7 @@
   "gpu_ring_inspector_test_cases": 6,
   "gpu_processor_support": "Bounded synchronous CP_RB_WPTR dispatch; zero/type2/NOP packets, ME_INIT data storage, INDIRECT_BUFFER/PFD traversal; unknown/predicated commands stop; no renderer",
   "gpu_processor_checks_passed": 137,
-  "gpu_processor_negative_cases": 38,
+  "gpu_processor_negative_cases": 43,
   "gpu_first_submission_words": 22,
   "gpu_first_submission_write_index": 22,
   "gpu_first_indirect_physical": "0x1F8F0040",
@@ -380,5 +380,19 @@
       "value": 3
     },
     "gpu_completion_implemented": false
+  },
+  "gpu_shader_event_support": {
+    "initiator": 3,
+    "literal_write": true,
+    "endianness_modes": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "publication": "aligned atomic 32-bit exchange",
+    "counter_supported": false,
+    "rejects_prior_experimental_draw_bypass": true,
+    "real_title_event_completed": false
   }
 }

@@ -44,3 +44,5 @@ Existe una prueba opcional `DS1_PROBE_ZERO_SURFACE=1`, desactivada por defecto, 
 El diagnóstico identifica el evento de finalización posterior: solicita escribir `BF8E00D4` en `1FCEE004`. Se captura y decodifica, pero no se escribe una finalización de shaders no ejecutados.
 
 Se verificó en aislamiento el productor de dos señales de finalización y sus lectores de CPU: posición etiquetada del búfer y número de secuencia. Detalles en COMPLETION-PROTOCOL.md; la finalización GPU real sigue pendiente.
+
+El evento literal PS_DONE_TS ya puede publicar su señal para trabajo síncrono admitido, con escritura atómica y validación de memoria. Rechaza señales después de dibujos omitidos; el juego todavía no supera su bloqueo gráfico.

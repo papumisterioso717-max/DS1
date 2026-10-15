@@ -54,10 +54,10 @@ run([tool/'clang++.exe',*flags,root/'tests/gpu-ring-tests.cpp',gpu,'-o',bin/'Gpu
 run([bin/'GpuRingTests.exe'])
 run([tool/'clang++.exe',*flags,root/'tests/gpu-processor-tests.cpp',gpu,'-o',bin/'GpuProcessorTests.exe'])
 run([bin/'GpuProcessorTests.exe'])
-for case,expected in [('shaderevent',20),('shadereventshort',22),('unknown',20),('truncated',22),('index',22),('cycle',22),('register',20),('waitfalse',20),('waitmemory',20),('unknownrange',20),('scratchbad',22),('scratchreadonly',22),('waitvsync',20),('waitfifo',20),('waitdirty',20),('sqgap',20),('rmwunknown',20),('rmwshort',22),('rmwmode',20),('opaqueadjacent',20),('windowrange',20),('invalidatelength',22),('invalidatepred',20),('shaderlength',22),('shaderstage',20),('shaderoffset',20),('shaderempty',22),('programrange',20),('vertexrange',20),('vizexecute',20),('vizrange',20),('cliprange',20),('aarange',20),('destneighbor',20),('depthneighbor',20),('modeneighbor',20),('colorneighbor',20),('pointneighbor',20),('vertexcontrolneighbor',20),('drawcapture',20)]:
+for case,expected in [('shaderevent',0),('shadereventcounter',20),('shadereventtype',20),('shadereventbad',22),('shadereventreadonly',22),('shadereventshort',22),('unknown',20),('truncated',22),('index',22),('cycle',22),('register',20),('waitfalse',20),('waitmemory',20),('unknownrange',20),('scratchbad',22),('scratchreadonly',22),('waitvsync',20),('waitfifo',20),('waitdirty',20),('sqgap',20),('rmwunknown',20),('rmwshort',22),('rmwmode',20),('opaqueadjacent',20),('windowrange',20),('invalidatelength',22),('invalidatepred',20),('shaderlength',22),('shaderstage',20),('shaderoffset',20),('shaderempty',22),('programrange',20),('vertexrange',20),('vizexecute',20),('vizrange',20),('cliprange',20),('aarange',20),('destneighbor',20),('depthneighbor',20),('modeneighbor',20),('colorneighbor',20),('pointneighbor',20),('vertexcontrolneighbor',20),('drawcapture',20)]:
  r=subprocess.run([str(bin/'GpuProcessorTests.exe'),case],capture_output=True,text=True)
  if r.returncode!=expected:raise RuntimeError('GPU processor rejection failed: '+case)
- if case=='shaderevent' and 'physical=00011000 endian=2 value=12345678 bypassed_draws=0 write=absent' not in r.stderr:raise RuntimeError('Shader event capture mismatch')
+ if case=='shaderevent' and 'GPU_SHADER_EVENT_COMPLETE physical=00012000' not in r.stderr:raise RuntimeError('Shader event completion missing')
  if case=='drawcapture' and 'primitive=3 source=2 major=0 index32=1 count=4660 payload=1 execution=absent' not in r.stderr:raise RuntimeError('Draw capture decode mismatch')
  if case=='drawcapture' and 'written_mask=0 defaults=diagnostic-zero-not-hardware' not in r.stderr:raise RuntimeError('Coverage provenance capture mismatch')
  if case=='drawcapture' and ('GPU_DRAW_TAIL remaining=2 limit=2 execution=absent' not in r.stderr or 'value=12345678' not in r.stderr or 'GPU_REGISTER index=2000' in r.stderr):raise RuntimeError('Draw lookahead executed or lost data')
@@ -68,6 +68,8 @@ if r.returncode!=20:raise RuntimeError('Default draw guard disabled')
 probe_env=os.environ.copy();probe_env['DS1_PROBE_ZERO_SURFACE']='1'
 r=subprocess.run([str(bin/'GpuProcessorTests.exe'),'zeroprobe'],capture_output=True,text=True,env=probe_env)
 if r.returncode!=0 or 'side-effects=unverified' not in r.stderr:raise RuntimeError('Opt-in zero surface probe failed')
+r=subprocess.run([str(bin/'GpuProcessorTests.exe'),'zeroprobeevent'],capture_output=True,text=True,env=probe_env)
+if r.returncode!=20 or 'completion=unverified' not in r.stderr or 'GPU_SHADER_EVENT_COMPLETE' in r.stderr:raise RuntimeError('Bypassed work incorrectly signaled completion')
 
 for case in ['shift','alignment','unmapped','overflow','order','wbshift','wbunmapped']:
  r=subprocess.run([str(bin/'GpuRingTests.exe'),case],capture_output=True,text=True)
