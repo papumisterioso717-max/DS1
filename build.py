@@ -37,6 +37,13 @@ run([tool/'clang++.exe',*flags,root/'tests/memory-tests.cpp',memory,'-o',bin/'Me
 run([bin/'MemoryTests.exe'])
 run([tool/'clang++.exe',*flags,root/'tests/startup-tests.cpp',imports,'-o',bin/'StartupTests.exe'])
 run([bin/'StartupTests.exe'])
+run([tool/'clang++.exe',*flags,root/'tests/critical-region-tests.cpp',imports,'-o',bin/'CriticalRegionTests.exe'])
+run([bin/'CriticalRegionTests.exe'])
+for case in ['unbalanced','null','overflow','readonly']:
+ r=subprocess.run([str(bin/'CriticalRegionTests.exe'),case],capture_output=True,text=True)
+ assert r.returncode==22 and 'INVALID_CRITICAL_REGION' in r.stderr,(case,r.returncode,r.stderr)
+print('PASS 4 critical-region rejection cases',flush=True)
+
 run([tool/'clang++.exe',*flags,root/'tests/sync-tests.cpp',imports,sync,'-o',bin/'SyncTests.exe'])
 run([bin/'SyncTests.exe'])
 run([tool/'clang++.exe',*flags,root/'tests/video-tests.cpp',video,'-o',bin/'VideoTests.exe'])

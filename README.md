@@ -4,7 +4,7 @@ Proyecto experimental de recompilación de Dead Space para Xbox 360 con XenonRec
 
 ## Estado
 
-El diagnóstico procesa los 24 dibujos iniciales mediante un clasificador limitado de shaders sin efectos de memoria y una política de superficie cero compatible con Xenia. Completa las dos señales posteriores sin omisión experimental y llega a `KeEnterCriticalRegion` (LR `0x8240CAF4`). No dispone de renderizador: aún no muestra imagen ni es jugable. Véase NO-OUTPUT-DRAWS.md.
+El diagnóstico procesa los 24 dibujos iniciales mediante un clasificador limitado de shaders sin efectos de memoria y una política de superficie cero compatible con Xenia. Completa las dos señales posteriores sin omisión experimental y supera `KeEnterCriticalRegion`. El bloqueo actual es `INVALID_SYNC`: dirección `0xC1010100` sin asignar (salida 22). Véase CRITICAL-REGIONS.md. No dispone de renderizador: aún no muestra imagen ni es jugable. Véase NO-OUTPUT-DRAWS.md.
 
 Pruebas actuales: 320/320 archivos compilados y 50 comprobaciones de memoria física, además de las demás pruebas del runtime. El respaldo compartido requiere Windows 10 1803 o posterior.
 

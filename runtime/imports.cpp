@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 // Guest RTL critical sections occupy 28 bytes; native Windows objects cannot
 // be placed here. Initialization follows Xenia xboxkrnl_rtl.cc layout.
 static void initializeGuestCriticalSection(uint8_t* base,uint32_t a,uint32_t spin) {
@@ -163,8 +164,28 @@ PPC_FUNC(__imp__VdGetSystemCommandBuffer) { fprintf(stderr, "PENDING_IMPORT __im
 PPC_FUNC(__imp__ObCreateSymbolicLink) { fprintf(stderr, "PENDING_IMPORT __imp__ObCreateSymbolicLink guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__ObDeleteSymbolicLink) { fprintf(stderr, "PENDING_IMPORT __imp__ObDeleteSymbolicLink guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__VdRetrainEDRAMWorker) { fprintf(stderr, "PENDING_IMPORT __imp__VdRetrainEDRAMWorker guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
-PPC_FUNC(__imp__KeEnterCriticalRegion) { fprintf(stderr, "PENDING_IMPORT __imp__KeEnterCriticalRegion guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
-PPC_FUNC(__imp__KeLeaveCriticalRegion) { fprintf(stderr, "PENDING_IMPORT __imp__KeLeaveCriticalRegion guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
+// Xenia X_KTHREAD +0xB0 is a host-endian runtime counter (not a be<> field).
+// APC enqueue exports remain fail-fast; delivery is not implemented.
+static void changeCriticalRegion(PPCContext& ctx,uint8_t* base,bool enter) {
+ auto valid=[&](uint64_t a,uint32_t n){
+  if(!a||a+n>0x100000000ull)return false;
+  for(uint32_t i=0;i<n;++i){MEMORY_BASIC_INFORMATION m{};
+   if(!VirtualQuery(base+a+i,&m,sizeof(m))||m.State!=MEM_COMMIT||
+      (m.Protect&PAGE_GUARD)||!(m.Protect&(PAGE_READWRITE|PAGE_EXECUTE_READWRITE)))return false;
+  }return true;
+ };
+ auto fail=[&](){fprintf(stderr,"INVALID_CRITICAL_REGION guest_lr=0x%08X\n",uint32_t(ctx.lr));std::_Exit(22);};
+ const uint32_t pcr=ctx.r13.u32;
+ if(!pcr||(pcr&3)||!valid(uint64_t(pcr)+0x100,4))fail();
+ const auto* p=base+pcr+0x100;
+ const uint32_t thread=(uint32_t(p[0])<<24)|(uint32_t(p[1])<<16)|(uint32_t(p[2])<<8)|p[3];
+ if(!thread||(thread&3)||!valid(uint64_t(thread)+0xB0,4))fail();
+ int32_t count;memcpy(&count,base+thread+0xB0,4);
+ if(count>0||(enter?count==INT32_MIN:count==0))fail();
+ count+=enter?-1:1;memcpy(base+thread+0xB0,&count,4);
+}
+PPC_FUNC(__imp__KeEnterCriticalRegion) { changeCriticalRegion(ctx,base,true); }
+PPC_FUNC(__imp__KeLeaveCriticalRegion) { changeCriticalRegion(ctx,base,false); }
 PPC_FUNC(__imp__VdRetrainEDRAM) { fprintf(stderr, "PENDING_IMPORT __imp__VdRetrainEDRAM guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__KeUnlockL2) { fprintf(stderr, "PENDING_IMPORT __imp__KeUnlockL2 guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__KeLockL2) { fprintf(stderr, "PENDING_IMPORT __imp__KeLockL2 guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }

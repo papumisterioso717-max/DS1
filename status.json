@@ -9,9 +9,9 @@
   "full_compilation": "320/320 passed; full build and runtime test suites rerun",
   "instruction_checks_passed": 98408,
   "runtime": "diagnostic: constrained zero-surface no-output draws classified and completed; no renderer",
-  "diagnostic_exit_code": 20,
-  "next_unimplemented_import": "KeEnterCriticalRegion",
-  "guest_lr": "0x8240CAF4",
+  "diagnostic_exit_code": 22,
+  "next_unimplemented_import": null,
+  "guest_lr": "0x8240CB00 (static call-site identification)",
   "playable": false,
   "setjmp_longjmp": "not identified; unset",
   "memory_checks_passed": 43,
@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "KeEnterCriticalRegion after 24 analyzed no-output draws and two completed shader events; renderer absent",
+  "next_blocker": "INVALID_SYNC unmapped address=0xC1010100 after KeEnterCriticalRegion; RtlEnterCriticalSection in sub_8240CAD8",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -403,5 +403,11 @@
     "experimental_bypasses": 0,
     "classifier_checks": 23,
     "general_rendering": false
+  },
+  "critical_regions": {
+    "support": "per-KTHREAD nested counter; void context preserved; APC enqueue/delivery unsupported",
+    "tests": 9,
+    "rejection_cases": 4,
+    "normal_run": "passed entry, stops on subsequent unmapped critical section"
   }
 }
