@@ -16,6 +16,23 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strncmp(argv[1],"renderstate",11)){
+   c.r3.u32=0x10000;c.r4.u32=4;__imp__VdInitializeRingBuffer(c,base);
+   const bool bad=!strcmp(argv[1],"renderstatebad");
+   put(0,bad?0x000C2200:0x000B2200);
+   for(uint32_t k=0;k<(bad?13u:12u);++k)put(k+1,0xA5000000+k);
+   diagnosticMmioStore32(base,0x7FC80714,bad?14:13,0);
+   auto s=queryDiagnosticGpu(base);
+   check(s.depthControl==0xA5000000&&s.blendControl[0]==0xA5000001&&s.colorControl==0xA5000002&&s.hizControl==0xA5000003);
+   for(uint32_t k=0;k<3;++k)check(s.clipTransformConfig[k]==0xA5000004+k);
+   check(s.currentBinIdMin==0xA5000007&&s.modeControl==0xA5000008);
+   for(uint32_t k=1;k<4;++k)check(s.blendControl[k]==0xA5000008+k);
+   check(s.ringReadIndex==13&&PPC_LOAD_U32(0xA0011000)==13);
+   __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
+   check(s.colorControl==0&&s.currentBinIdMin==0);for(auto v:s.blendControl)check(v==0);
+   puts("PASS contiguous render-state packet, existing fields, writeback and reset");return 0;
+  }
+
   if(!strncmp(argv[1],"texturecoher",12)){
    c.r3.u32=0x10000;c.r4.u32=4;__imp__VdInitializeRingBuffer(c,base);
    uint32_t mode=0x02000000,addr=0x12000;
@@ -109,11 +126,8 @@ int main(int argc,char**argv){
   if(!strcmp(argv[1],"vertexcontrolneighbor")){put(0,0x00012302);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"pointneighbor")){put(0,0x00012280);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"colorneighbor")){put(0,0x00012104);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
-  if(!strcmp(argv[1],"modeneighbor")){put(0,0x00012208);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
-  if(!strcmp(argv[1],"depthneighbor")){put(0,0x00012200);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"destneighbor")){put(0,0x0001200F);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"aarange")){put(0,0x00012312);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
-  if(!strcmp(argv[1],"cliprange")){put(0,0x00012206);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"vizexecute")){put(0,0xC0002300);put(1,0);diagnosticMmioStore32(base,0x7FC80714,2,0);}
   if(!strcmp(argv[1],"vizrange")){put(0,0x00012293);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"vertexrange")){put(0,0x00012102);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
