@@ -155,3 +155,5 @@ assert r.returncode==20 and 'index=220C' in r.stderr,(r.returncode,r.stderr)
 print('PASS render-state boundary rejection',flush=True)
 
 run([bin/'GpuProcessorTests.exe','interpolator'])
+
+run([bin/'GpuProcessorTests.exe','surfaces'])

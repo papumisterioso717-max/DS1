@@ -16,6 +16,20 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strcmp(argv[1],"surfaces")){
+   c.r3.u32=0x10000;c.r4.u32=4;__imp__VdInitializeRingBuffer(c,base);
+   put(0,0x000F2000);for(uint32_t k=0;k<16;++k)put(k+1,0x56780000+k);
+   diagnosticMmioStore32(base,0x7FC80714,17,0);
+   auto s=queryDiagnosticGpu(base);check(s.surfaceInfo==0x56780000&&s.colorInfo[0]==0x56780001&&s.depthInfo==0x56780002);
+   for(uint32_t k=1;k<4;++k)check(s.colorInfo[k]==0x56780002+k);
+   for(uint32_t k=0;k<8;++k)check(s.coherDestBase[k]==0x56780006+k);
+   check(s.screenScissor[0]==0x5678000E&&s.screenScissor[1]==0x5678000F&&s.coverageWrittenMask==7);
+   check(s.ringReadIndex==17&&PPC_LOAD_U32(0xA0011000)==17);
+   __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
+   check(s.depthInfo==0);for(auto v:s.colorInfo)check(v==0);
+   puts("PASS surface block: four color targets, depth, existing fields, writeback and reset");return 0;
+  }
+
   if(!strcmp(argv[1],"interpolator")){
    put(0,0x00042180);for(uint32_t k=0;k<5;++k)put(k+1,0x12340000+k);
    diagnosticMmioStore32(base,0x7FC80714,6,0);
