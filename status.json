@@ -8,10 +8,10 @@
   "unsupported_instruction_occurrences": 0,
   "full_compilation": "320/320 passed; full build and runtime test suites rerun",
   "instruction_checks_passed": 98408,
-  "runtime": "diagnostic: eight worker threads created; GPU configuration captured, rendering absent",
+  "runtime": "diagnostic: constrained zero-surface no-output draws classified and completed; no renderer",
   "diagnostic_exit_code": 20,
-  "next_unimplemented_import": null,
-  "guest_lr": "0x823EBC90",
+  "next_unimplemented_import": "KeEnterCriticalRegion",
+  "guest_lr": "0x8240CAF4",
   "playable": false,
   "setjmp_longjmp": "not identified; unset",
   "memory_checks_passed": 43,
@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "DRAW_INDX_2 captured but not executed at 0x1FCEA980; shader analysis and rendering backend pending",
+  "next_blocker": "KeEnterCriticalRegion after 24 analyzed no-output draws and two completed shader events; renderer absent",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -122,7 +122,7 @@
   "gpu_ring_inspector_test_cases": 6,
   "gpu_processor_support": "Bounded synchronous CP_RB_WPTR dispatch; zero/type2/NOP packets, ME_INIT data storage, INDIRECT_BUFFER/PFD traversal; unknown/predicated commands stop; no renderer",
   "gpu_processor_checks_passed": 137,
-  "gpu_processor_negative_cases": 43,
+  "gpu_processor_negative_cases": 45,
   "gpu_first_submission_words": 22,
   "gpu_first_submission_write_index": 22,
   "gpu_first_indirect_physical": "0x1F8F0040",
@@ -357,7 +357,8 @@
     "next_blocker": "EVENT_WRITE_SHD opcode 0x58 at 0x1F8E00E0",
     "shader_side_effects_verified": false,
     "rendered_image": false,
-    "normal_mode_still_stops_at_first_draw": true
+    "normal_mode_still_stops_at_first_draw": false,
+    "historical_result_superseded_by_no_output_classifier": true
   },
   "gpu_shader_event_capture": {
     "event": 3,
@@ -379,7 +380,7 @@
       "physical": "0x1FCEE000",
       "value": 3
     },
-    "gpu_completion_implemented": false
+    "gpu_completion_implemented": "literal synchronous events, including classified no-output draws"
   },
   "gpu_shader_event_support": {
     "initiator": 3,
@@ -393,6 +394,14 @@
     "publication": "aligned atomic 32-bit exchange",
     "counter_supported": false,
     "rejects_prior_experimental_draw_bypass": true,
-    "real_title_event_completed": false
+    "real_title_event_completed": true
+  },
+  "gpu_no_output_support": {
+    "policy": "Xenia-compatible zero-surface rasterization, plus conservative shader side-effect analysis",
+    "normal_run_classified_draws": 24,
+    "completed_events": 2,
+    "experimental_bypasses": 0,
+    "classifier_checks": 23,
+    "general_rendering": false
   }
 }

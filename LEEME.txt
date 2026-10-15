@@ -13,8 +13,8 @@ RESULTADO VERIFICADO
 - Reserva 1 MB y activa 64 KB de memoria correctamente.
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
-- Completa la primera lista y se detiene en DRAW_INDX_2 (36), fisica 0x1FCEA980, profundidad 2
-  (LR 0x823EBC90, salida 20). Ver diagnostic.log.
+- Procesa 24 dibujos clasificados sin salida y dos eventos de finalizacion.
+- Se detiene en KeEnterCriticalRegion (LR 0x8240CAF4, salida 20). Sin imagen. Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
 - Pasaron 16 401 comprobaciones de estado inicial, límites y memoria vecina.
@@ -725,3 +725,6 @@ No modifica completados del runtime ni ejecuta los shaders.
 2026-10-15: PS_DONE_TS literal implementado para trabajo sincronico sin dibujos omitidos.
 Escritura atomica de 32 bits, cuatro ordenes de bytes, validacion de memoria.
 Pruebas pasan; evento real sigue bloqueado tras 24 omisiones experimentales.
+
+2026-10-15: caso limitado de dibujos sin salida integrado; ver NO-OUTPUT-DRAWS.md.
+23 pruebas del clasificador y suite completa pasan. Sin bypass experimental en arranque normal.

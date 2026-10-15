@@ -16,6 +16,24 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strncmp(argv[1],"nooutput",8)){
+   c.r3.u32=0x10000;c.r4.u32=6;__imp__VdInitializeRingBuffer(c,base);
+   uint32_t cursor=0;auto emit=[&](uint32_t value){put(cursor++,value);};
+   emit(0x2180);emit(0x1000000E);emit(0x2208);emit(4);
+   if(!strcmp(argv[1],"nooutputcolor")){emit(0x2104);emit(15);}
+   for(uint32_t stage=0;stage<2;++stage){
+    emit(0xC0072B00);emit(stage);emit(6);emit(0x1001);emit(0x2200);emit(0);
+    emit((50u<<26)|0xC000|(!strcmp(argv[1],"nooutputmem")?32:0));emit(0);emit((7u<<29)|(2u<<24));
+   }
+   emit(0xC0003600);emit(0x10081);emit(0xC0025800);emit(3);emit(0x12002);emit(0x12345678);
+   diagnosticMmioStore32(base,0x7FC80714,cursor,0);
+   auto result=queryDiagnosticGpu(base);
+   check(result.noOutputDraws==1&&result.diagnosticBypassedDraws==0&&result.completedShaderEvents==1);
+   check(PPC_LOAD_U32(0xA0012000)==0x12345678&&result.ringReadIndex==cursor);
+   __imp__VdShutdownEngines(c,base);check(queryDiagnosticGpu(base).noOutputDraws==0);
+   puts("PASS analyzed no-output draw and completion integration");return 0;
+  }
+
   if(!strncmp(argv[1],"shaderevent",11)){
    const bool shortPacket=!strcmp(argv[1],"shadereventshort");
    uint32_t initiator=3,target=0x12002;

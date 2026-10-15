@@ -2,6 +2,7 @@
 #include <windows.h>
 #include "ppc_recomp_shared.h"
 #include "gpu.h"
+#include "gpu-no-output.h"
 #include <map>
 #include <vector>
 #include <atomic>
@@ -268,6 +269,11 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
   }
   else if(type==3&&(head&1)==0&&opcode==0x36){
    const uint32_t draw=physicalWord(base,address(i+1));
+   if(diagnosticNoOutputDraw(state,draw,count)){
+    ++state.noOutputDraws;
+    fprintf(stderr,"GPU_NO_OUTPUT_DRAW number=%u physical=%08X shaders=analyzed policy=zero-surface framebuffer-writes=none\n",state.noOutputDraws,address(i));
+    ++state.processedPackets;i+=count+1;continue;
+   }
    // Opt-in investigation only. Xenia D3D12 IssueDraw accepts zero-pitch
    // draws without rendering (with a documented memexport limitation).
    // This does NOT prove shader side effects absent or hardware equivalence.
