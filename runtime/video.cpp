@@ -96,3 +96,10 @@ PPC_FUNC(__imp__VdRetrainEDRAM){
  fprintf(stderr,"EDRAM_RETRAIN compatibility=empty-request result=0 commands=0 hardware-training=absent\n");
  ctx.r3.u64=0;
 }
+
+PPC_FUNC(__imp__VdIsHSIOTrainingSucceeded){
+ // Xenia-compatible virtual hardware status. This does not certify that
+ // training ran, or that EDRAM/rendering is implemented by this host.
+ fprintf(stderr,"HSIO_TRAINING_STATUS result=1 profile=virtual-compatibility hardware-training=absent\n");
+ ctx.r3.u64=1;
+}

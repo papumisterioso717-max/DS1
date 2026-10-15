@@ -10,8 +10,8 @@
   "instruction_checks_passed": 98408,
   "runtime": "diagnostic: constrained zero-surface no-output draws classified and completed; no renderer",
   "diagnostic_exit_code": 20,
-  "next_unimplemented_import": "VdIsHSIOTrainingSucceeded",
-  "guest_lr": "0x823F82AC",
+  "next_unimplemented_import": null,
+  "guest_lr": null,
   "playable": false,
   "setjmp_longjmp": "not identified; unset",
   "memory_checks_passed": 43,
@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "PENDING_IMPORT __imp__VdIsHSIOTrainingSucceeded after restricted EDRAM compatibility path",
+  "next_blocker": "PENDING_GPU_PACKET opcode 0x60 PM4_SET_BIN_MASK_LO at physical 0x1F8E0100",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -419,7 +419,8 @@
   },
   "edram_retraining": {
     "mode": "restricted empty-request no-op compatibility; hardware training absent",
-    "checks": 5,
+    "checks": 9,
     "unsupported_request_cases": 4
-  }
+  },
+  "hsio_training_status": "virtual compatibility return 1; no physical training, no renderer"
 }

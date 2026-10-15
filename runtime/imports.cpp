@@ -149,7 +149,6 @@ PPC_FUNC(__imp__KeAcquireSpinLockAtRaisedIrql) { fprintf(stderr, "PENDING_IMPORT
 PPC_FUNC(__imp__KfAcquireSpinLock) { fprintf(stderr, "PENDING_IMPORT __imp__KfAcquireSpinLock guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__KfReleaseSpinLock) { fprintf(stderr, "PENDING_IMPORT __imp__KfReleaseSpinLock guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__KeReleaseSpinLockFromRaisedIrql) { fprintf(stderr, "PENDING_IMPORT __imp__KeReleaseSpinLockFromRaisedIrql guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
-PPC_FUNC(__imp__VdIsHSIOTrainingSucceeded) { fprintf(stderr, "PENDING_IMPORT __imp__VdIsHSIOTrainingSucceeded guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__VdSetDisplayMode) { fprintf(stderr, "PENDING_IMPORT __imp__VdSetDisplayMode guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__VdGetCurrentDisplayInformation) { fprintf(stderr, "PENDING_IMPORT __imp__VdGetCurrentDisplayInformation guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__sprintf) { fprintf(stderr, "PENDING_IMPORT __imp__sprintf guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
