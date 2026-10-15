@@ -8,6 +8,7 @@
 #include "objects.h"
 #include "threads.h"
 #include "timestamp.h"
+#include "video-lock.h"
 #include <file.h>
 #include <cstdio>
 #include <cstdlib>
@@ -96,6 +97,11 @@ int main(int argc,char**argv){
  put(0x8200092C,0x60050000); // KeDebugMonitorData
  put(0x82000850,0x60050004); // KeCertMonitorData
  fprintf(stderr,"MONITOR_IMPORTS debug=disabled cert=disabled\n");
+ // Resolve ordinal 449 to an initialized physical RTL critical section.
+ if(!initializeVideoCalibrationLock(base,0x82000670)){
+  fprintf(stderr,"VIDEO_CALIBRATION_LOCK_INIT_FAILED\n");return 10;
+ }
+ fprintf(stderr,"VIDEO_CALIBRATION_LOCK initialized\n");
  registerCurrentGuestThread(base,ctx.r13.u32);
  _xstart(ctx,base);
  printf("Guest entry returned. This does not imply a playable game.\n");

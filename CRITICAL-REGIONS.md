@@ -9,3 +9,5 @@ Validation: full build and runtime suites passed; 9 focused checks cover nesting
 Normal diagnostic with original local XEX advances beyond the previous pending import and exits 22: INVALID_SYNC unmapped address=0xC1010100. The next call in sub_8240CAD8 is RtlEnterCriticalSection, return address 0x8240CB00, loading its pointer from guest 0x82000670. This call-site identification comes from translated code; the failure log itself does not report LR. Next work: trace allocation/physical aliases and initialization of this critical section before changing synchronization behavior.
 
 There is still no renderer or game image. No game executable, translated game source or captures are included in this snapshot.
+
+Update: the unmapped lock blocker is resolved by VIDEO-CALIBRATION-LOCK.md; the earlier run above is historical. Current blocker: VdRetrainEDRAMWorker at 0x8240CB10.

@@ -126,3 +126,6 @@ run([bin/'PhysicalTests.exe'])
 r=subprocess.run([str(bin/'VideoTests.exe'),'invalid'],capture_output=True,text=True)
 if r.returncode!=22:raise RuntimeError('Invalid video buffer was not rejected')
 print(f'Compiled {len(files)} translation files, diagnostic host and tests.')
+
+run([tool/'clang++.exe',*flags,root/'tests/video-lock-tests.cpp',imports,sync,physical,'-o',bin/'VideoLockTests.exe'])
+run([bin/'VideoLockTests.exe'])
