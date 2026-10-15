@@ -261,10 +261,10 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    fprintf(stderr,"GPU_WAIT info=%08X register=%08X ref=%08X mask=%08X interval=%u\n",info,reg,ref,mask,interval);
    if((info&~7u)||reg<0xA2F||reg>0xA31){fprintf(stderr,"PENDING_GPU_WAIT_MODE\n");std::_Exit(20);}
    if(reg==0xA31&&(state.coherStatus&0x80000000u)){
-    // Only the observed initial request is supported. All currently accepted
+    // Vertex-cache and texture-cache requests only. All currently accepted
     // packets use shared CPU memory; no textures, draws or host GPU caches exist.
     // A future rendering backend must replace this path with resource barriers.
-    if(state.coherStatus!=0x81000000u){fprintf(stderr,"PENDING_GPU_COHERENCE_MODE status=%08X\n",state.coherStatus);std::_Exit(20);}
+    if(state.diagnosticBypassedDraws||(state.coherStatus!=0x81000000u&&state.coherStatus!=0x82000000u)){fprintf(stderr,"PENDING_GPU_COHERENCE_MODE status=%08X\n",state.coherStatus);std::_Exit(20);}
     if(!physicalRange(base,state.coherBase,state.coherSize))invalidRing();
     std::atomic_thread_fence(std::memory_order_seq_cst);
     state.coherStatus=0;

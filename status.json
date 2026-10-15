@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "PENDING_GPU_COHERENCE_MODE status=82000000 at WAIT_REG_MEM physical 0x1F8E0154",
+  "next_blocker": "PENDING_GPU_REGISTER_PACKET index=2201 physical=1F8E0234",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -434,5 +434,6 @@
     ],
     "support": "64-bit full/half updates; predicate packets still unsupported",
     "validation": "all six updates, opposite-half preservation, independent fields, reset, malformed length and predicate rejection"
-  }
+  },
+  "texture_coherence": "exact texture/vertex action modes, shared CPU memory fence, full range validation; experimental bypass rejects completion"
 }

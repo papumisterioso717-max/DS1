@@ -16,6 +16,21 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strncmp(argv[1],"texturecoher",12)){
+   c.r3.u32=0x10000;c.r4.u32=4;__imp__VdInitializeRingBuffer(c,base);
+   uint32_t mode=0x02000000,addr=0x12000;
+   if(!strcmp(argv[1],"texturecoherunsupported"))mode=0x04000000;
+   if(!strcmp(argv[1],"texturecoherbad"))addr=0x20000;
+   PPC_STORE_U32(0xA0012000,0x12345678);
+   put(0,0x00020A2F);put(1,4096);put(2,addr);put(3,mode);
+   put(4,0xC0043C00);put(5,3);put(6,0xA31);put(7,0);put(8,0x80000000);put(9,8);
+   diagnosticMmioStore32(base,0x7FC80714,10,0);
+   auto result=queryDiagnosticGpu(base);check(result.coherStatus==0&&result.coherBase==addr&&result.coherSize==4096);
+   check(result.ringReadIndex==10&&PPC_LOAD_U32(0xA0011000)==10);
+   check(PPC_LOAD_U32(0xA0012000)==0x12345678);
+   puts("PASS texture coherence: validated range, completed wait, preserved data");return 0;
+  }
+
   if(!strncmp(argv[1],"bin",3)){
    if(!strcmp(argv[1],"binbad")){put(0,0xC0016000);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);return 2;}
    if(!strcmp(argv[1],"binpredicate")){put(0,0xC0006001);put(1,1);diagnosticMmioStore32(base,0x7FC80714,2,0);return 2;}

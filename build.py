@@ -142,3 +142,9 @@ for case,code in [('binbad',22),('binpredicate',20)]:
  r=subprocess.run([str(bin/'GpuProcessorTests.exe'),case],capture_output=True,text=True)
  assert r.returncode==code,(case,r.returncode,r.stderr)
 print('PASS bin malformed length and unsupported predication checks',flush=True)
+
+run([bin/'GpuProcessorTests.exe','texturecoher'])
+for case,code in [('texturecoherunsupported',20),('texturecoherbad',22)]:
+ r=subprocess.run([str(bin/'GpuProcessorTests.exe'),case],capture_output=True,text=True)
+ assert r.returncode==code,(case,r.returncode,r.stderr)
+print('PASS texture coherence unsupported mode and unmapped range rejection',flush=True)
