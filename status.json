@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "PENDING_GPU_REGISTER_PACKET index=2103 physical=1F8E02C4",
+  "next_blocker": "PENDING_GPU_REGISTER_PACKET index=2281 physical=1F8E031C",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -438,5 +438,6 @@
   "texture_coherence": "exact texture/vertex action modes, shared CPU memory fence, full range validation; experimental bypass rejects completion",
   "render_state_block": "0x2200..0x220B retained; blending/color operations not executed",
   "shader_interpolator_state": "0x2180..0x2184 retained; interpolation/shader execution absent",
-  "surface_state": "0x2000..0x200F retained; no host render targets or rasterization"
+  "surface_state": "0x2000..0x200F retained; no host render targets or rasterization",
+  "viewport_color_state": "0x2100..0x2114 retained as exact raw words; no rasterization"
 }

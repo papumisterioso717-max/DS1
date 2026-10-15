@@ -16,6 +16,24 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strncmp(argv[1],"viewport",8)){
+   c.r3.u32=0x10000;c.r4.u32=4;__imp__VdInitializeRingBuffer(c,base);
+   bool bad=!strcmp(argv[1],"viewportbad");
+   put(0,bad?0x00152100:0x00142100);for(uint32_t k=0;k<(bad?22u:21u);++k)put(k+1,0x7FC00000+k);
+   diagnosticMmioStore32(base,0x7FC80714,bad?23:22,0);
+   auto s=queryDiagnosticGpu(base);
+   for(uint32_t k=0;k<3;++k)check(s.vertexIndexConfig[k]==0x7FC00000+k);
+   check(s.primitiveResetIndex==0x7FC00003&&s.colorMask==0x7FC00004);
+   for(uint32_t k=0;k<4;++k)check(s.blendConstant[k]==0x7FC00005+k);
+   for(uint32_t k=0;k<3;++k)check(s.fogColor[k]==0x7FC00009+k);
+   check(s.stencilRefMask[0]==0x7FC0000C&&s.stencilRefMask[1]==0x7FC0000D&&s.alphaRef==0x7FC0000E);
+   for(uint32_t k=0;k<6;++k)check(s.viewport[k]==0x7FC0000F+k);
+   check(s.ringReadIndex==22&&PPC_LOAD_U32(0xA0011000)==22);
+   __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
+   check(s.primitiveResetIndex==0&&s.alphaRef==0);for(auto v:s.viewport)check(v==0);
+   puts("PASS viewport/color configuration block, exact float bits and reset");return 0;
+  }
+
   if(!strcmp(argv[1],"surfaces")){
    c.r3.u32=0x10000;c.r4.u32=4;__imp__VdInitializeRingBuffer(c,base);
    put(0,0x000F2000);for(uint32_t k=0;k<16;++k)put(k+1,0x56780000+k);
@@ -151,12 +169,10 @@ int main(int argc,char**argv){
   if(!strcmp(argv[1],"drawcapture")){put(0,0xC0003600);put(1,0x12340883);put(2,0x00002000);put(3,0x12345678);diagnosticMmioStore32(base,0x7FC80714,4,0);}
   if(!strcmp(argv[1],"vertexcontrolneighbor")){put(0,0x00012302);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"pointneighbor")){put(0,0x00012280);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
-  if(!strcmp(argv[1],"colorneighbor")){put(0,0x00012104);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"destneighbor")){put(0,0x0001200F);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"aarange")){put(0,0x00012312);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"vizexecute")){put(0,0xC0002300);put(1,0);diagnosticMmioStore32(base,0x7FC80714,2,0);}
   if(!strcmp(argv[1],"vizrange")){put(0,0x00012293);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
-  if(!strcmp(argv[1],"vertexrange")){put(0,0x00012102);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"programrange")){put(0,0x00012184);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"shaderlength")||!strcmp(argv[1],"shaderstage")||!strcmp(argv[1],"shaderoffset")||!strcmp(argv[1],"shaderempty")){
    put(0,0xC0022B00);put(1,!strcmp(argv[1],"shaderstage")?2:0);
