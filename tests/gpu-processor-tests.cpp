@@ -16,6 +16,25 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strncmp(argv[1],"bin",3)){
+   if(!strcmp(argv[1],"binbad")){put(0,0xC0016000);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);return 2;}
+   if(!strcmp(argv[1],"binpredicate")){put(0,0xC0006001);put(1,1);diagnosticMmioStore32(base,0x7FC80714,2,0);return 2;}
+   auto packet=[&](uint32_t op,uint32_t a,uint32_t b,bool full){
+    c.r3.u32=0x10000;c.r4.u32=2;__imp__VdInitializeRingBuffer(c,base);
+    put(0,0xC0000000|(full?0x10000:0)|(op<<8));put(1,a);put(2,b);
+    diagnosticMmioStore32(base,0x7FC80714,full?3:2,0);
+   };
+   packet(0x50,0x12345678,0x9ABCDEF0,true);check(queryDiagnosticGpu(base).binMask==0x123456789ABCDEF0ull);
+   packet(0x60,0x76543210,0,false);check(queryDiagnosticGpu(base).binMask==0x1234567876543210ull);
+   packet(0x61,0xFEDCBA98,0,false);check(queryDiagnosticGpu(base).binMask==0xFEDCBA9876543210ull);
+   packet(0x51,0x89ABCDEF,0x01234567,true);check(queryDiagnosticGpu(base).binSelect==0x89ABCDEF01234567ull);
+   packet(0x62,0,0,false);check(queryDiagnosticGpu(base).binSelect==0x89ABCDEF00000000ull);
+   packet(0x63,1,0,false);check(queryDiagnosticGpu(base).binSelect==0x100000000ull);
+   check(queryDiagnosticGpu(base).binMask==0xFEDCBA9876543210ull);
+   __imp__VdShutdownEngines(c,base);check(queryDiagnosticGpu(base).binMask==0&&queryDiagnosticGpu(base).binSelect==0);
+   puts("PASS bin mask/select full and half updates, independent state and reset");return 0;
+  }
+
   if(!strncmp(argv[1],"nooutput",8)){
    c.r3.u32=0x10000;c.r4.u32=6;__imp__VdInitializeRingBuffer(c,base);
    uint32_t cursor=0;auto emit=[&](uint32_t value){put(cursor++,value);};

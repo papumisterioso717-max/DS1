@@ -21,7 +21,7 @@ bool readable(uint8_t*b,uint32_t a,uint32_t n){
 }
 DiagnosticGpuState queryDiagnosticGpu(uint8_t*b){std::lock_guard<std::mutex> guard(mutex);auto it=engines.find(b);return it==engines.end()?DiagnosticGpuState{}:it->second;}
 PPC_FUNC(__imp__VdInitializeEngines){
- const DiagnosticGpuState next{true,ctx.r3.u32,ctx.r4.u32,ctx.r5.u32,ctx.r6.u32,ctx.r7.u32};
+ DiagnosticGpuState next{};next.initialized=true;next.flags=ctx.r3.u32;next.callback=ctx.r4.u32;next.argument=ctx.r5.u32;next.pfp=ctx.r6.u32;next.me=ctx.r7.u32;
  // Capture the request only. Microcode execution and callbacks need a GPU backend.
  if(!readable(base,next.pfp,4)||!readable(base,next.me,4)||
     (next.callback&&((next.callback&3)||next.callback<PPC_CODE_BASE||uint64_t(next.callback)>=uint64_t(PPC_CODE_BASE)+PPC_CODE_SIZE))){ctx.r3.u64=0;return;}
@@ -231,6 +231,16 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
     const uint32_t index=first+(single?0:n),value=physicalWord(base,address(i+1+n));
     writeGpuRegister(base,state,index,value);
    }
+  }
+  else if(type==3&&(head&1)==0&&((opcode>=0x60&&opcode<=0x63)||opcode==0x50||opcode==0x51)){
+   const bool full=opcode==0x50||opcode==0x51;
+   if(count!=(full?2u:1u))invalidRing();
+   auto& value=(opcode==0x50||opcode==0x60||opcode==0x61)?state.binMask:state.binSelect;
+   const uint32_t first=physicalWord(base,address(i+1));
+   if(full)value=(uint64_t(first)<<32)|physicalWord(base,address(i+2));
+   else if(opcode&1)value=(value&0xFFFFFFFFull)|(uint64_t(first)<<32);
+   else value=(value&0xFFFFFFFF00000000ull)|first;
+   fprintf(stderr,"GPU_BIN_STATE mask=%016llX select=%016llX\n",(unsigned long long)state.binMask,(unsigned long long)state.binSelect);
   }
   else if(type==3&&(head&1)==0&&opcode==0x21){
    if(count!=3)invalidRing();

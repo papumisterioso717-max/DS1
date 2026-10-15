@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "PENDING_GPU_PACKET opcode 0x60 PM4_SET_BIN_MASK_LO at physical 0x1F8E0100",
+  "next_blocker": "PENDING_GPU_COHERENCE_MODE status=82000000 at WAIT_REG_MEM physical 0x1F8E0154",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -422,5 +422,17 @@
     "checks": 9,
     "unsupported_request_cases": 4
   },
-  "hsio_training_status": "virtual compatibility return 1; no physical training, no renderer"
+  "hsio_training_status": "virtual compatibility return 1; no physical training, no renderer",
+  "gpu_bin_state": {
+    "opcodes": [
+      "0x50",
+      "0x51",
+      "0x60",
+      "0x61",
+      "0x62",
+      "0x63"
+    ],
+    "support": "64-bit full/half updates; predicate packets still unsupported",
+    "validation": "all six updates, opposite-half preservation, independent fields, reset, malformed length and predicate rejection"
+  }
 }

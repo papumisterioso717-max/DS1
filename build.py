@@ -136,3 +136,9 @@ for case in ['worker','nonempty','invalid','capacity']:
  r=subprocess.run([str(bin/'EdramTests.exe'),case],capture_output=True,text=True)
  assert r.returncode==20 and 'PENDING_EDRAM' in r.stderr,(case,r.returncode,r.stderr)
 print('PASS 4 unsupported EDRAM request cases',flush=True)
+
+run([bin/'GpuProcessorTests.exe','bin'])
+for case,code in [('binbad',22),('binpredicate',20)]:
+ r=subprocess.run([str(bin/'GpuProcessorTests.exe'),case],capture_output=True,text=True)
+ assert r.returncode==code,(case,r.returncode,r.stderr)
+print('PASS bin malformed length and unsupported predication checks',flush=True)

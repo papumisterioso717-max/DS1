@@ -4,7 +4,7 @@ Proyecto experimental de recompilación de Dead Space para Xbox 360 con XenonRec
 
 ## Estado
 
-El diagnóstico procesa los 24 dibujos iniciales mediante un clasificador limitado de shaders sin efectos de memoria y una política de superficie cero compatible con Xenia. Completa las dos señales posteriores sin omisión experimental y supera `KeEnterCriticalRegion`. Resuelve y adquiere `VdHSIOCalibrationLock`; pasa una compatibilidad restringida de recalibración EDRAM sin trabajo gráfico. La consulta HSIO usa estado virtual de compatibilidad. El bloqueo actual es GPU `SET_BIN_MASK_LO` (opcode `0x60`, dirección física `0x1F8E0100`, salida 20). Véase EDRAM-COMPATIBILITY.md. No dispone de renderizador: aún no muestra imagen ni es jugable. Véase NO-OUTPUT-DRAWS.md.
+El diagnóstico procesa los 24 dibujos iniciales mediante un clasificador limitado de shaders sin efectos de memoria y una política de superficie cero compatible con Xenia. Completa las dos señales posteriores sin omisión experimental y supera `KeEnterCriticalRegion`. Resuelve y adquiere `VdHSIOCalibrationLock`; pasa una compatibilidad restringida de recalibración EDRAM sin trabajo gráfico. La consulta HSIO usa estado virtual de compatibilidad. Las máscaras GPU ya se actualizan. El bloqueo actual es `PENDING_GPU_COHERENCE_MODE` (estado `82000000`, salida 20). Véase GPU-BIN-STATE.md. Véase EDRAM-COMPATIBILITY.md. No dispone de renderizador: aún no muestra imagen ni es jugable. Véase NO-OUTPUT-DRAWS.md.
 
 Pruebas actuales: 320/320 archivos compilados y 50 comprobaciones de memoria física, además de las demás pruebas del runtime. El respaldo compartido requiere Windows 10 1803 o posterior.
 
