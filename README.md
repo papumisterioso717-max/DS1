@@ -42,3 +42,5 @@ Se localizaron los generadores recompilados de la secuencia y se verificaron en 
 Existe una prueba opcional `DS1_PROBE_ZERO_SURFACE=1`, desactivada por defecto, que omite hasta 24 dibujos con estado restringido siguiendo una compatibilidad de Xenia. Sus efectos de shader no están verificados. La prueba llega a `EVENT_WRITE_SHD` y se detiene; no genera imagen. El modo normal conserva el bloqueo del primer dibujo. Detalles en DRAW-SEQUENCE.md.
 
 El diagnóstico identifica el evento de finalización posterior: solicita escribir `BF8E00D4` en `1FCEE004`. Se captura y decodifica, pero no se escribe una finalización de shaders no ejecutados.
+
+Se verificó en aislamiento el productor de dos señales de finalización y sus lectores de CPU: posición etiquetada del búfer y número de secuencia. Detalles en COMPLETION-PROTOCOL.md; la finalización GPU real sigue pendiente.

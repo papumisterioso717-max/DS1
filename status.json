@@ -369,5 +369,16 @@
     "memory_written": false,
     "prior_draws_bypassed": 24,
     "decoder_checks": 9
+  },
+  "gpu_completion_protocol": {
+    "producer": "0x823EBF80",
+    "sequence_reader": "0x823EAEA8",
+    "pointer_reader": "0x823EB450",
+    "isolated_probe_passed": true,
+    "second_event_preview": {
+      "physical": "0x1FCEE000",
+      "value": 3
+    },
+    "gpu_completion_implemented": false
   }
 }
