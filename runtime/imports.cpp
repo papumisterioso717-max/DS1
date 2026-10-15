@@ -163,7 +163,6 @@ PPC_FUNC(__imp__VdPersistDisplay) { fprintf(stderr, "PENDING_IMPORT __imp__VdPer
 PPC_FUNC(__imp__VdGetSystemCommandBuffer) { fprintf(stderr, "PENDING_IMPORT __imp__VdGetSystemCommandBuffer guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__ObCreateSymbolicLink) { fprintf(stderr, "PENDING_IMPORT __imp__ObCreateSymbolicLink guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__ObDeleteSymbolicLink) { fprintf(stderr, "PENDING_IMPORT __imp__ObDeleteSymbolicLink guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
-PPC_FUNC(__imp__VdRetrainEDRAMWorker) { fprintf(stderr, "PENDING_IMPORT __imp__VdRetrainEDRAMWorker guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 // Xenia X_KTHREAD +0xB0 is a host-endian runtime counter (not a be<> field).
 // APC enqueue exports remain fail-fast; delivery is not implemented.
 static void changeCriticalRegion(PPCContext& ctx,uint8_t* base,bool enter) {
@@ -186,7 +185,6 @@ static void changeCriticalRegion(PPCContext& ctx,uint8_t* base,bool enter) {
 }
 PPC_FUNC(__imp__KeEnterCriticalRegion) { changeCriticalRegion(ctx,base,true); }
 PPC_FUNC(__imp__KeLeaveCriticalRegion) { changeCriticalRegion(ctx,base,false); }
-PPC_FUNC(__imp__VdRetrainEDRAM) { fprintf(stderr, "PENDING_IMPORT __imp__VdRetrainEDRAM guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__KeUnlockL2) { fprintf(stderr, "PENDING_IMPORT __imp__KeUnlockL2 guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__KeLockL2) { fprintf(stderr, "PENDING_IMPORT __imp__KeLockL2 guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }
 PPC_FUNC(__imp__VdInitializeScalerCommandBuffer) { fprintf(stderr, "PENDING_IMPORT __imp__VdInitializeScalerCommandBuffer guest_lr=0x%08X\n", uint32_t(ctx.lr)); std::_Exit(20); }

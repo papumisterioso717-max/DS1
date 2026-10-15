@@ -129,3 +129,10 @@ print(f'Compiled {len(files)} translation files, diagnostic host and tests.')
 
 run([tool/'clang++.exe',*flags,root/'tests/video-lock-tests.cpp',imports,sync,physical,'-o',bin/'VideoLockTests.exe'])
 run([bin/'VideoLockTests.exe'])
+
+run([tool/'clang++.exe',*flags,root/'tests/edram-tests.cpp',video,'-o',bin/'EdramTests.exe'])
+run([bin/'EdramTests.exe'])
+for case in ['worker','nonempty','invalid','capacity']:
+ r=subprocess.run([str(bin/'EdramTests.exe'),case],capture_output=True,text=True)
+ assert r.returncode==20 and 'PENDING_EDRAM' in r.stderr,(case,r.returncode,r.stderr)
+print('PASS 4 unsupported EDRAM request cases',flush=True)

@@ -9,3 +9,5 @@ Reference: Xenia RegisterVideoExports, https://github.com/xenia-project/xenia/bl
 The integration test checks import replacement, critical-section fields, recursive acquisition/release using a guest KTHREAD, shared physical alias access and cleanup. The normal title run passes the former synchronization failure and stops at PENDING_IMPORT __imp__VdRetrainEDRAMWorker, guest LR 0x8240CB10, exit 20. The added allocation shifts later physical addresses; completion signal locations must be read from the new diagnostic log, not old captures.
 
 Next: investigate the EDRAM retraining contract and the arguments/commands emitted by the title. GPU calibration and rendering remain unsupported; no game image is displayed.
+
+Update: the worker blocker above is historical; see EDRAM-COMPATIBILITY.md for the current restricted compatibility path and new blocker.

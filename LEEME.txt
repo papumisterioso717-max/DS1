@@ -14,7 +14,7 @@ RESULTADO VERIFICADO
 - Supera la escritura al alias fisico 0xBE010100 con respaldo compartido.
 - Recibe la escritura CP_RB_WPTR y procesa la primera lista de comandos.
 - Procesa 24 dibujos clasificados sin salida y dos eventos de finalizacion.
-- Supera KeEnterCriticalRegion y adquiere VdHSIOCalibrationLock; se detiene en VdRetrainEDRAMWorker (LR 0x8240CB10, salida 20). Sin imagen. Ver diagnostic.log.
+- Supera KeEnterCriticalRegion y adquiere VdHSIOCalibrationLock; pasa la compatibilidad EDRAM vacía y se detiene en VdIsHSIOTrainingSucceeded (LR 0x823F82AC, salida 20). Sin imagen. Ver diagnostic.log.
 - Se implementaron KeGetCurrentProcessType (proceso de usuario),
   RtlInitializeCriticalSection y su variante con contador de espera activa.
 - Pasaron 16 401 comprobaciones de estado inicial, límites y memoria vecina.

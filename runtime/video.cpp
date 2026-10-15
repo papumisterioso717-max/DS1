@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <initializer_list>
+#include <algorithm>
 namespace {
 // Diagnostic-only virtual display, matching Xenia's baseline video-mode query.
 // This profile describes no physical PC connector and does not create a renderer.
@@ -69,4 +70,29 @@ PPC_FUNC(__imp__VdGetCurrentDisplayGamma){
  const float gamma=2.22222233f;uint32_t bits;memcpy(&bits,&gamma,4);
  put(type,2);put(power,bits);
  fprintf(stderr,"VIDEO_GAMMA type=2 power=%.8f profile=diagnostic\n",double(gamma));
+}
+
+// Diagnostic compatibility with Xenia's zero-return retraining stubs.
+// Only accept the title's initial empty request; no EDRAM or commands generated.
+PPC_FUNC(__imp__VdRetrainEDRAMWorker){
+ if(ctx.r3.u32){fprintf(stderr,"PENDING_EDRAM_WORKER_MODE argument=%08X\n",ctx.r3.u32);std::_Exit(20);}
+ fprintf(stderr,"EDRAM_WORKER compatibility=no-op hardware-training=absent\n");ctx.r3.u64=0;
+}
+PPC_FUNC(__imp__VdRetrainEDRAM){
+ auto readable=[&](uint32_t a,uint32_t n){
+  if(!a||uint64_t(a)+n>0x100000000ull)return false;
+  for(uint64_t pos=a;pos<uint64_t(a)+n;){MEMORY_BASIC_INFORMATION m{};
+   if(!VirtualQuery(base+pos,&m,sizeof(m))||m.State!=MEM_COMMIT||
+     (m.Protect&(PAGE_GUARD|PAGE_NOACCESS)))return false;
+   pos=std::min(uint64_t(a)+n,uint64_t(static_cast<uint8_t*>(m.BaseAddress)-base)+m.RegionSize);
+  }return true;
+ };
+ auto get=[&](uint32_t a){return(uint32_t(base[a])<<24)|(uint32_t(base[a+1])<<16)|(uint32_t(base[a+2])<<8)|base[a+3];};
+ const uint32_t cursor=ctx.r4.u32,state=ctx.r6.u32;
+ if(ctx.r5.u32!=4096||ctx.r8.u32!=2048||!readable(cursor,4)||!readable(state,4)||
+    !readable(ctx.r7.u32,2048)||get(cursor)||get(state)){
+  fprintf(stderr,"PENDING_EDRAM_REQUEST guest_lr=0x%08X\n",uint32_t(ctx.lr));std::_Exit(20);
+ }
+ fprintf(stderr,"EDRAM_RETRAIN compatibility=empty-request result=0 commands=0 hardware-training=absent\n");
+ ctx.r3.u64=0;
 }
