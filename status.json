@@ -358,5 +358,16 @@
     "shader_side_effects_verified": false,
     "rendered_image": false,
     "normal_mode_still_stops_at_first_draw": true
+  },
+  "gpu_shader_event_capture": {
+    "event": 3,
+    "event_name": "PS_DONE_TS",
+    "physical_address": "0x1FCEE004",
+    "value": "0xBF8E00D4",
+    "byte_order": "big endian",
+    "counter_requested": false,
+    "memory_written": false,
+    "prior_draws_bypassed": 24,
+    "decoder_checks": 9
   }
 }

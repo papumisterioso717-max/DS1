@@ -16,6 +16,12 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strcmp(argv[1],"shaderevent")||!strcmp(argv[1],"shadereventshort")){
+   put(0,!strcmp(argv[1],"shadereventshort")?0xC0015800:0xC0025800);
+   put(1,4);put(2,0x11002);put(3,0x12345678);
+   diagnosticMmioStore32(base,0x7FC80714,!strcmp(argv[1],"shadereventshort")?3:4,0);
+  }
+
   if(!strcmp(argv[1],"zeroprobe")){
    put(0,0x00002208);put(1,4);put(2,0xC0003600);put(3,0x00010081);
    diagnosticMmioStore32(base,0x7FC80714,4,0);

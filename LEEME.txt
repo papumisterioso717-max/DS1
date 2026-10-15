@@ -714,3 +714,6 @@ Modo experimental opcional DS1_PROBE_ZERO_SURFACE=1: maximo 24 dibujos omitidos.
 No verifica efectos de shader ni renderiza. Desactivado por defecto.
 Prueba real alcanza EVENT_WRITE_SHD 0x58 en 1F8E00E0, termina con 20.
 Modo normal comprobado: sigue detenido en primer dibujo.
+
+EVENT_WRITE_SHD capturado: PS_DONE_TS, destino fisico 1FCEE004, valor BF8E00D4, big endian.
+No escribe finalizacion despues de dibujos omitidos. 9 pruebas del decodificador pasan.

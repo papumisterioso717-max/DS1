@@ -22,3 +22,11 @@ The diagnostic has an opt-in probe, DS1_PROBE_ZERO_SURFACE=1. It accepts at most
 A real experimental run bypassed 24 commands, then observed window scissor reset, state invalidation and EVENT_WRITE_SHD (opcode 0x58, three payload words) at physical 0x1F8E00E0. It stopped there with exit 20. Local log: zero-surface-probe.log. No event completion is fabricated. A separate normal run still stops at the first draw with exit 20 and no bypass messages. This separates experimental reachability from verified runtime support.
 
 Validation includes a synthetic candidate rejected by default and accepted only with the explicit environment flag, tracking/reset checks, and the repeated real runs. Next task: inspect the event payload and implement only justified completion behavior; do not treat the experimental bypass as rendering progress.
+
+## Shader completion event capture
+
+EVENT_WRITE_SHD is now recognized and captured without signaling completion. It requires exactly three payload words; malformed packets are rejected. The experimental run observes initiator 3 (PS_DONE_TS), encoded address 0x1FCEE006, physical address 0x1FCEE004, byte-order mode 2 and literal value 0xBF8E00D4. No counter is requested. The four requested bytes are BF 8E 00 D4. The destination differs from the ring read-pointer writeback (0x1FCEE03C).
+
+`inspect-shader-event.py` decodes all four byte-order modes and leaves counter-generated values unknown. Nine decoder checks pass; runtime tests verify capture and malformed length rejection. No event memory write is made, especially after experimental draw bypasses. The observed event provides a concrete synchronization target to trace next, not proof of completed GPU work. The normal-mode first-draw stop remains unchanged.
+
+Reference: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/command_processor.cc (ExecutePacketType3_EVENT_WRITE_SHD), event identifiers in https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/xenos.h.

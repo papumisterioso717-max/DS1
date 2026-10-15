@@ -299,6 +299,14 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    // Capture only: no draw completion, register mutation or read-pointer update.
    fprintf(stderr,"PENDING_GPU_DRAW renderer=absent\n");std::_Exit(20);
   }
+  else if(type==3&&(head&1)==0&&opcode==0x58){
+   if(count!=3)invalidRing();
+   const uint32_t initiator=physicalWord(base,address(i+1));
+   const uint32_t target=physicalWord(base,address(i+2)),value=physicalWord(base,address(i+3));
+   fprintf(stderr,"GPU_SHADER_EVENT_CAPTURE initiator=%08X event=%u counter=%u address=%08X physical=%08X endian=%u value=%08X bypassed_draws=%u write=absent\n",initiator,initiator&63,initiator>>31,target,target&~3u,target&3,value,state.diagnosticBypassedDraws);
+   // A bypassed draw has not established shader completion. Never signal it.
+   fprintf(stderr,"PENDING_GPU_SHADER_EVENT completion=unverified\n");std::_Exit(20);
+  }
   else if(type==3&&(head&1)==0&&opcode==0x2B){
    if(count<2)invalidRing();
    const uint32_t stage=physicalWord(base,address(i+1)),descriptor=physicalWord(base,address(i+2));
