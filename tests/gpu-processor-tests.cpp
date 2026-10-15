@@ -16,6 +16,18 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strcmp(argv[1],"interpolator")){
+   put(0,0x00042180);for(uint32_t k=0;k<5;++k)put(k+1,0x12340000+k);
+   diagnosticMmioStore32(base,0x7FC80714,6,0);
+   auto s=queryDiagnosticGpu(base);
+   check(s.sqProgramControl==0x12340000&&s.sqContextMisc==0x12340001);
+   check(s.sqInterpolatorControl==0x12340002&&s.sqWrapping[0]==0x12340003&&s.sqWrapping[1]==0x12340004);
+   check(s.ringReadIndex==6&&PPC_LOAD_U32(0xA0011000)==6);
+   __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
+   check(s.sqInterpolatorControl==0&&s.sqWrapping[0]==0&&s.sqWrapping[1]==0);
+   puts("PASS shader interpolator/wrapping state, writeback and reset");return 0;
+  }
+
   if(!strncmp(argv[1],"renderstate",11)){
    c.r3.u32=0x10000;c.r4.u32=4;__imp__VdInitializeRingBuffer(c,base);
    const bool bad=!strcmp(argv[1],"renderstatebad");
@@ -131,7 +143,7 @@ int main(int argc,char**argv){
   if(!strcmp(argv[1],"vizexecute")){put(0,0xC0002300);put(1,0);diagnosticMmioStore32(base,0x7FC80714,2,0);}
   if(!strcmp(argv[1],"vizrange")){put(0,0x00012293);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"vertexrange")){put(0,0x00012102);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
-  if(!strcmp(argv[1],"programrange")){put(0,0x00012181);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
+  if(!strcmp(argv[1],"programrange")){put(0,0x00012184);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"shaderlength")||!strcmp(argv[1],"shaderstage")||!strcmp(argv[1],"shaderoffset")||!strcmp(argv[1],"shaderempty")){
    put(0,0xC0022B00);put(1,!strcmp(argv[1],"shaderstage")?2:0);
    put(2,!strcmp(argv[1],"shaderlength")?2:!strcmp(argv[1],"shaderoffset")?0x10001:!strcmp(argv[1],"shaderempty")?0:1);put(3,0);
