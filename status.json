@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "PENDING_GPU_REGISTER_PACKET index=2300 physical=1F8E0374",
+  "next_blocker": "PENDING_GPU_REGISTER_PACKET index=4800 physical=1F8E0544",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -440,5 +440,6 @@
   "shader_interpolator_state": "0x2180..0x2184 retained; interpolation/shader execution absent",
   "surface_state": "0x2000..0x200F retained; no host render targets or rasterization",
   "viewport_color_state": "0x2100..0x2114 retained as exact raw words; no rasterization",
-  "primitive_state": "0x2280..0x2294 retained; primitive processing/rasterization not implemented"
+  "primitive_state": "0x2280..0x2294 retained; primitive processing/rasterization not implemented",
+  "raster_copy_state": "0x2300..0x2325 retained; no raster/copy execution; sample-count-enabled draws rejected"
 }

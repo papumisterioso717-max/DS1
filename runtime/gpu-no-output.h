@@ -40,7 +40,7 @@ inline bool diagnosticNoOutputDraw(const DiagnosticGpuState& s,uint32_t draw,uin
  // Unlike a blind zero-pitch bypass, require both shaders to be memory-free.
  return count==1&&draw==0x00010081&&s.surfaceInfo==0&&s.modeControl==4&&
   s.colorMask==0&&s.depthControl==0&&s.hizControl==0&&s.vizQueryConfig==0&&
-  s.sqProgramControl==0x1000000E&&s.sqContextMisc==0&&
+  s.sqProgramControl==0x1000000E&&s.sqContextMisc==0&&s.rasterCopyConfig[0x24]==0&&
   diagnosticShaderHasOnlyOrdinaryExports(s.shaderWords[0],false)&&
   diagnosticShaderHasOnlyOrdinaryExports(s.shaderWords[1],true);
 }

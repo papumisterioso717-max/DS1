@@ -135,6 +135,7 @@ uint32_t& gpuRegister(DiagnosticGpuState& s,uint32_t index){
  if(index>=0x2109&&index<=0x210B)return s.fogColor[index-0x2109];
  if(index>=0x210F&&index<=0x2114)return s.viewport[index-0x210F];
  if(index>=0x2281&&index<=0x2292)return s.primitiveConfig[index-0x2281];
+ if(index>=0x2300&&index<=0x2325&&index!=0x2302&&index!=0x2312)return s.rasterCopyConfig[index-0x2300];
  switch(index){
  case 0x2000:return s.surfaceInfo;
  case 0x2001:return s.colorInfo[0];case 0x2002:return s.depthInfo;
@@ -176,7 +177,7 @@ void writeGpuRegister(uint8_t* base,DiagnosticGpuState& state,uint32_t index,uin
     // file and generic WriteRegister fallback. Hardware semantics are unknown.
     // Initialization/configuration storage only. Rendering and EDRAM effects
     // are not implemented; draws and events still stop before completion.
-    if((index>=0x2000&&index<=0x200F)||index==0x2302||(index>=0x2280&&index<=0x2294)||index==0x2104||index==0x2208||index==0x2203||(index>=0x2200&&index<=0x220B)||(index>=0x2006&&index<=0x200D)||index==0x2312||(index>=0x2204&&index<=0x2206)||index==0x2293||(index>=0x2100&&index<=0x2114)||(index>=0x2180&&index<=0x2184)||index==0xE42||index==0xC85||index==0xF01||(index>=0x2080&&index<=0x2082))gpuRegister(state,index)=value;
+    if((index>=0x2000&&index<=0x200F)||(index>=0x2300&&index<=0x2325)||(index>=0x2280&&index<=0x2294)||index==0x2104||index==0x2208||index==0x2203||(index>=0x2200&&index<=0x220B)||(index>=0x2006&&index<=0x200D)||index==0x2312||(index>=0x2204&&index<=0x2206)||index==0x2293||(index>=0x2100&&index<=0x2114)||(index>=0x2180&&index<=0x2184)||index==0xE42||index==0xC85||index==0xF01||(index>=0x2080&&index<=0x2082))gpuRegister(state,index)=value;
     else if(index==0x81)state.unknown0081=value;
     else if(index==0x82)state.unknown0082=value;
     else if(index==0xA2F)state.coherSize=value;
@@ -236,7 +237,7 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    // Match Xenia's WriteRegister behavior without pretending to flush a GPU.
    for(uint32_t n=0;n<count;++n){
     const uint32_t index=first+(single?0:n);
-    if(!((index>=0x2000&&index<=0x200F)||index==0x2302||(index>=0x2280&&index<=0x2294)||index==0x2104||index==0x2208||index==0x2203||(index>=0x2200&&index<=0x220B)||(index>=0x2006&&index<=0x200D)||index==0x2312||(index>=0x2204&&index<=0x2206)||index==0x2293||(index>=0xA2F&&index<=0xA31)||(index>=0xD00&&index<=0xD02)||(index>=0xA02&&index<=0xA05)||(index>=0x2100&&index<=0x2114)||(index>=0x2180&&index<=0x2184)||index==0xE42||index==0xC85||index==0xF01||(index>=0x2080&&index<=0x2082)||index==0x81||index==0x82||index==0xD04||index==0x5C8||index==0x1DC||index==0x1DD||(index>=0x578&&index<=0x57F))){fprintf(stderr,"PENDING_GPU_REGISTER_PACKET index=%04X physical=%08X\n",index,address(i));std::_Exit(20);}
+    if(!((index>=0x2000&&index<=0x200F)||(index>=0x2300&&index<=0x2325)||(index>=0x2280&&index<=0x2294)||index==0x2104||index==0x2208||index==0x2203||(index>=0x2200&&index<=0x220B)||(index>=0x2006&&index<=0x200D)||index==0x2312||(index>=0x2204&&index<=0x2206)||index==0x2293||(index>=0xA2F&&index<=0xA31)||(index>=0xD00&&index<=0xD02)||(index>=0xA02&&index<=0xA05)||(index>=0x2100&&index<=0x2114)||(index>=0x2180&&index<=0x2184)||index==0xE42||index==0xC85||index==0xF01||(index>=0x2080&&index<=0x2082)||index==0x81||index==0x82||index==0xD04||index==0x5C8||index==0x1DC||index==0x1DD||(index>=0x578&&index<=0x57F))){fprintf(stderr,"PENDING_GPU_REGISTER_PACKET index=%04X physical=%08X\n",index,address(i));std::_Exit(20);}
    }
    for(uint32_t n=0;n<count;++n){
     const uint32_t index=first+(single?0:n),value=physicalWord(base,address(i+1+n));

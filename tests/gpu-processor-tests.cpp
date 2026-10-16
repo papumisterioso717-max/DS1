@@ -16,6 +16,24 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strcmp(argv[1],"rastercopy")){
+   c.r3.u32=0x10000;c.r4.u32=5;__imp__VdInitializeRingBuffer(c,base);
+   put(0,0x00252300);for(uint32_t k=0;k<38;++k)put(k+1,0xA0000000+k);
+   PPC_STORE_U32(0xA0012000,0x55AA55AA);
+   diagnosticMmioStore32(base,0x7FC80714,39,0);
+   auto s=queryDiagnosticGpu(base);
+   for(uint32_t k=0;k<38;++k){
+    if(k==2)check(s.vertexControl==0xA0000002);
+    else if(k==18)check(s.aaMask==0xA0000012);
+    else check(s.rasterCopyConfig[k]==0xA0000000+k);
+   }
+   check(PPC_LOAD_U32(0xA0012000)==0x55AA55AA&&s.completedShaderEvents==0);
+   check(s.ringReadIndex==39&&PPC_LOAD_U32(0xA0011000)==39);
+   __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
+   for(auto v:s.rasterCopyConfig)check(v==0);
+   puts("PASS raster/copy register storage, no copy side effects, writeback and reset");return 0;
+  }
+
   if(!strcmp(argv[1],"primitives")){
    c.r3.u32=0x10000;c.r4.u32=4;__imp__VdInitializeRingBuffer(c,base);
    put(0,0x00142280);for(uint32_t k=0;k<21;++k)put(k+1,0x80000000+k);
@@ -133,6 +151,7 @@ int main(int argc,char**argv){
    uint32_t cursor=0;auto emit=[&](uint32_t value){put(cursor++,value);};
    emit(0x2180);emit(0x1000000E);emit(0x2208);emit(4);
    if(!strcmp(argv[1],"nooutputcolor")){emit(0x2104);emit(15);}
+   if(!strcmp(argv[1],"nooutputsample")){emit(0x2324);emit(1);}
    for(uint32_t stage=0;stage<2;++stage){
     emit(0xC0072B00);emit(stage);emit(6);emit(0x1001);emit(0x2200);emit(0);
     emit((50u<<26)|0xC000|(!strcmp(argv[1],"nooutputmem")?32:0));emit(0);emit((7u<<29)|(2u<<24));
@@ -184,9 +203,8 @@ int main(int argc,char**argv){
   }
 
   if(!strcmp(argv[1],"drawcapture")){put(0,0xC0003600);put(1,0x12340883);put(2,0x00002000);put(3,0x12345678);diagnosticMmioStore32(base,0x7FC80714,4,0);}
-  if(!strcmp(argv[1],"vertexcontrolneighbor")){put(0,0x00012302);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"destneighbor")){put(0,0x0001200F);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
-  if(!strcmp(argv[1],"aarange")){put(0,0x00012312);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
+  if(!strcmp(argv[1],"aarange")){put(0,0x00012325);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"vizexecute")){put(0,0xC0002300);put(1,0);diagnosticMmioStore32(base,0x7FC80714,2,0);}
   if(!strcmp(argv[1],"vizrange")){put(0,0x00012294);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"programrange")){put(0,0x00012184);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
