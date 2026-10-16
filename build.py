@@ -21,6 +21,16 @@ def compile(p):
  pending.replace(obj)
  return obj
 files=sorted((root/'ppc').glob('*.cpp'))
+run([tool/'clang++.exe','-std=c++17','-O2',root/'tests/edram-layout-tests.cpp','-o',bin/'EdramLayoutTests.exe'])
+run([bin/'EdramLayoutTests.exe'])
+run([tool/'clang++.exe','-std=c++17','-O2',root/'tests/edram-storage-tests.cpp','-o',bin/'EdramStorageTests.exe'])
+run([bin/'EdramStorageTests.exe'])
+run([tool/'clang++.exe','-std=c++17','-O2',root/'tests/depth-stencil-tests.cpp','-o',bin/'DepthStencilTests.exe'])
+run([bin/'DepthStencilTests.exe'])
+run([tool/'clang++.exe','-std=c++17','-O2',root/'tests/covered-sample-tests.cpp','-o',bin/'CoveredSampleTests.exe'])
+run([bin/'CoveredSampleTests.exe'])
+run([tool/'clang++.exe','-std=c++17','-O2',root/'tests/rectangle-coverage-tests.cpp','-o',bin/'RectangleCoverageTests.exe'])
+run([bin/'RectangleCoverageTests.exe'])
 with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
  objects=[]
  for obj in pool.map(compile,files):

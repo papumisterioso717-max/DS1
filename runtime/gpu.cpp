@@ -332,6 +332,28 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
     fprintf(stderr,"GPU_DRAW_SHADER stage=%u words=%u\n",stage,uint32_t(state.shaderWords[stage].size()));
     for(uint32_t n=0;n<state.shaderWords[stage].size();++n)fprintf(stderr,"GPU_SHADER_WORD stage=%u index=%u value=%08X\n",stage,n,state.shaderWords[stage][n]);
    }
+   // Bounded read-only descriptor preview, not shader-driven resource execution.
+   // Texture groups occupy all six words; never interpret their tail as vertices.
+   uint32_t previewBudget=256;
+   for(uint32_t group=0;group<32;++group){
+    if((state.fetchConstants[group*6]&3)==2)continue;
+    for(uint32_t slot=0;slot<3;++slot){
+     const uint32_t descriptor=group*3+slot;
+     const uint32_t a=state.fetchConstants[descriptor*2],b=state.fetchConstants[descriptor*2+1];
+     if((a&3)!=3)continue;
+     const uint32_t physical=a&~3u,size=(b>>2)&0xffffffu;
+     uint32_t preview=size<64?size:64;
+     if(preview>previewBudget)preview=previewBudget;
+     fprintf(stderr,"GPU_VERTEX_BUFFER descriptor=%u physical=%08X words=%u endian=%u preview=%u\n",descriptor,physical,size,b&3,preview);
+     if(!preview)continue;
+     if(!physicalRange(base,physical,uint64_t(preview)*4)){
+      fprintf(stderr,"GPU_VERTEX_BUFFER_UNREADABLE descriptor=%u\n",descriptor);continue;
+     }
+     previewBudget-=preview;
+     for(uint32_t n=0;n<preview;++n)
+      fprintf(stderr,"GPU_VERTEX_BYTES descriptor=%u index=%u be_word=%08X\n",descriptor,n,physicalWord(base,physical+n*4));
+    }
+   }
    // Capture only: no draw completion, register mutation or read-pointer update.
    fprintf(stderr,"PENDING_GPU_DRAW renderer=absent\n");std::_Exit(20);
   }

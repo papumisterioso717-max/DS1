@@ -4,6 +4,38 @@ Layout reference: xenia/src/xenia/gpu/ucode.h.
 import json, sys
 from pathlib import Path
 
+def decode_fetch(words):
+    """Inspect fetch bitfields only; mini-fetch addresses need preceding state.
+
+    Layout: Xenia ucode.h VertexFetchInstruction. No memory is accessed.
+    """
+    if len(words)!=3 or any(type(w) is not int or not 0<=w<=0xffffffff for w in words):
+        raise ValueError('FETCH requires three unsigned words')
+    a,b,c=words
+    opcode=a&31
+    if opcode:
+        return {'opcode':opcode,'operation':'UNSUPPORTED_FETCH','decoded':False}
+    def signed(value,bits):
+        return value-(1<<bits) if value&(1<<(bits-1)) else value
+    mini=bool(b&(1<<30))
+    return {'opcode':0,'operation':'VERTEX_FETCH','decoded':True,
+        'mini':mini,'destination':(a>>12)&63,'destination_relative':bool(a&(1<<18)),
+        'destination_swizzle':['xyzw01?_'[(b>>(i*3))&7] for i in range(4)],
+        'source':None if mini else (a>>5)&63,
+        'source_component':None if mini else 'xyzw'[a>>30],
+        'source_relative':None if mini else bool(a&(1<<11)),
+        'fetch_constant_index':None if mini else ((a>>20)&31)*3+((a>>25)&3),
+        'stride_dwords':None if mini else c&255,
+        'offset_dwords':signed((c>>8)&0x7fffff,23),
+        'format_code':(b>>16)&63,'signed':bool(b&(1<<12)),
+        'normalized':not bool(b&(1<<13)),
+        'signed_fraction_mode':(b>>14)&1,
+        'index_rounded':None if mini else bool(b&(1<<15)),
+        'exponent_adjust':signed((b>>24)&63,6),
+        'predicated':bool(b&(1<<31)),'predicate_condition':bool(c&(1<<31)),
+        'address_source':'previous_full_fetch' if mini else 'descriptor_and_source_register',
+        'executed':False}
+
 def decode_alu(words):
     """Decode output routing; recognize only unpredicated MAX/RETAIN_PREV.
 
@@ -58,13 +90,17 @@ def analyze(words):
     if not ended: raise ValueError('No unconditional EXEC_END found')
     cf_groups=(len(result)+1)//2
     if any(item.get('address',cf_groups)<cf_groups for item in result): raise ValueError('EXEC overlaps control flow')
-    alu=[]; fetch=False
+    alu=[]; fetch=False; fetches=[]
     for item in result:
         for instruction in item.get('instructions',[]):
-            if instruction['kind']=='FETCH': fetch=True; continue
+            if instruction['kind']=='FETCH':
+                fetch=True
+                slot=instruction['slot']
+                fetches.append({'slot':slot, **decode_fetch(words[slot*3:slot*3+3])})
+                continue
             slot=instruction['slot']
             alu.append({'slot':slot, **decode_alu(words[slot*3:slot*3+3])})
-    return {'control_flow':result,'alu':alu,
+    return {'control_flow':result,'alu':alu,'fetch':fetches,
         'instruction_semantics_analyzed':bool(alu) and not fetch and all(i['recognized_semantics'] for i in alu),
         'safe_to_skip_draw':False}
 
