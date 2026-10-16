@@ -1,0 +1,9 @@
+# Type-3 packet predication
+
+Predicate-bit Type-3 packets now test the full 64-bit intersection of binMask and binSelect after validating the packet fits in the submitted list. Zero intersection consumes the packet without executing it or following its pointers. Nonzero intersection dispatches through the existing handlers, whose length/state checks remain active. Unknown active opcodes remain pending. Predicate counters are diagnostic only and reset with the engine. Active swaps remain unsupported, including predicated ones.
+
+Reference for mask intersection: https://github.com/xenia-project/xenia/blob/master/src/xenia/gpu/command_processor.cc . Unlike Xenia's swap-specific compatibility skip, this diagnostic stops on an active unsupported swap rather than acknowledging it.
+
+Tests use the highest bit to prove 64-bit matching, execute a predicated invalidation, then change selection and skip a draw plus an invalid-address indirect buffer without following it. They check no draw/completion side effects, ring writeback and reset. Separate tests reject an active unknown command and a truncated packet even when its predicate is false. Earlier predicate rejection fixtures now verify false-predicate skipping.
+
+Normal title validation: mask=00000000FFFFFFFF and select=00000000FFFFFFFF intersect, so the draw must execute. The active packet at 0x1F8E0594 has draw word 00030088 (primitive code 8, auto-index source 2, count 3). It reaches the draw capture and stops at PENDING_GPU_DRAW renderer=absent. State includes surface=0A020280, color mask=0000FFFF, depth=00008777 and program=10010001; these are outside the previous no-output classifier. Shader captures contain 27 vertex words and 9 pixel words. No draw completion or image is claimed. Next work requires decoding this primitive/shader/resource state and implementing an actual rendering path.

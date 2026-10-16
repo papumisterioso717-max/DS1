@@ -4,7 +4,7 @@ Proyecto experimental de recompilación de Dead Space para Xbox 360 con XenonRec
 
 ## Estado
 
-El diagnóstico procesa los 24 dibujos iniciales sin salida, completa sus señales y avanza por la configuración gráfica con compatibilidad virtual EDRAM/HSIO. Conserva los bloques de superficies, mezcla, interpolación y viewport. El bloqueo actual es `PENDING_GPU_REGISTER_PACKET`, registro `0x4800` en `0x1F8E0544` (salida 20). No hay renderizador, imagen ni juego ejecutable de forma jugable. Véase RASTER-COPY-STATE.md y status.json.
+El diagnóstico procesa 24 dibujos iniciales sin salida y avanza por la configuración de GPU. Ya conserva descriptores de recursos y evalúa condiciones con máscaras de 64 bits. El dibujo activo en 0x1F8E0594 pasa su condición y se detiene en `PENDING_GPU_DRAW renderer=absent`. No hay imagen ni ejecución jugable. Véase GPU-PREDICATION.md y status.json.
 
 Pruebas actuales: 320/320 archivos compilados y 50 comprobaciones de memoria física, además de las demás pruebas del runtime. El respaldo compartido requiere Windows 10 1803 o posterior.
 

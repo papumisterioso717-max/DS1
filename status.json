@@ -75,7 +75,7 @@
     "pfp": "0x820D0F08",
     "me": "0x820D1388"
   },
-  "next_blocker": "PENDING_GPU_REGISTER_PACKET index=4800 physical=1F8E0544",
+  "next_blocker": "PENDING_GPU_DRAW renderer=absent; predicate passed at physical 1F8E0594",
   "next_fault_guest_address": null,
   "notification_checks_passed": 14,
   "notification_invalid_record_test": "passed; exit 22",
@@ -441,5 +441,14 @@
   "surface_state": "0x2000..0x200F retained; no host render targets or rasterization",
   "viewport_color_state": "0x2100..0x2114 retained as exact raw words; no rasterization",
   "primitive_state": "0x2280..0x2294 retained; primitive processing/rasterization not implemented",
-  "raster_copy_state": "0x2300..0x2325 retained; no raster/copy execution; sample-count-enabled draws rejected"
+  "raster_copy_state": "0x2300..0x2325 retained; no raster/copy execution; sample-count-enabled draws rejected",
+  "fetch_constant_state": "192 descriptor words retained at 0x4800..0x48BF; no resource reads or shader execution",
+  "fetch_flush_state": "0x5000..0x5002 stored; no derived descriptor cache or GPU invalidation implemented",
+  "gpu_predication": {
+    "rule": "64-bit mask & select nonzero executes existing validated handler; zero skips payload after bounds validation",
+    "normal_draw": "00030088 primitive=8 source=2 count=3",
+    "vertex_shader_words": 27,
+    "pixel_shader_words": 9,
+    "rendered": false
+  }
 }

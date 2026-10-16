@@ -136,6 +136,8 @@ uint32_t& gpuRegister(DiagnosticGpuState& s,uint32_t index){
  if(index>=0x210F&&index<=0x2114)return s.viewport[index-0x210F];
  if(index>=0x2281&&index<=0x2292)return s.primitiveConfig[index-0x2281];
  if(index>=0x2300&&index<=0x2325&&index!=0x2302&&index!=0x2312)return s.rasterCopyConfig[index-0x2300];
+ if(index>=0x4800&&index<=0x48BF)return s.fetchConstants[index-0x4800];
+ if(index>=0x5000&&index<=0x5002)return s.fetchFlush[index-0x5000];
  switch(index){
  case 0x2000:return s.surfaceInfo;
  case 0x2001:return s.colorInfo[0];case 0x2002:return s.depthInfo;
@@ -177,7 +179,7 @@ void writeGpuRegister(uint8_t* base,DiagnosticGpuState& state,uint32_t index,uin
     // file and generic WriteRegister fallback. Hardware semantics are unknown.
     // Initialization/configuration storage only. Rendering and EDRAM effects
     // are not implemented; draws and events still stop before completion.
-    if((index>=0x2000&&index<=0x200F)||(index>=0x2300&&index<=0x2325)||(index>=0x2280&&index<=0x2294)||index==0x2104||index==0x2208||index==0x2203||(index>=0x2200&&index<=0x220B)||(index>=0x2006&&index<=0x200D)||index==0x2312||(index>=0x2204&&index<=0x2206)||index==0x2293||(index>=0x2100&&index<=0x2114)||(index>=0x2180&&index<=0x2184)||index==0xE42||index==0xC85||index==0xF01||(index>=0x2080&&index<=0x2082))gpuRegister(state,index)=value;
+    if((index>=0x5000&&index<=0x5002)||(index>=0x4800&&index<=0x48BF)||(index>=0x2000&&index<=0x200F)||(index>=0x2300&&index<=0x2325)||(index>=0x2280&&index<=0x2294)||index==0x2104||index==0x2208||index==0x2203||(index>=0x2200&&index<=0x220B)||(index>=0x2006&&index<=0x200D)||index==0x2312||(index>=0x2204&&index<=0x2206)||index==0x2293||(index>=0x2100&&index<=0x2114)||(index>=0x2180&&index<=0x2184)||index==0xE42||index==0xC85||index==0xF01||(index>=0x2080&&index<=0x2082))gpuRegister(state,index)=value;
     else if(index==0x81)state.unknown0081=value;
     else if(index==0x82)state.unknown0082=value;
     else if(index==0xA2F)state.coherSize=value;
@@ -230,6 +232,12 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
   if(count>words-i-1)invalidRing();
   const uint32_t opcode=(head>>8)&0x7F;
   fprintf(stderr,"GPU_PACKET depth=%u physical=%08X header=%08X payload=%u\n",depth,address(i),head,count);
+  if(type==3&&(head&1)){
+   const bool pass=(state.binMask&state.binSelect)!=0;
+   fprintf(stderr,"GPU_PREDICATE mask=%016llX select=%016llX pass=%u\n",(unsigned long long)state.binMask,(unsigned long long)state.binSelect,pass);
+   if(!pass){++state.predicateSkipped;++state.processedPackets;i+=count+1;continue;}
+   ++state.predicatePassed;
+  }
   if(head==0||type==2){ /* Explicit no-op packet. */ }
   else if(type==0){
    const uint32_t first=head&0x7FFF;const bool single=(head&0x8000)!=0;
@@ -237,14 +245,14 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    // Match Xenia's WriteRegister behavior without pretending to flush a GPU.
    for(uint32_t n=0;n<count;++n){
     const uint32_t index=first+(single?0:n);
-    if(!((index>=0x2000&&index<=0x200F)||(index>=0x2300&&index<=0x2325)||(index>=0x2280&&index<=0x2294)||index==0x2104||index==0x2208||index==0x2203||(index>=0x2200&&index<=0x220B)||(index>=0x2006&&index<=0x200D)||index==0x2312||(index>=0x2204&&index<=0x2206)||index==0x2293||(index>=0xA2F&&index<=0xA31)||(index>=0xD00&&index<=0xD02)||(index>=0xA02&&index<=0xA05)||(index>=0x2100&&index<=0x2114)||(index>=0x2180&&index<=0x2184)||index==0xE42||index==0xC85||index==0xF01||(index>=0x2080&&index<=0x2082)||index==0x81||index==0x82||index==0xD04||index==0x5C8||index==0x1DC||index==0x1DD||(index>=0x578&&index<=0x57F))){fprintf(stderr,"PENDING_GPU_REGISTER_PACKET index=%04X physical=%08X\n",index,address(i));std::_Exit(20);}
+    if(!((index>=0x5000&&index<=0x5002)||(index>=0x4800&&index<=0x48BF)||(index>=0x2000&&index<=0x200F)||(index>=0x2300&&index<=0x2325)||(index>=0x2280&&index<=0x2294)||index==0x2104||index==0x2208||index==0x2203||(index>=0x2200&&index<=0x220B)||(index>=0x2006&&index<=0x200D)||index==0x2312||(index>=0x2204&&index<=0x2206)||index==0x2293||(index>=0xA2F&&index<=0xA31)||(index>=0xD00&&index<=0xD02)||(index>=0xA02&&index<=0xA05)||(index>=0x2100&&index<=0x2114)||(index>=0x2180&&index<=0x2184)||index==0xE42||index==0xC85||index==0xF01||(index>=0x2080&&index<=0x2082)||index==0x81||index==0x82||index==0xD04||index==0x5C8||index==0x1DC||index==0x1DD||(index>=0x578&&index<=0x57F))){fprintf(stderr,"PENDING_GPU_REGISTER_PACKET index=%04X physical=%08X\n",index,address(i));std::_Exit(20);}
    }
    for(uint32_t n=0;n<count;++n){
     const uint32_t index=first+(single?0:n),value=physicalWord(base,address(i+1+n));
     writeGpuRegister(base,state,index,value);
    }
   }
-  else if(type==3&&(head&1)==0&&((opcode>=0x60&&opcode<=0x63)||opcode==0x50||opcode==0x51)){
+  else if(type==3&&((opcode>=0x60&&opcode<=0x63)||opcode==0x50||opcode==0x51)){
    const bool full=opcode==0x50||opcode==0x51;
    if(count!=(full?2u:1u))invalidRing();
    auto& value=(opcode==0x50||opcode==0x60||opcode==0x61)?state.binMask:state.binSelect;
@@ -254,7 +262,7 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    else value=(value&0xFFFFFFFF00000000ull)|first;
    fprintf(stderr,"GPU_BIN_STATE mask=%016llX select=%016llX\n",(unsigned long long)state.binMask,(unsigned long long)state.binSelect);
   }
-  else if(type==3&&(head&1)==0&&opcode==0x21){
+  else if(type==3&&opcode==0x21){
    if(count!=3)invalidRing();
    const uint32_t info=physicalWord(base,address(i+1));
    const uint32_t andWord=physicalWord(base,address(i+2)),orWord=physicalWord(base,address(i+3));
@@ -266,7 +274,7 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    const uint32_t orValue=(info&0x40000000u)?gpuRegister(state,orWord&0x1FFF):orWord;
    writeGpuRegister(base,state,index,(before&andValue)|orValue);
   }
-  else if(type==3&&(head&1)==0&&opcode==0x3C&&count==5){
+  else if(type==3&&opcode==0x3C&&count==5){
    const uint32_t info=physicalWord(base,address(i+1)),reg=physicalWord(base,address(i+2));
    const uint32_t ref=physicalWord(base,address(i+3)),mask=physicalWord(base,address(i+4));
    const uint32_t interval=physicalWord(base,address(i+5));
@@ -289,7 +297,7 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    // condition. Stop without publishing a completed ring read pointer.
    if(!matched){fprintf(stderr,"PENDING_GPU_WAIT_CONDITION value=%08X\n",v);std::_Exit(20);}
   }
-  else if(type==3&&(head&1)==0&&opcode==0x36){
+  else if(type==3&&opcode==0x36){
    const uint32_t draw=physicalWord(base,address(i+1));
    if(diagnosticNoOutputDraw(state,draw,count)){
     ++state.noOutputDraws;
@@ -327,7 +335,7 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    // Capture only: no draw completion, register mutation or read-pointer update.
    fprintf(stderr,"PENDING_GPU_DRAW renderer=absent\n");std::_Exit(20);
   }
-  else if(type==3&&(head&1)==0&&opcode==0x58){
+  else if(type==3&&opcode==0x58){
    if(count!=3)invalidRing();
    const uint32_t initiator=physicalWord(base,address(i+1));
    const uint32_t target=physicalWord(base,address(i+2)),value=physicalWord(base,address(i+3));
@@ -350,7 +358,7 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    state.shaderEventInitiator=initiator;++state.completedShaderEvents;
    fprintf(stderr,"GPU_SHADER_EVENT_COMPLETE physical=%08X value=%08X backend=synchronous-no-renderer\n",physical,value);
   }
-  else if(type==3&&(head&1)==0&&opcode==0x2B){
+  else if(type==3&&opcode==0x2B){
    if(count<2)invalidRing();
    const uint32_t stage=physicalWord(base,address(i+1)),descriptor=physicalWord(base,address(i+2));
    const uint32_t offset=descriptor>>16,length=descriptor&0xFFFF;
@@ -363,7 +371,7 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    for(uint32_t n=0;n<length;++n)code.push_back(physicalWord(base,address(i+3+n)));
    state.shaderWords[stage]=std::move(code);++state.shaderUploadCount;
   }
-  else if(type==3&&(head&1)==0&&opcode==0x3B){
+  else if(type==3&&opcode==0x3B){
    if(count!=1)invalidRing();
    // No derived GPU state or shader/resource caches exist in this diagnostic.
    // Record the request without resetting architectural registers or memory.
@@ -372,12 +380,12 @@ void processPackets(uint8_t* base,DiagnosticGpuState& state,uint32_t start,uint3
    ++state.invalidationCount;
    fprintf(stderr,"GPU_INVALIDATE_STATE mask=%08X backend=no-derived-state\n",state.invalidationMask);
   }
-  else if(type==3&&(head&1)==0&&opcode==0x10){ /* NOP payload. */ }
-  else if(type==3&&(head&1)==0&&opcode==0x48){
+  else if(type==3&&opcode==0x10){ /* NOP payload. */ }
+  else if(type==3&&opcode==0x48){
    auto& data=microEngine[base];data.clear();
    for(uint32_t n=0;n<count;++n)data.push_back(physicalWord(base,address(i+1+n)));
    state.microEngineWords=count;
-  }else if(type==3&&(head&1)==0&&(opcode==0x3F||opcode==0x37)&&count==2){
+  }else if(type==3&&(opcode==0x3F||opcode==0x37)&&count==2){
    const uint32_t child=physicalWord(base,address(i+1))&0x1FFFFFFF;
    const uint32_t length=physicalWord(base,address(i+2));
    if(length>65536||(child&3)||!physicalRange(base,child,uint64_t(length)*4))invalidRing();

@@ -63,7 +63,7 @@ run([tool/'clang++.exe',*flags,root/'tests/gpu-no-output-tests.cpp','-o',bin/'Gp
 run([bin/'GpuNoOutputTests.exe'])
 run([tool/'clang++.exe',*flags,root/'tests/gpu-processor-tests.cpp',gpu,'-o',bin/'GpuProcessorTests.exe'])
 run([bin/'GpuProcessorTests.exe'])
-for case,expected in [('nooutput',0),('nooutputcolor',20),('nooutputsample',20),('nooutputmem',20),('shaderevent',0),('shadereventcounter',20),('shadereventtype',20),('shadereventbad',22),('shadereventreadonly',22),('shadereventshort',22),('unknown',20),('truncated',22),('index',22),('cycle',22),('register',20),('waitfalse',20),('waitmemory',20),('unknownrange',20),('scratchbad',22),('scratchreadonly',22),('waitvsync',20),('waitfifo',20),('waitdirty',20),('sqgap',20),('rmwunknown',20),('rmwshort',22),('rmwmode',20),('opaqueadjacent',20),('windowrange',20),('invalidatelength',22),('invalidatepred',20),('shaderlength',22),('shaderstage',20),('shaderoffset',20),('shaderempty',22),('programrange',20),('vizexecute',20),('vizrange',20),('aarange',20),('destneighbor',20),('drawcapture',20)]:
+for case,expected in [('nooutput',0),('nooutputcolor',20),('nooutputsample',20),('nooutputmem',20),('shaderevent',0),('shadereventcounter',20),('shadereventtype',20),('shadereventbad',22),('shadereventreadonly',22),('shadereventshort',22),('unknown',20),('truncated',22),('index',22),('cycle',22),('register',20),('waitfalse',20),('waitmemory',20),('unknownrange',20),('scratchbad',22),('scratchreadonly',22),('waitvsync',20),('waitfifo',20),('waitdirty',20),('sqgap',20),('rmwunknown',20),('rmwshort',22),('rmwmode',20),('opaqueadjacent',20),('windowrange',20),('invalidatelength',22),('invalidatepred',0),('shaderlength',22),('shaderstage',20),('shaderoffset',20),('shaderempty',22),('programrange',20),('vizexecute',20),('vizrange',20),('aarange',20),('destneighbor',20),('drawcapture',20)]:
  r=subprocess.run([str(bin/'GpuProcessorTests.exe'),case],capture_output=True,text=True)
  if r.returncode!=expected:raise RuntimeError('GPU processor rejection failed: '+case)
  if case=='shaderevent' and 'GPU_SHADER_EVENT_COMPLETE physical=00012000' not in r.stderr:raise RuntimeError('Shader event completion missing')
@@ -138,7 +138,7 @@ for case in ['worker','nonempty','invalid','capacity']:
 print('PASS 4 unsupported EDRAM request cases',flush=True)
 
 run([bin/'GpuProcessorTests.exe','bin'])
-for case,code in [('binbad',22),('binpredicate',20)]:
+for case,code in [('binbad',22),('binpredicate',0)]:
  r=subprocess.run([str(bin/'GpuProcessorTests.exe'),case],capture_output=True,text=True)
  assert r.returncode==code,(case,r.returncode,r.stderr)
 print('PASS bin malformed length and unsupported predication checks',flush=True)
@@ -166,3 +166,21 @@ print('PASS viewport block boundary rejection',flush=True)
 run([bin/'GpuProcessorTests.exe','primitives'])
 
 run([bin/'GpuProcessorTests.exe','rastercopy'])
+
+run([bin/'GpuProcessorTests.exe','fetch'])
+for case,code in [('fetchboundary',20),('fetchtruncated',22)]:
+ r=subprocess.run([str(bin/'GpuProcessorTests.exe'),case],capture_output=True,text=True)
+ assert r.returncode==code,(case,r.returncode,r.stderr)
+print('PASS fetch boundary and truncated-packet rejection',flush=True)
+
+run([bin/'GpuProcessorTests.exe','flushfetch'])
+for case,code in [('flushfetchboundary',20),('flushfetchshort',22)]:
+ r=subprocess.run([str(bin/'GpuProcessorTests.exe'),case],capture_output=True,text=True)
+ assert r.returncode==code,(case,r.returncode,r.stderr)
+print('PASS fetch-flush boundary and truncated-packet rejection',flush=True)
+
+run([bin/'GpuProcessorTests.exe','predicate'])
+for case,code in [('predicateunknown',20),('predicatetruncated',22)]:
+ r=subprocess.run([str(bin/'GpuProcessorTests.exe'),case],capture_output=True,text=True)
+ assert r.returncode==code,(case,r.returncode,r.stderr)
+print('PASS predication unknown-command and truncation rejection',flush=True)

@@ -16,6 +16,56 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strncmp(argv[1],"predicate",9)){
+   c.r3.u32=0x10000;c.r4.u32=4;__imp__VdInitializeRingBuffer(c,base);
+   // Match only the highest bit, exercising the full 64-bit predicate.
+   put(0,0xC0015000);put(1,0x80000000);put(2,0);
+   put(3,0xC0015100);put(4,0x80000000);put(5,0);
+   if(!strcmp(argv[1],"predicateunknown")){put(6,0xC0007F01);put(7,0);diagnosticMmioStore32(base,0x7FC80714,8,0);return 2;}
+   if(!strcmp(argv[1],"predicatetruncated")){put(0,0xC0043C01);put(1,0);diagnosticMmioStore32(base,0x7FC80714,2,0);return 2;}
+   put(6,0xC0003B01);put(7,0x7FFF); // Pass: invalidate.
+   put(8,0xC0015100);put(9,0);put(10,1); // No overlap.
+   put(11,0xC0023F01);put(12,0xDEADBEEF);put(13,0xFFFFFFFF);put(14,0); // Skip invalid IB payload.
+   put(15,0xC0003601);put(16,0x10081); // Skip draw.
+   diagnosticMmioStore32(base,0x7FC80714,17,0);auto s=queryDiagnosticGpu(base);
+   check(s.predicatePassed==1&&s.predicateSkipped==2&&s.invalidationCount==1);
+   check(s.noOutputDraws==0&&s.diagnosticBypassedDraws==0&&s.completedShaderEvents==0);
+   check(s.ringReadIndex==17&&PPC_LOAD_U32(0xA0011000)==17);
+   __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);check(s.predicatePassed==0&&s.predicateSkipped==0);
+   puts("PASS 64-bit predication: passing update, skipped IB/draw, no side effects and reset");return 0;
+  }
+
+  if(!strncmp(argv[1],"flushfetch",10)){
+   c.r3.u32=0x10000;c.r4.u32=4;__imp__VdInitializeRingBuffer(c,base);
+   if(!strcmp(argv[1],"flushfetchboundary")){put(0,0x00015002);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);return 2;}
+   if(!strcmp(argv[1],"flushfetchshort")){put(0,0x00025000);put(1,1);diagnosticMmioStore32(base,0x7FC80714,2,0);return 2;}
+   put(0,0x00054800);for(uint32_t k=0;k<6;++k)put(k+1,0x12340000+k);
+   put(7,0x00025000);put(8,0xFFFFFFFF);put(9,0x80000001);put(10,0x55AA55AA);
+   PPC_STORE_U32(0xA0012000,0x11223344);
+   diagnosticMmioStore32(base,0x7FC80714,11,0);auto s=queryDiagnosticGpu(base);
+   check(s.fetchFlush[0]==0xFFFFFFFF&&s.fetchFlush[1]==0x80000001&&s.fetchFlush[2]==0x55AA55AA);
+   for(uint32_t k=0;k<6;++k)check(s.fetchConstants[k]==0x12340000+k);
+   check(s.completedShaderEvents==0&&PPC_LOAD_U32(0xA0012000)==0x11223344);
+   check(s.ringReadIndex==11&&PPC_LOAD_U32(0xA0011000)==11);
+   __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);for(auto v:s.fetchFlush)check(v==0);
+   puts("PASS fetch flush state: exact words, retained descriptors, no completion or memory writes and reset");return 0;
+  }
+
+  if(!strncmp(argv[1],"fetch",5)){
+   c.r3.u32=0x10000;c.r4.u32=5;__imp__VdInitializeRingBuffer(c,base);
+   if(!strcmp(argv[1],"fetchboundary")){put(0,0x000148BF);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);return 2;}
+   if(!strcmp(argv[1],"fetchtruncated")){put(0,0x00054800);put(1,1);diagnosticMmioStore32(base,0x7FC80714,2,0);return 2;}
+   put(0,0x00054800);for(uint32_t k=0;k<6;++k)put(k+1,0xDEAD0000+k);
+   put(7,0x000548BA);for(uint32_t k=0;k<6;++k)put(k+8,0xBEEF0000+k);
+   PPC_STORE_U32(0xA0012000,0x12345678);
+   diagnosticMmioStore32(base,0x7FC80714,14,0);auto s=queryDiagnosticGpu(base);
+   for(uint32_t k=0;k<6;++k){check(s.fetchConstants[k]==0xDEAD0000+k);check(s.fetchConstants[186+k]==0xBEEF0000+k);}
+   for(uint32_t k=6;k<186;++k)check(s.fetchConstants[k]==0);
+   check(s.ringReadIndex==14&&PPC_LOAD_U32(0xA0011000)==14&&PPC_LOAD_U32(0xA0012000)==0x12345678);
+   __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);for(auto v:s.fetchConstants)check(v==0);
+   puts("PASS fetch descriptors: first/last groups, isolated storage, no resource access and reset");return 0;
+  }
+
   if(!strcmp(argv[1],"rastercopy")){
    c.r3.u32=0x10000;c.r4.u32=5;__imp__VdInitializeRingBuffer(c,base);
    put(0,0x00252300);for(uint32_t k=0;k<38;++k)put(k+1,0xA0000000+k);
@@ -129,7 +179,7 @@ int main(int argc,char**argv){
 
   if(!strncmp(argv[1],"bin",3)){
    if(!strcmp(argv[1],"binbad")){put(0,0xC0016000);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);return 2;}
-   if(!strcmp(argv[1],"binpredicate")){put(0,0xC0006001);put(1,1);diagnosticMmioStore32(base,0x7FC80714,2,0);return 2;}
+   if(!strcmp(argv[1],"binpredicate")){put(0,0xC0006001);put(1,1);diagnosticMmioStore32(base,0x7FC80714,2,0);check(queryDiagnosticGpu(base).predicateSkipped==1);return 0;}
    auto packet=[&](uint32_t op,uint32_t a,uint32_t b,bool full){
     c.r3.u32=0x10000;c.r4.u32=2;__imp__VdInitializeRingBuffer(c,base);
     put(0,0xC0000000|(full?0x10000:0)|(op<<8));put(1,a);put(2,b);
@@ -216,6 +266,7 @@ int main(int argc,char**argv){
   if(!strcmp(argv[1],"invalidatelength")||!strcmp(argv[1],"invalidatepred")){
    put(0,!strcmp(argv[1],"invalidatelength")?0xC0013B00:0xC0003B01);put(1,0x7FFF);put(2,0);
    diagnosticMmioStore32(base,0x7FC80714,!strcmp(argv[1],"invalidatelength")?3:2,0);
+   check(queryDiagnosticGpu(base).invalidationCount==0&&queryDiagnosticGpu(base).predicateSkipped==1);return 0;
   }
   if(!strcmp(argv[1],"windowrange")){put(0,0x00012082);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"opaqueadjacent")){put(0,0x00010082);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
