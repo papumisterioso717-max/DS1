@@ -16,6 +16,23 @@ int main(int argc,char**argv){
  c.r3.u64=0x11000;c.r4.u64=6;__imp__VdEnableRingBufferRPtrWriteBack(c,base);
  auto put=[&](uint32_t i,uint32_t v){PPC_STORE_U32(0xA0010000+i*4,v);};
  if(argc>1){
+  if(!strcmp(argv[1],"primitives")){
+   c.r3.u32=0x10000;c.r4.u32=4;__imp__VdInitializeRingBuffer(c,base);
+   put(0,0x00142280);for(uint32_t k=0;k<21;++k)put(k+1,0x80000000+k);
+   diagnosticMmioStore32(base,0x7FC80714,22,0);
+   auto s=queryDiagnosticGpu(base);check(s.pointSize==0x80000000);
+   for(uint32_t k=0;k<18;++k)check(s.primitiveConfig[k]==0x80000001+k);
+   check(s.vizQueryConfig==0x80000013&&s.vgtEnhance==0x80000014);
+   check(s.ringReadIndex==22&&PPC_LOAD_U32(0xA0011000)==22);
+   // Overwrite one register without changing its neighbors.
+   put(22,0x00002281);put(23,0x80000041);
+   diagnosticMmioStore32(base,0x7FC80714,24,0);
+   check(queryDiagnosticGpu(base).primitiveConfig[0]==0x80000041&&queryDiagnosticGpu(base).primitiveConfig[1]==0x80000002);
+   __imp__VdShutdownEngines(c,base);s=queryDiagnosticGpu(base);
+   for(auto v:s.primitiveConfig)check(v==0);check(s.vgtEnhance==0&&s.vizQueryConfig==0);
+   puts("PASS primitive state block, exact bits, isolated overwrite, writeback and reset");return 0;
+  }
+
   if(!strncmp(argv[1],"viewport",8)){
    c.r3.u32=0x10000;c.r4.u32=4;__imp__VdInitializeRingBuffer(c,base);
    bool bad=!strcmp(argv[1],"viewportbad");
@@ -168,11 +185,10 @@ int main(int argc,char**argv){
 
   if(!strcmp(argv[1],"drawcapture")){put(0,0xC0003600);put(1,0x12340883);put(2,0x00002000);put(3,0x12345678);diagnosticMmioStore32(base,0x7FC80714,4,0);}
   if(!strcmp(argv[1],"vertexcontrolneighbor")){put(0,0x00012302);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
-  if(!strcmp(argv[1],"pointneighbor")){put(0,0x00012280);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"destneighbor")){put(0,0x0001200F);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"aarange")){put(0,0x00012312);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"vizexecute")){put(0,0xC0002300);put(1,0);diagnosticMmioStore32(base,0x7FC80714,2,0);}
-  if(!strcmp(argv[1],"vizrange")){put(0,0x00012293);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
+  if(!strcmp(argv[1],"vizrange")){put(0,0x00012294);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"programrange")){put(0,0x00012184);put(1,1);put(2,2);diagnosticMmioStore32(base,0x7FC80714,3,0);}
   if(!strcmp(argv[1],"shaderlength")||!strcmp(argv[1],"shaderstage")||!strcmp(argv[1],"shaderoffset")||!strcmp(argv[1],"shaderempty")){
    put(0,0xC0022B00);put(1,!strcmp(argv[1],"shaderstage")?2:0);
